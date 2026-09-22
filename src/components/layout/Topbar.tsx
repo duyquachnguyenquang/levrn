@@ -86,8 +86,8 @@ export function Topbar() {
         <div className="relative hidden md:flex items-center w-56 lg:w-64 focus-within:w-72 transition-all duration-300">
           <Search className="absolute left-3 h-3.5 w-3.5 text-muted-foreground transition-colors group-focus-within:text-[#7D39EB]" />
           <Input
-            placeholder="Tìm kiếm khóa học, ghi chú..."
-            className="h-9 pl-8.5 pr-4 text-xs rounded-lg bg-card/80 border-border/70 focus-visible:ring-[#7D39EB] focus-visible:border-[#7D39EB] transition-all"
+            placeholder="Tìm kiếm"
+            className="h-9 pl-9 pr-4 text-xs rounded-lg bg-card/80 border-border/70 focus-visible:ring-[#7D39EB] focus-visible:border-[#7D39EB] transition-all"
           />
         </div>
 

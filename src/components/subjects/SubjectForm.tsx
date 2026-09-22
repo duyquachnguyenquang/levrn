@@ -25,6 +25,7 @@ import {
   DEFAULT_CATEGORY_COLORS,
   ACADEMIC_TERMS,
   AcademicTerm,
+  WEEKDAYS,
 } from "@/lib/types";
 import {
   Sparkles,
@@ -317,6 +318,7 @@ export function SubjectForm({
   // Lịch học
   const [startDate, setStartDate] = useState("");
   const [totalWeeks, setTotalWeeks] = useState<string>("15");
+  const [scheduleDays, setScheduleDays] = useState<number[]>([]);
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -378,6 +380,13 @@ export function SubjectForm({
       setDriveUrl(initialData.driveUrl || "");
       setStartDate(initialData.startDate || "");
       setTotalWeeks(initialData.totalWeeks ? String(initialData.totalWeeks) : "15");
+      setScheduleDays(
+        initialData.scheduleDays && initialData.scheduleDays.length > 0
+          ? initialData.scheduleDays
+          : initialData.startDate
+          ? [new Date(initialData.startDate).getDay()]
+          : []
+      );
     } else {
       setCode("");
       setName("");
@@ -389,10 +398,30 @@ export function SubjectForm({
       setDriveUrl("");
       setStartDate("");
       setTotalWeeks("15");
+      setScheduleDays([]);
     }
     setErrorMessage(null);
     setDriveHelpNotice(null);
   }, [initialData, mode, open]);
+
+  // Xử lý khi đổi ngày bắt đầu: tự động chọn thứ tương ứng nếu chưa chọn thứ nào
+  const handleStartDateChange = (val: string) => {
+    setStartDate(val);
+    if (val && scheduleDays.length === 0) {
+      const d = new Date(val);
+      if (!isNaN(d.getTime())) {
+        setScheduleDays([d.getDay()]);
+      }
+    }
+  };
+
+  const toggleScheduleDay = (dayValue: number) => {
+    setScheduleDays((prev) =>
+      prev.includes(dayValue)
+        ? prev.filter((d) => d !== dayValue)
+        : [...prev, dayValue].sort((a, b) => a - b)
+    );
+  };
 
   // Xử lý mã môn: Viết hoa, tối đa 10 ký tự chữ và số
   const handleCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -458,6 +487,7 @@ export function SubjectForm({
       startDate: startDate || undefined,
       totalWeeks: weeksNum > 0 ? weeksNum : undefined,
       endDate: computedEndDate,
+      scheduleDays: scheduleDays.length > 0 ? scheduleDays : (startDate ? [new Date(startDate).getDay()] : undefined),
     };
 
     setIsSubmitting(true);
@@ -725,7 +755,7 @@ export function SubjectForm({
               <SmartDatePicker
                 id="startDate"
                 value={startDate}
-                onChange={(val) => setStartDate(val)}
+                onChange={handleStartDateChange}
               />
             </div>
 
@@ -745,6 +775,39 @@ export function SubjectForm({
                 onChange={(e) => setTotalWeeks(e.target.value)}
                 className="rounded-md font-bold"
               />
+            </div>
+          </div>
+
+          {/* Thứ học trong tuần */}
+          <div className="space-y-2 p-3 rounded-lg bg-muted/40 border border-border/70">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                <Clock className="h-3.5 w-3.5 text-[#7D39EB]" />
+                <span>Thứ học trong tuần</span>
+              </Label>
+              <span className="text-[11px] text-muted-foreground">
+                Tự động đánh dấu trên Lịch học Dashboard
+              </span>
+            </div>
+            <div className="grid grid-cols-7 gap-1.5">
+              {WEEKDAYS.map((wd) => {
+                const isSelected = scheduleDays.includes(wd.value);
+                return (
+                  <button
+                    key={wd.value}
+                    type="button"
+                    onClick={() => toggleScheduleDay(wd.value)}
+                    className={`h-8 rounded-md text-xs font-bold transition-all duration-150 border flex items-center justify-center cursor-pointer ${
+                      isSelected
+                        ? "bg-[#7D39EB] text-white border-[#7D39EB] shadow-xs scale-102"
+                        : "bg-background text-muted-foreground border-border/80 hover:bg-muted hover:text-foreground"
+                    }`}
+                    title={wd.fullLabel}
+                  >
+                    {wd.label}
+                  </button>
+                );
+              })}
             </div>
           </div>
 

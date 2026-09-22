@@ -23,6 +23,7 @@ const INITIAL_DEMO_SUBJECTS: Subject[] = [
     startDate: "2024-09-05",
     totalWeeks: 15,
     endDate: "2024-12-19",
+    scheduleDays: [4], // Thứ Năm hàng tuần
     createdAt: new Date().toISOString(),
   },
   {
@@ -39,6 +40,7 @@ const INITIAL_DEMO_SUBJECTS: Subject[] = [
     startDate: "2024-09-10",
     totalWeeks: 15,
     endDate: "2024-12-24",
+    scheduleDays: [2], // Thứ Ba hàng tuần
     createdAt: new Date().toISOString(),
   },
   {
@@ -56,6 +58,7 @@ const INITIAL_DEMO_SUBJECTS: Subject[] = [
     startDate: "2024-09-08",
     totalWeeks: 15,
     endDate: "2024-12-22",
+    scheduleDays: [1, 3], // Thứ Hai & Thứ Tư hàng tuần
     createdAt: new Date().toISOString(),
   },
 ];

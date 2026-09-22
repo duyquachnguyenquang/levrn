@@ -168,7 +168,7 @@ export function SubjectCard({ subject, onEdit, onDelete }: SubjectCardProps) {
                 <span className="font-semibold text-foreground/80 text-[11px] truncate">{subject.semester}</span>
               </div>
 
-              {/* Lịch học */}
+              {/* Lịch học & Thứ trong tuần */}
               {subject.totalWeeks ? (
                 <div className="flex items-center gap-2 text-[11px]">
                   <Clock className="h-3.5 w-3.5 text-muted-foreground/80 shrink-0" />
@@ -183,6 +183,23 @@ export function SubjectCard({ subject, onEdit, onDelete }: SubjectCardProps) {
                   <span>Bắt đầu: {formatDateVi(subject.startDate)}</span>
                 </div>
               ) : null}
+
+              {/* Thứ học */}
+              {((subject.scheduleDays && subject.scheduleDays.length > 0) || subject.startDate) && (
+                <div className="flex items-center gap-2 text-[11px] text-foreground/85">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#7D39EB] shrink-0" />
+                  <span>
+                    Lịch học:{" "}
+                    <strong className="text-foreground font-semibold">
+                      {subject.scheduleDays && subject.scheduleDays.length > 0
+                        ? subject.scheduleDays.map((d) => (d === 0 ? "Chủ Nhật" : `Thứ ${d + 1}`)).join(", ")
+                        : (subject.startDate && !isNaN(new Date(subject.startDate).getTime()))
+                        ? (new Date(subject.startDate).getDay() === 0 ? "Chủ Nhật" : `Thứ ${new Date(subject.startDate).getDay() + 1}`)
+                        : ""}
+                    </strong>
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Cụm liên kết nhanh: Course LMS & Google Drive */}

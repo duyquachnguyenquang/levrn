@@ -1,5 +1,6 @@
 import React from "react";
 import { Sidebar } from "@/components/layout/Sidebar";
+import { SidebarSpacer } from "@/components/layout/SidebarSpacer";
 import { Topbar } from "@/components/layout/Topbar";
 import { SidebarProvider } from "@/components/layout/SidebarContext";
 
@@ -9,16 +10,19 @@ interface DashboardLayoutProps {
 
 /**
  * Layout chính cho toàn bộ các trang thuộc nhóm (dashboard)
- * Bao gồm Sidebar dọc bên trái (Desktop) với chế độ thu gọn/mở rộng và Topbar ngang bên trên
+ * Bao gồm Sidebar dọc bên trái (Desktop) cố định (fixed) với chế độ thu gọn/mở rộng và Topbar ngang bên trên
  */
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
     <SidebarProvider>
       <div className="min-h-screen bg-background text-foreground flex flex-row">
-        {/* 1. Sidebar dọc bên trái cố định cho desktop */}
+        {/* 1. Sidebar dọc bên trái cố định (fixed) cho desktop */}
         <Sidebar />
 
-        {/* 2. Cột nội dung chính chứa Topbar và nội dung trang */}
+        {/* 2. Khoảng trống giữ chỗ cho Sidebar cố định */}
+        <SidebarSpacer />
+
+        {/* 3. Cột nội dung chính chứa Topbar và nội dung trang */}
         <div className="flex-1 flex flex-col min-w-0 transition-all duration-300">
           {/* Topbar ngang sticky trên cùng */}
           <Topbar />

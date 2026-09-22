@@ -27,6 +27,17 @@ export const DEFAULT_CATEGORY_COLORS: Record<SubjectCategory, string> = {
 export const ACADEMIC_TERMS = ["HK1", "HK2", "HK hè"] as const;
 export type AcademicTerm = (typeof ACADEMIC_TERMS)[number];
 
+// Các thứ trong tuần dùng cho lịch học (0: CN, 1: T2, ..., 6: T7 theo getDay() của JS)
+export const WEEKDAYS = [
+  { value: 1, label: "T2", fullLabel: "Thứ Hai" },
+  { value: 2, label: "T3", fullLabel: "Thứ Ba" },
+  { value: 3, label: "T4", fullLabel: "Thứ Tư" },
+  { value: 4, label: "T5", fullLabel: "Thứ Năm" },
+  { value: 5, label: "T6", fullLabel: "Thứ Sáu" },
+  { value: 6, label: "T7", fullLabel: "Thứ Bảy" },
+  { value: 0, label: "CN", fullLabel: "Chủ Nhật" },
+] as const;
+
 /**
  * Định nghĩa kiểu dữ liệu cho môn học (Subject) trong ứng dụng LEVRN
  */
@@ -45,6 +56,7 @@ export interface Subject {
   startDate?: string;      // Ngày bắt đầu (YYYY-MM-DD)
   totalWeeks?: number;     // Số tuần học (mặc định 15)
   endDate?: string;        // Ngày kết thúc (YYYY-MM-DD)
+  scheduleDays?: number[]; // Các thứ học trong tuần (1..6, 0: CN)
   createdAt: string;       // Thời điểm tạo môn học (ISO string)
   
   // Dữ liệu cũ (tuỳ chọn giữ tương thích ngược)

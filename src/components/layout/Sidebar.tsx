@@ -64,7 +64,7 @@ export function Sidebar({ className }: SidebarProps) {
   return (
     <aside
       className={cn(
-        "hidden lg:flex flex-col bg-[#13151B] text-white h-screen sticky top-0 z-30 select-none border-r border-[#1F222C] shadow-2xl justify-between transition-[width] duration-300 ease-in-out relative group/sidebar",
+        "hidden lg:flex flex-col bg-[#13151B] text-white h-screen fixed left-0 top-0 bottom-0 z-30 select-none border-r border-[#1F222C] shadow-2xl justify-between transition-[width] duration-300 ease-in-out group/sidebar overflow-y-auto overflow-x-hidden",
         isCollapsed ? "w-[72px]" : "w-[240px]",
         className
       )}

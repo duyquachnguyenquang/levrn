@@ -15,6 +15,24 @@ export const supabase = (supabaseUrl && supabaseAnonKey)
  * Chuyển đổi dữ liệu từ Supabase (snake_case) sang Subject interface (camelCase)
  */
 export function mapRowToSubject(row: any): Subject {
+  let scheduleDays: number[] | undefined = undefined;
+  if (Array.isArray(row.schedule_days)) {
+    scheduleDays = row.schedule_days;
+  } else if (Array.isArray(row.scheduleDays)) {
+    scheduleDays = row.scheduleDays;
+  } else if (typeof row.note === "string" && row.note.includes("levrn_schedule:")) {
+    try {
+      const match = row.note.match(/levrn_schedule:(\[[0-9,]*\])/);
+      if (match) {
+        scheduleDays = JSON.parse(match[1]);
+      }
+    } catch {}
+  }
+
+  const cleanNote = typeof row.note === "string"
+    ? row.note.replace(/\s*levrn_schedule:(\[[0-9,]*\])/g, "").trim() || undefined
+    : (row.note ?? undefined);
+
   return {
     id: row.id,
     code: row.code,
@@ -30,9 +48,10 @@ export function mapRowToSubject(row: any): Subject {
     startDate: row.start_date || row.startDate || undefined,
     endDate: row.end_date || row.endDate || undefined,
     totalWeeks: row.total_weeks ?? row.totalWeeks ?? undefined,
+    scheduleDays,
     instructor: row.instructor ?? undefined,
     targetHours: row.target_hours ?? row.targetHours ?? undefined,
-    note: row.note ?? undefined,
+    note: cleanNote,
     createdAt: row.created_at || row.createdAt || new Date().toISOString(),
   };
 }
@@ -58,7 +77,15 @@ export function mapSubjectToRow(data: Partial<SubjectFormData>) {
   if (data.totalWeeks !== undefined) row.total_weeks = data.totalWeeks ?? null;
   if (data.instructor !== undefined) row.instructor = data.instructor;
   if (data.targetHours !== undefined) row.target_hours = data.targetHours;
-  if (data.note !== undefined) row.note = data.note;
+  
+  let noteValue = data.note ?? "";
+  if (data.scheduleDays && data.scheduleDays.length > 0) {
+    const tag = `levrn_schedule:${JSON.stringify(data.scheduleDays)}`;
+    noteValue = noteValue ? `${noteValue} ${tag}` : tag;
+  }
+  if (noteValue) {
+    row.note = noteValue;
+  }
 
   return row;
 }
