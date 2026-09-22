@@ -1,0 +1,114 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* LEVRN Brand Colors - Light Mode (Soft Canvas #F4F5F9 + Pure White Cards) */
+    --background: 225 20% 97%; /* #F4F5F9 */
+    --foreground: 240 10% 8%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 8%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 8%;
+
+    --primary: 263 81.3% 57.3%; /* #7D39EB - Violet */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 76.8 100% 60%; /* #C6FF33 - Lime */
+    --secondary-foreground: 0 0% 0%;
+
+    --muted: 225 15% 92%;
+    --muted-foreground: 225 10% 45%;
+
+    --accent: 76.8 100% 60%; /* #C6FF33 - Lime */
+    --accent-foreground: 0 0% 0%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 225 15% 89%;
+    --input: 225 15% 89%;
+    --ring: 263 81.3% 57.3%;
+
+    --radius: 0.5rem; /* Cứng cáp, chuẩn công nghệ */
+  }
+
+  .dark {
+    /* LEVRN Brand Colors - Dark Mode (Deep Obsidian #0D0E12 + Charcoal Cards #13151B) */
+    --background: 230 20% 7%; /* #0D0E12 */
+    --foreground: 0 0% 98%;
+
+    --card: 230 18% 11%; /* #13151B */
+    --card-foreground: 0 0% 98%;
+
+    --popover: 230 18% 11%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 263 81.3% 57.3%; /* #7D39EB */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 76.8 100% 60%; /* #C6FF33 */
+    --secondary-foreground: 0 0% 0%;
+
+    --muted: 230 15% 18%;
+    --muted-foreground: 230 10% 65%;
+
+    --accent: 76.8 100% 60%; /* #C6FF33 */
+    --accent-foreground: 0 0% 0%;
+
+    --destructive: 0 62.8% 45.6%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 230 15% 18%;
+    --input: 230 15% 18%;
+    --ring: 76.8 100% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+/* Micro-animations & Tech vibe styles */
+@layer utilities {
+  .tech-card {
+    @apply transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg hover:shadow-black/20 hover:border-border/90;
+  }
+  .tech-glow-lime {
+    @apply transition-all duration-300 hover:shadow-[0_0_20px_rgba(198,255,51,0.25)] hover:border-[#C6FF33]/50;
+  }
+  .tech-glow-violet {
+    @apply transition-all duration-300 hover:shadow-[0_0_20px_rgba(125,57,235,0.25)] hover:border-[#7D39EB]/50;
+  }
+  .tech-interactive {
+    @apply transition-transform duration-150 active:scale-95 cursor-pointer;
+  }
+}
+
+/* Custom smooth scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.25);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.4);
+}
