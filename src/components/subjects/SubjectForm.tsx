@@ -47,6 +47,7 @@ import {
   ChevronRight,
   ChevronDown,
   X,
+  MapPin,
 } from "lucide-react";
 
 // Danh sách năm học gợi ý
@@ -319,6 +320,13 @@ export function SubjectForm({
   const [startDate, setStartDate] = useState("");
   const [totalWeeks, setTotalWeeks] = useState<string>("15");
   const [scheduleDays, setScheduleDays] = useState<number[]>([]);
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
+
+  // Địa điểm học
+  const [room, setRoom] = useState("");
+  const [campus, setCampus] = useState("");
+  const [mapUrl, setMapUrl] = useState("");
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -387,6 +395,11 @@ export function SubjectForm({
           ? [new Date(initialData.startDate).getDay()]
           : []
       );
+      setStartTime(initialData.startTime || "");
+      setEndTime(initialData.endTime || "");
+      setRoom(initialData.room || "");
+      setCampus(initialData.campus || "");
+      setMapUrl(initialData.mapUrl || "");
     } else {
       setCode("");
       setName("");
@@ -399,6 +412,11 @@ export function SubjectForm({
       setStartDate("");
       setTotalWeeks("15");
       setScheduleDays([]);
+      setStartTime("");
+      setEndTime("");
+      setRoom("");
+      setCampus("");
+      setMapUrl("");
     }
     setErrorMessage(null);
     setDriveHelpNotice(null);
@@ -488,6 +506,11 @@ export function SubjectForm({
       totalWeeks: weeksNum > 0 ? weeksNum : undefined,
       endDate: computedEndDate,
       scheduleDays: scheduleDays.length > 0 ? scheduleDays : (startDate ? [new Date(startDate).getDay()] : undefined),
+      startTime: startTime.trim() || undefined,
+      endTime: endTime.trim() || undefined,
+      room: room.trim() || undefined,
+      campus: campus.trim() || undefined,
+      mapUrl: mapUrl.trim() || (campus.trim() ? `https://maps.google.com/?q=${encodeURIComponent(campus.trim())}` : undefined),
     };
 
     setIsSubmitting(true);
@@ -808,6 +831,97 @@ export function SubjectForm({
                   </button>
                 );
               })}
+            </div>
+          </div>
+
+          {/* HÀNG 5: Giờ học */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-lg bg-muted/30 border border-border/70">
+            <div className="space-y-1.5">
+              <Label htmlFor="startTime" className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                <Clock className="h-3.5 w-3.5 text-[#7D39EB]" />
+                <span>Giờ bắt đầu</span>
+              </Label>
+              <Input
+                id="startTime"
+                type="time"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+                className="rounded-md font-semibold"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="endTime" className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                <Clock className="h-3.5 w-3.5 text-[#7D39EB]" />
+                <span>Giờ kết thúc</span>
+              </Label>
+              <Input
+                id="endTime"
+                type="time"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+                className="rounded-md font-semibold"
+              />
+            </div>
+          </div>
+
+          {/* HÀNG 6: Phòng học & Cơ sở (Google Maps) */}
+          <div className="space-y-3 p-3 rounded-lg bg-muted/30 border border-border/70">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="room" className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                  <MapPin className="h-3.5 w-3.5 text-[#7D39EB]" />
+                  <span>Phòng học</span>
+                </Label>
+                <Input
+                  id="room"
+                  placeholder="VD: B.304, Lab 02"
+                  value={room}
+                  onChange={(e) => setRoom(e.target.value)}
+                  className="rounded-md"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="campus" className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                  <MapPin className="h-3.5 w-3.5 text-[#7D39EB]" />
+                  <span>Cơ sở</span>
+                </Label>
+                <Input
+                  id="campus"
+                  placeholder="VD: Cơ sở 1 - Nguyễn Tri Phương"
+                  value={campus}
+                  onChange={(e) => setCampus(e.target.value)}
+                  className="rounded-md"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="mapUrl" className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                  <ExternalLink className="h-3.5 w-3.5 text-[#7D39EB]" />
+                  <span>Link Google Maps</span>
+                </Label>
+                {(mapUrl || campus) && (
+                  <a
+                    href={mapUrl || `https://maps.google.com/?q=${encodeURIComponent(campus)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[11px] font-bold text-[#7D39EB] hover:underline flex items-center gap-1"
+                  >
+                    <span>Mở thử bản đồ</span>
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                )}
+              </div>
+              <Input
+                id="mapUrl"
+                type="url"
+                placeholder="https://maps.google.com/?q=... (hoặc để trống sẽ tự tìm theo Cơ sở)"
+                value={mapUrl}
+                onChange={(e) => setMapUrl(e.target.value)}
+                className="rounded-md text-xs"
+              />
             </div>
           </div>
 

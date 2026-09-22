@@ -24,6 +24,11 @@ const INITIAL_DEMO_SUBJECTS: Subject[] = [
     totalWeeks: 15,
     endDate: "2024-12-19",
     scheduleDays: [4], // Thứ Năm hàng tuần
+    startTime: "08:00",
+    endTime: "10:30",
+    room: "B.304",
+    campus: "Cơ sở 1 - Nguyễn Tri Phương",
+    mapUrl: "https://maps.google.com/?q=279+Nguyen+Tri+Phuong+Quan+10+TPHCM",
     createdAt: new Date().toISOString(),
   },
   {
@@ -41,6 +46,11 @@ const INITIAL_DEMO_SUBJECTS: Subject[] = [
     totalWeeks: 15,
     endDate: "2024-12-24",
     scheduleDays: [2], // Thứ Ba hàng tuần
+    startTime: "13:30",
+    endTime: "15:00",
+    room: "A2.102",
+    campus: "Cơ sở 2 - Nguyễn Kiệm",
+    mapUrl: "https://maps.google.com/?q=Nguyen+Kiem+Go+Vap+TPHCM",
     createdAt: new Date().toISOString(),
   },
   {
@@ -59,6 +69,11 @@ const INITIAL_DEMO_SUBJECTS: Subject[] = [
     totalWeeks: 15,
     endDate: "2024-12-22",
     scheduleDays: [1, 3], // Thứ Hai & Thứ Tư hàng tuần
+    startTime: "09:45",
+    endTime: "12:15",
+    room: "Lab 05",
+    campus: "Cơ sở Công Nghệ Cao",
+    mapUrl: "https://maps.google.com/?q=Khu+Cong+Nghe+Cao+TP+Thu+Duc",
     createdAt: new Date().toISOString(),
   },
 ];

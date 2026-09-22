@@ -57,6 +57,11 @@ export interface Subject {
   totalWeeks?: number;     // Số tuần học (mặc định 15)
   endDate?: string;        // Ngày kết thúc (YYYY-MM-DD)
   scheduleDays?: number[]; // Các thứ học trong tuần (1..6, 0: CN)
+  startTime?: string;      // Giờ bắt đầu học (VD: "08:00")
+  endTime?: string;        // Giờ kết thúc học (VD: "10:30")
+  room?: string;           // Phòng học (VD: "B.304")
+  campus?: string;         // Cơ sở (VD: "Cơ sở 1 - Nguyễn Tri Phương")
+  mapUrl?: string;         // Đường dẫn Google Maps của cơ sở
   createdAt: string;       // Thời điểm tạo môn học (ISO string)
   
   // Dữ liệu cũ (tuỳ chọn giữ tương thích ngược)

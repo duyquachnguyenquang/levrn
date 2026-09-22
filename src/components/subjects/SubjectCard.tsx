@@ -24,6 +24,7 @@ import {
   Folder,
   Clock,
   BookOpen,
+  MapPin,
 } from "lucide-react";
 
 interface SubjectCardProps {
@@ -198,6 +199,46 @@ export function SubjectCard({ subject, onEdit, onDelete }: SubjectCardProps) {
                         : ""}
                     </strong>
                   </span>
+                </div>
+              )}
+
+              {/* Giờ học */}
+              {(subject.startTime || subject.endTime) && (
+                <div className="flex items-center gap-2 text-[11px] text-foreground/85">
+                  <Clock className="h-3 w-3 text-[#7D39EB] shrink-0" />
+                  <span>
+                    Ca học:{" "}
+                    <strong className="text-foreground font-mono font-bold">
+                      {subject.startTime || "--:--"} - {subject.endTime || "--:--"}
+                    </strong>
+                  </span>
+                </div>
+              )}
+
+              {/* Phòng học & Cơ sở */}
+              {(subject.room || subject.campus) && (
+                <div className="flex items-center gap-1.5 text-[11px] text-foreground/80 truncate">
+                  <MapPin className="h-3 w-3 text-[#C6FF33] shrink-0" />
+                  <span className="truncate">
+                    {subject.room && <strong className="text-foreground font-semibold mr-1">{subject.room}</strong>}
+                    {subject.campus && (
+                      <span className="text-muted-foreground">
+                        • {subject.campus}
+                      </span>
+                    )}
+                  </span>
+                  {(subject.mapUrl || subject.campus) && (
+                    <a
+                      href={subject.mapUrl || `https://maps.google.com/?q=${encodeURIComponent(subject.campus || "")}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="ml-auto text-[10px] font-bold text-[#7D39EB] hover:underline flex items-center gap-0.5 shrink-0"
+                      title="Mở Google Maps"
+                    >
+                      <span>Maps</span>
+                      <ExternalLink className="h-2.5 w-2.5" />
+                    </a>
+                  )}
                 </div>
               )}
             </div>
