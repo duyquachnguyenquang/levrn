@@ -64,3 +64,54 @@ VALUES
     ('ENG', 'Tiếng Anh Chuyên Ngành CNTT', 'HK1 2024-2025', 3, 'ThS. Sarah Jenkins', '#06B6D4', 45, 'Tập trung thuyết trình dự án công nghệ và viết bài luận kỹ thuật.'),
     ('PRG', 'Cấu Trúc Dữ Liệu & Giải Thuật', 'HK1 2024-2025', 3, 'PGS.TS. Trần Quốc Bảo', '#C6FF33', 50, 'Luyện bài tập cây nhị phân, thuật toán đồ thị trên LeetCode.')
 ON CONFLICT DO NOTHING;
+
+-- ====================================================================
+-- 4. Bảng study_tasks (Kế hoạch học tập, nhiệm vụ & timeblock)
+-- ====================================================================
+CREATE TABLE IF NOT EXISTS public.study_tasks (
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    subject_id TEXT,
+    semester TEXT,
+    title TEXT NOT NULL,
+    classification VARCHAR(30) NOT NULL DEFAULT 'theory',
+    status VARCHAR(20) NOT NULL DEFAULT 'todo',
+    duration_minutes INTEGER DEFAULT 60,
+    subtasks JSONB,
+    materials JSONB,
+    submission_url TEXT,
+    deadline TIMESTAMPTZ,
+    date DATE NOT NULL DEFAULT CURRENT_DATE,
+    description TEXT,
+    priority VARCHAR(20) DEFAULT 'medium',
+    timeblock JSONB,
+    notes TEXT,
+    checklist JSONB,
+    completed_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Migration nếu bảng study_tasks đã tồn tại trước đó
+ALTER TABLE public.study_tasks ADD COLUMN IF NOT EXISTS semester TEXT;
+ALTER TABLE public.study_tasks ADD COLUMN IF NOT EXISTS subtasks JSONB;
+ALTER TABLE public.study_tasks ADD COLUMN IF NOT EXISTS materials JSONB;
+ALTER TABLE public.study_tasks ADD COLUMN IF NOT EXISTS submission_url TEXT;
+ALTER TABLE public.study_tasks ADD COLUMN IF NOT EXISTS deadline TIMESTAMPTZ;
+
+ALTER TABLE public.study_tasks ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow public read study_tasks" ON public.study_tasks;
+CREATE POLICY "Allow public read study_tasks" ON public.study_tasks
+    FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Allow public insert study_tasks" ON public.study_tasks;
+CREATE POLICY "Allow public insert study_tasks" ON public.study_tasks
+    FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow public update study_tasks" ON public.study_tasks;
+CREATE POLICY "Allow public update study_tasks" ON public.study_tasks
+    FOR UPDATE USING (true);
+
+DROP POLICY IF EXISTS "Allow public delete study_tasks" ON public.study_tasks;
+CREATE POLICY "Allow public delete study_tasks" ON public.study_tasks
+    FOR DELETE USING (true);
+

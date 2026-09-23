@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
+import Link from "next/link";
 import {
   Clock,
   Timer,
@@ -11,10 +12,12 @@ import {
   ExternalLink,
   MapPin,
   Calendar as CalendarIcon,
+  ArrowRight,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { useSubjects } from "@/hooks/useSubjects";
+import { useStudyPlans } from "@/hooks/useStudyPlans";
 import {
   ScheduleCalendar,
   toDateKey,
@@ -49,6 +52,7 @@ function formatShortDate(dateStr: string, todayKey: string): string {
 
 export default function DashboardPage() {
   const { subjects } = useSubjects();
+  const { stats: planStats } = useStudyPlans();
   const [greeting, setGreeting] = useState<string>("Chào buổi sáng");
 
   const today = useMemo(() => new Date(), []);
@@ -116,36 +120,45 @@ export default function DashboardPage() {
           </div>
         </Card>
 
-        {/* Box 2: Bài tập (Đang phát triển) */}
-        <Card className="rounded-xl border border-border/80 bg-card p-5 shadow-xs flex flex-col justify-between transition-all duration-300 hover:border-border/90 hover:shadow-md">
-          {/* Header CHỈ CÓ Tiêu đề & Badge */}
-          <div className="flex items-center justify-between pb-3 border-b border-border/60">
-            <div className="flex items-center gap-2.5">
-              <div className="h-8 w-8 rounded-lg bg-[#C6FF33]/25 text-[#1F3E00] dark:text-[#C6FF33] flex items-center justify-center shrink-0">
-                <CheckSquare className="h-4 w-4" />
+        {/* Box 2: Kế hoạch học tập */}
+        <Link href="/plans" className="block group">
+          <Card className="rounded-xl border border-border/80 bg-card p-5 shadow-xs flex flex-col justify-between transition-all duration-300 hover:border-[#C6FF33]/60 hover:shadow-md h-full cursor-pointer">
+            {/* Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-border/60">
+              <div className="flex items-center gap-2.5">
+                <div className="h-8 w-8 rounded-lg bg-[#C6FF33]/25 text-[#1F3E00] dark:text-[#C6FF33] flex items-center justify-center shrink-0">
+                  <CheckSquare className="h-4 w-4" />
+                </div>
+                <h3 className="font-extrabold text-base text-foreground leading-tight">
+                  Kế hoạch học tập
+                </h3>
               </div>
-              <h3 className="font-extrabold text-base text-foreground leading-tight">
-                Bài tập
-              </h3>
+              <Badge
+                variant="outline"
+                className="bg-[#C6FF33]/20 text-[#2B4B00] dark:text-[#C6FF33] border-[#C6FF33]/40 font-bold text-[10px] px-2 py-0.5 shrink-0"
+              >
+                Hoạt động
+              </Badge>
             </div>
-            <Badge
-              variant="outline"
-              className="bg-[#C6FF33]/20 text-[#2B4B00] dark:text-[#C6FF33] border-[#C6FF33]/40 font-bold text-[10px] px-2 py-0.5 shrink-0"
-            >
-              Đang phát triển
-            </Badge>
-          </div>
 
-          {/* Thân Box tối giản, không văn bản dài */}
-          <div className="py-8 flex flex-col items-center justify-center text-center space-y-2">
-            <div className="h-12 w-12 rounded-xl bg-[#C6FF33]/20 flex items-center justify-center text-[#2B4B00] dark:text-[#C6FF33]">
-              <CheckSquare className="h-6 w-6" />
+            {/* Thân Box */}
+            <div className="py-6 flex flex-col items-center justify-center text-center space-y-2">
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-2xl font-black text-foreground">
+                  {planStats.todayCount}
+                </span>
+                <span className="text-xs font-bold text-muted-foreground">nhiệm vụ hôm nay</span>
+              </div>
+              <p className="text-xs font-medium text-muted-foreground">
+                Đã hoàn thành {planStats.todayCompletedCount}/{planStats.todayCount} nhiệm vụ
+              </p>
+              <div className="flex items-center gap-1 text-xs font-bold text-[#7D39EB] dark:text-[#C6FF33] group-hover:translate-x-0.5 transition-transform pt-1">
+                <span>Xem và điều chỉnh lịch học</span>
+                <ArrowRight className="h-3.5 w-3.5" />
+              </div>
             </div>
-            <span className="text-xs font-semibold text-muted-foreground">
-              Quản lý nhiệm vụ, bài tập &amp; hạn nộp
-            </span>
-          </div>
-        </Card>
+          </Card>
+        </Link>
 
         {/* Box 3: Lịch học trong ngày (Đưa ra thành Box độc lập đồng cấp) */}
         <Card className="rounded-xl border border-border/80 bg-card p-5 shadow-xs flex flex-col justify-between transition-all duration-300 hover:border-border/90 hover:shadow-md">

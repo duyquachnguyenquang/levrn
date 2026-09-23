@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   BookOpen,
+  CalendarRange,
   Timer,
   Target,
   BarChart3,
@@ -28,6 +29,11 @@ export const navigationItems = [
     name: "Môn học",
     href: "/subjects",
     icon: BookOpen,
+  },
+  {
+    name: "Kế hoạch",
+    href: "/plans",
+    icon: CalendarRange,
   },
   {
     name: "Phiên học",
