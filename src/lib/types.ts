@@ -248,3 +248,89 @@ export interface SubjectStudyStrategy {
   recommendedMethods: StudyPlanClassification[];
   notes?: string;
 }
+
+// ============================================================================
+// QUẢN LÝ ĐIỂM SỐ & GPA (GRADE MANAGEMENT)
+// ============================================================================
+
+/**
+ * Chế độ chấm điểm môn học:
+ * - 'final_only': Nhập trực tiếp điểm tổng kết (Môn cũ của sinh viên năm 1, năm 2)
+ * - 'components': Chia nhỏ theo các đầu điểm thành phần có tỷ trọng % (Môn đang học)
+ */
+export type GradingMethod = "final_only" | "components";
+
+/**
+ * Thang điểm chữ chuẩn Bộ GD&ĐT Việt Nam
+ */
+export type LetterGrade = "A" | "B+" | "B" | "C+" | "C" | "D+" | "D" | "F" | "--";
+
+/**
+ * Thành phần điểm (cột điểm) trong một môn học
+ */
+export interface GradeComponent {
+  id: string;              // Mã định danh cột điểm
+  name: string;            // Tên cột điểm: Chuyên cần, Giữa kỳ, Báo cáo, Cuối kỳ...
+  weight: number;          // Tỷ trọng % (VD: 10, 20, 50)
+  score?: number | null;   // Điểm số đạt được (thang 10, VD: 8.5)
+  maxScore?: number;       // Điểm tối đa (mặc định 10)
+  note?: string;           // Ghi chú thêm
+}
+
+/**
+ * Dữ liệu điểm số của một môn học (Course Grade)
+ */
+export interface CourseGrade {
+  id: string;                  // UUID duy nhất
+  subjectId?: string;          // Khóa ngoại liên kết tới Subject (nếu có)
+  subjectCode: string;         // Mã môn: MAT101, CS102, ENG...
+  subjectName: string;         // Tên môn học
+  credits: number;             // Số tín chỉ (VD: 2, 3, 4)
+  semester: string;            // Học kỳ: "HK1 2022-2023", "HK1 2024-2025"
+  academicYear?: string;       // Năm học: "2024-2025"
+  term?: AcademicTerm;         // Kỳ: "HK1" | "HK2" | "HK hè"
+  gradingMethod: GradingMethod;// 'final_only' hoặc 'components'
+  finalScore: number | null;   // Điểm tổng kết hệ 10 (0 - 10)
+  components: GradeComponent[];// Danh sách thành phần điểm kèm tỷ trọng
+  targetScore?: number | null; // Điểm mục tiêu mong muốn (hệ 10)
+  notes?: string;              // Ghi chú
+  createdAt: string;           // Thời điểm tạo
+  updatedAt?: string;          // Thời điểm cập nhật
+}
+
+/**
+ * Dữ liệu form tạo/sửa môn học trong bảng điểm
+ */
+export type CourseGradeFormData = Omit<CourseGrade, "id" | "createdAt" | "updatedAt">;
+
+/**
+ * Thống kê GPA theo từng học kỳ
+ */
+export interface SemesterGPASummary {
+  semester: string;            // Tên học kỳ (VD: "HK1 2024-2025")
+  academicYear?: string;
+  term?: string;
+  totalCourses: number;        // Tổng số môn
+  totalCredits: number;        // Tổng tín chỉ đăng ký
+  earnedCredits: number;       // Số tín chỉ đạt (Điểm >= 4.0 / D)
+  gpa10: number;               // Điểm trung bình hệ 10 (có trọng số tín chỉ)
+  gpa4: number;                // Điểm trung bình hệ 4 (có trọng số tín chỉ)
+  letterGrade: LetterGrade;    // Điểm chữ đại diện
+  academicStanding: string;    // Xếp loại học lực (Xuất sắc, Giỏi, Khá...)
+  courses: CourseGrade[];      // Danh sách các môn trong học kỳ
+}
+
+/**
+ * Thống kê GPA tích lũy toàn khóa
+ */
+export interface CumulativeGPASummary {
+  totalCourses: number;        // Tổng số môn toàn khóa
+  totalCredits: number;        // Tổng số tín chỉ toàn khóa
+  earnedCredits: number;       // Số tín chỉ đạt
+  cumulativeGPA10: number;     // Điểm GPA tích lũy hệ 10
+  cumulativeGPA4: number;      // Điểm GPA tích lũy hệ 4
+  letterGrade: LetterGrade;    // Điểm chữ tương ứng
+  academicStanding: string;    // Xếp loại học lực tốt nghiệp dự kiến
+  semesters: SemesterGPASummary[]; // Thống kê chi tiết theo từng kỳ
+}
+

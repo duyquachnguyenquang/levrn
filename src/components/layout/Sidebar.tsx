@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   BookOpen,
+  GraduationCap,
   CalendarRange,
   Timer,
   Target,
@@ -31,6 +32,11 @@ export const navigationItems = [
     icon: BookOpen,
   },
   {
+    name: "Điểm số",
+    href: "/grades",
+    icon: GraduationCap,
+  },
+  {
     name: "Kế hoạch",
     href: "/plans",
     icon: CalendarRange,
@@ -51,6 +57,7 @@ export const navigationItems = [
     icon: BarChart3,
   },
 ];
+
 
 interface SidebarProps {
   className?: string;

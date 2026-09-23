@@ -13,16 +13,19 @@ import {
   MapPin,
   Calendar as CalendarIcon,
   ArrowRight,
+  GraduationCap,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { useSubjects } from "@/hooks/useSubjects";
 import { useStudyPlans } from "@/hooks/useStudyPlans";
+import { useCourseGrades } from "@/hooks/useCourseGrades";
 import {
   ScheduleCalendar,
   toDateKey,
   calculateAllSessions,
 } from "@/components/dashboard/ScheduleCalendar";
+
 import { cn } from "@/lib/utils";
 
 // Tính câu chào dựa theo thời điểm trong ngày
@@ -53,6 +56,7 @@ function formatShortDate(dateStr: string, todayKey: string): string {
 export default function DashboardPage() {
   const { subjects } = useSubjects();
   const { stats: planStats } = useStudyPlans();
+  const { cumulativeGPA } = useCourseGrades();
   const [greeting, setGreeting] = useState<string>("Chào buổi sáng");
 
   const today = useMemo(() => new Date(), []);
@@ -79,13 +83,34 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6 sm:space-y-7 animate-in fade-in-50 duration-300">
-      {/* 1. Lời chào theo thời gian (CHỈ HEADER, KHÔNG CÓ DÒNG CHỮ PHỤ) */}
-      <div className="flex items-center justify-between">
+      {/* 1. Lời chào theo thời gian & Badge GPA tích lũy nhanh */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <h2 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight flex items-center gap-2">
           <span>{greeting}, Taylor</span>
           <span className="text-2xl">👋</span>
         </h2>
+
+        {cumulativeGPA.cumulativeGPA4 > 0 && (
+          <Link
+            href="/grades"
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl border border-border/80 bg-card hover:border-[#7D39EB]/50 hover:bg-muted/30 transition-all text-xs font-semibold shadow-xs group w-fit"
+            title="Xem chi tiết bảng điểm và GPA"
+          >
+            <div className="h-6 w-6 rounded-lg bg-[#7D39EB]/15 text-[#7D39EB] flex items-center justify-center">
+              <GraduationCap className="h-3.5 w-3.5" />
+            </div>
+            <span>
+              GPA Tích lũy:{" "}
+              <strong className="font-mono text-sm font-black text-[#7D39EB]">
+                {cumulativeGPA.cumulativeGPA4.toFixed(2)}
+              </strong>
+              /4.0 ({cumulativeGPA.academicStanding})
+            </span>
+            <ArrowRight className="h-3.5 w-3.5 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
+          </Link>
+        )}
       </div>
+
 
       {/* 2. Hàng 3 Box đồng cấp: Thời gian học tập, Bài tập, Lịch học trong ngày */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">

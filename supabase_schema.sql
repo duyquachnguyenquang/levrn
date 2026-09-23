@@ -115,3 +115,48 @@ DROP POLICY IF EXISTS "Allow public delete study_tasks" ON public.study_tasks;
 CREATE POLICY "Allow public delete study_tasks" ON public.study_tasks
     FOR DELETE USING (true);
 
+-- ====================================================================
+-- 5. Bảng course_grades (Quản lý điểm số, GPA và thành phần điểm)
+-- ====================================================================
+CREATE TABLE IF NOT EXISTS public.course_grades (
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    subject_id TEXT,
+    subject_code VARCHAR(20) NOT NULL,
+    subject_name TEXT NOT NULL,
+    credits INTEGER NOT NULL DEFAULT 3,
+    semester TEXT NOT NULL,
+    academic_year TEXT,
+    term TEXT,
+    grading_method VARCHAR(20) NOT NULL DEFAULT 'final_only',
+    final_score NUMERIC(4,2),
+    components JSONB DEFAULT '[]'::jsonb,
+    target_score NUMERIC(4,2),
+    notes TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Bổ sung cột nếu bảng đã tồn tại trước đó
+ALTER TABLE public.course_grades ADD COLUMN IF NOT EXISTS grading_method VARCHAR(20) DEFAULT 'final_only';
+ALTER TABLE public.course_grades ADD COLUMN IF NOT EXISTS components JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE public.course_grades ADD COLUMN IF NOT EXISTS target_score NUMERIC(4,2);
+
+ALTER TABLE public.course_grades ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow public read course_grades" ON public.course_grades;
+CREATE POLICY "Allow public read course_grades" ON public.course_grades
+    FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Allow public insert course_grades" ON public.course_grades;
+CREATE POLICY "Allow public insert course_grades" ON public.course_grades
+    FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow public update course_grades" ON public.course_grades;
+CREATE POLICY "Allow public update course_grades" ON public.course_grades
+    FOR UPDATE USING (true);
+
+DROP POLICY IF EXISTS "Allow public delete course_grades" ON public.course_grades;
+CREATE POLICY "Allow public delete course_grades" ON public.course_grades
+    FOR DELETE USING (true);
+
+

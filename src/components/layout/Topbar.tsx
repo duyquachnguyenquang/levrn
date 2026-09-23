@@ -36,11 +36,13 @@ import { BrandLogo } from "@/components/ui/brand-logo";
 const pageTitles: Record<string, string> = {
   "/dashboard": "Dashboard Tổng quan",
   "/subjects": "Quản lý môn học",
+  "/grades": "Quản lý điểm số & GPA",
   "/plans": "Kế hoạch học tập",
   "/sessions": "Phiên học tập",
   "/goals": "Mục tiêu học tập",
   "/stats": "Thống kê tiến độ",
 };
+
 
 /**
  * Topbar ngang phong cách hiện đại với thanh tìm kiếm nhanh dạng pill và widgets

@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { Subject, SubjectFormData } from "./types";
+import { Subject, SubjectFormData, CourseGrade, CourseGradeFormData } from "./types";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
@@ -123,6 +123,51 @@ export function mapSubjectToRow(data: Partial<SubjectFormData>) {
   if (noteValue) {
     row.note = noteValue;
   }
+
+  return row;
+}
+
+/**
+ * Chuyển đổi dữ liệu bảng course_grades từ Supabase sang CourseGrade interface
+ */
+export function mapRowToCourseGrade(row: any): CourseGrade {
+  return {
+    id: row.id,
+    subjectId: row.subject_id || row.subjectId || undefined,
+    subjectCode: row.subject_code || row.subjectCode || "",
+    subjectName: row.subject_name || row.subjectName || "",
+    credits: Number(row.credits) || 0,
+    semester: row.semester || "",
+    academicYear: row.academic_year || row.academicYear || undefined,
+    term: row.term || undefined,
+    gradingMethod: (row.grading_method || row.gradingMethod || "final_only") as any,
+    finalScore: row.final_score !== null && row.final_score !== undefined ? Number(row.final_score) : null,
+    components: Array.isArray(row.components) ? row.components : [],
+    targetScore: row.target_score !== null && row.target_score !== undefined ? Number(row.target_score) : null,
+    notes: row.notes || undefined,
+    createdAt: row.created_at || row.createdAt || new Date().toISOString(),
+    updatedAt: row.updated_at || row.updatedAt || undefined,
+  };
+}
+
+/**
+ * Chuyển đổi CourseGradeFormData sang định dạng lưu trữ cơ sở dữ liệu Supabase
+ */
+export function mapCourseGradeToRow(data: Partial<CourseGradeFormData>) {
+  const row: Record<string, any> = {};
+
+  if (data.subjectId !== undefined) row.subject_id = data.subjectId || null;
+  if (data.subjectCode !== undefined) row.subject_code = data.subjectCode;
+  if (data.subjectName !== undefined) row.subject_name = data.subjectName;
+  if (data.credits !== undefined) row.credits = data.credits;
+  if (data.semester !== undefined) row.semester = data.semester;
+  if (data.academicYear !== undefined) row.academic_year = data.academicYear || null;
+  if (data.term !== undefined) row.term = data.term || null;
+  if (data.gradingMethod !== undefined) row.grading_method = data.gradingMethod;
+  if (data.finalScore !== undefined) row.final_score = data.finalScore !== null ? Number(data.finalScore) : null;
+  if (data.components !== undefined) row.components = data.components;
+  if (data.targetScore !== undefined) row.target_score = data.targetScore !== null ? Number(data.targetScore) : null;
+  if (data.notes !== undefined) row.notes = data.notes || null;
 
   return row;
 }

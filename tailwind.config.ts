@@ -20,6 +20,10 @@ const config: Config = {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ["var(--font-be-vietnam-pro)", "system-ui", "-apple-system", "sans-serif"],
+        mono: ["var(--font-be-vietnam-pro)", "system-ui", "-apple-system", "sans-serif"],
+      },
       colors: {
         // LEVRN Brand Colors theo bảng màu Project GridsterGP & giao diện Eduplex
         brand: {
