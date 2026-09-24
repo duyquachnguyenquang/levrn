@@ -65,7 +65,7 @@ export function mapRowToSubject(row: any): Subject {
     academicYear: row.academic_year || row.academicYear || undefined,
     term: row.term || undefined,
     credits: row.credits ?? undefined,
-    category: row.category || "Môn chuyên ngành",
+    category: row.category || undefined,
     color: row.color || "#7D39EB",
     courseUrl: row.course_url || row.courseUrl || undefined,
     driveUrl: row.drive_url || row.driveUrl || undefined,

@@ -189,7 +189,7 @@ export function SubjectCard({ subject, onEdit, onDelete }: SubjectCardProps) {
                 <div className="w-3.5 h-3.5 flex items-center justify-center shrink-0 text-muted-foreground/80">
                   <Calendar className="h-3.5 w-3.5" />
                 </div>
-                <span className="font-semibold text-foreground/80 truncate">{subject.semester}</span>
+                <span className="font-semibold text-foreground/80 truncate">{subject.semester || "Chưa xếp kỳ"}</span>
               </div>
 
               {/* Hàng 2: Thời lượng tuần */}
