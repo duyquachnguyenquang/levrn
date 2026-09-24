@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   Calendar as CalendarIcon,
   ChevronLeft,
@@ -115,6 +115,20 @@ export function DateTimePicker({
     }
   };
 
+  const [isAllDay, setIsAllDay] = useState<boolean>(() => {
+    if (!parsed) return false;
+    return parsed.getHours() === 23 && parsed.getMinutes() === 59;
+  });
+
+  // Đồng bộ lại isAllDay khi parsed thay đổi
+  useEffect(() => {
+    if (parsed) {
+      if (parsed.getHours() === 23 && parsed.getMinutes() === 59) {
+        setIsAllDay(true);
+      }
+    }
+  }, [parsed]);
+
   // Định dạng hiển thị
   const displayLabel = useMemo(() => {
     if (!parsed) return "";
@@ -123,8 +137,11 @@ export function DateTimePicker({
     const year = parsed.getFullYear();
     const hour = String(parsed.getHours()).padStart(2, "0");
     const min = String(parsed.getMinutes()).padStart(2, "0");
+    if (isAllDay || (hour === "23" && min === "59")) {
+      return `Cả ngày • ${day}/${month}/${year}`;
+    }
     return `${hour}:${min} • ${day}/${month}/${year}`;
-  }, [parsed]);
+  }, [parsed, isAllDay]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -226,67 +243,97 @@ export function DateTimePicker({
           })}
         </div>
 
-        {/* Bộ chọn Giờ : Phút */}
+        {/* Bộ chọn Giờ : Phút hoặc Cả ngày */}
         <div className="pt-2 border-t border-border/60 space-y-2">
           <div className="flex items-center justify-between text-[11px] font-bold text-muted-foreground">
             <span className="flex items-center gap-1">
               <Clock className="h-3 w-3 text-[#7D39EB]" />
               Giờ hạn chót:
             </span>
-            <div className="flex items-center gap-1 font-mono">
+            <label className="flex items-center gap-1.5 cursor-pointer text-xs font-bold text-foreground select-none">
               <input
-                type="number"
-                min={0}
-                max={23}
-                value={selectedHour}
+                type="checkbox"
+                checked={isAllDay}
                 onChange={(e) => {
-                  const val = String(e.target.value).padStart(2, "0").slice(-2);
-                  setSelectedHour(val);
-                  if (parsed) {
-                    const u = new Date(parsed);
-                    u.setHours(parseInt(val, 10) || 0);
-                    onChange(u.toISOString());
+                  const checked = e.target.checked;
+                  setIsAllDay(checked);
+                  if (checked) {
+                    handleQuickPresetTime("23", "59");
                   }
                 }}
-                className="w-8 h-6 text-center text-xs rounded bg-muted/80 border border-border/70 font-bold focus:outline-none focus:ring-1 focus:ring-[#7D39EB]"
+                className="rounded border-input text-[#7D39EB] focus:ring-[#7D39EB] cursor-pointer h-3.5 w-3.5"
               />
-              <span>:</span>
-              <input
-                type="number"
-                min={0}
-                max={59}
-                value={selectedMinute}
-                onChange={(e) => {
-                  const val = String(e.target.value).padStart(2, "0").slice(-2);
-                  setSelectedMinute(val);
-                  if (parsed) {
-                    const u = new Date(parsed);
-                    u.setMinutes(parseInt(val, 10) || 0);
-                    onChange(u.toISOString());
-                  }
-                }}
-                className="w-8 h-6 text-center text-xs rounded bg-muted/80 border border-border/70 font-bold focus:outline-none focus:ring-1 focus:ring-[#7D39EB]"
-              />
-            </div>
+              <span>Cả ngày</span>
+            </label>
           </div>
 
-          {/* Quick presets: 23:59, 17:00, 12:00 */}
-          <div className="flex items-center gap-1.5 pt-1">
-            {[
-              { label: "23:59 (Cuối ngày)", h: "23", m: "59" },
-              { label: "17:00 (Chiều)", h: "17", m: "00" },
-              { label: "12:00 (Trưa)", h: "12", m: "00" },
-            ].map((p, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => handleQuickPresetTime(p.h, p.m)}
-                className="px-2 py-0.5 rounded bg-muted/60 hover:bg-muted text-[10px] font-bold text-muted-foreground hover:text-foreground transition-all cursor-pointer border border-border/50"
-              >
-                {p.h}:{p.m}
-              </button>
-            ))}
-          </div>
+          {!isAllDay ? (
+            <>
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] text-muted-foreground">Nhập giờ cụ thể:</span>
+                <div className="flex items-center gap-1 font-mono">
+                  <input
+                    type="number"
+                    min={0}
+                    max={23}
+                    value={selectedHour}
+                    onChange={(e) => {
+                      const val = String(e.target.value).padStart(2, "0").slice(-2);
+                      setSelectedHour(val);
+                      if (parsed) {
+                        const u = new Date(parsed);
+                        u.setHours(parseInt(val, 10) || 0);
+                        onChange(u.toISOString());
+                      }
+                    }}
+                    className="w-8 h-6 text-center text-xs rounded bg-muted/80 border border-border/70 font-bold focus:outline-none focus:ring-1 focus:ring-[#7D39EB]"
+                  />
+                  <span>:</span>
+                  <input
+                    type="number"
+                    min={0}
+                    max={59}
+                    value={selectedMinute}
+                    onChange={(e) => {
+                      const val = String(e.target.value).padStart(2, "0").slice(-2);
+                      setSelectedMinute(val);
+                      if (parsed) {
+                        const u = new Date(parsed);
+                        u.setMinutes(parseInt(val, 10) || 0);
+                        onChange(u.toISOString());
+                      }
+                    }}
+                    className="w-8 h-6 text-center text-xs rounded bg-muted/80 border border-border/70 font-bold focus:outline-none focus:ring-1 focus:ring-[#7D39EB]"
+                  />
+                </div>
+              </div>
+
+              {/* Quick presets */}
+              <div className="flex items-center gap-1.5 pt-0.5">
+                {[
+                  { label: "23:59 (Cuối ngày)", h: "23", m: "59" },
+                  { label: "17:00 (Chiều)", h: "17", m: "00" },
+                  { label: "12:00 (Trưa)", h: "12", m: "00" },
+                ].map((p, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => {
+                      setIsAllDay(false);
+                      handleQuickPresetTime(p.h, p.m);
+                    }}
+                    className="px-2 py-0.5 rounded bg-muted/60 hover:bg-muted text-[10px] font-bold text-muted-foreground hover:text-foreground transition-all cursor-pointer border border-border/50"
+                  >
+                    {p.h}:{p.m}
+                  </button>
+                ))}
+              </div>
+            </>
+          ) : (
+            <div className="p-2 rounded-lg bg-[#7D39EB]/10 border border-[#7D39EB]/20 text-[11px] text-[#7D39EB] dark:text-[#C6FF33] font-semibold text-center">
+              Nhiệm vụ được đặt hạn chót kéo dài trọn vẹn cả ngày
+            </div>
+          )}
 
           {/* Nút Xong */}
           <div className="pt-1 flex justify-end">

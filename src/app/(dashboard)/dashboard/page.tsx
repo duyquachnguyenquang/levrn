@@ -55,7 +55,13 @@ function formatShortDate(dateStr: string, todayKey: string): string {
 
 export default function DashboardPage() {
   const { subjects } = useSubjects();
-  const { stats: planStats } = useStudyPlans();
+  const {
+    tasks: planTasks,
+    stats: planStats,
+    addTask: addPlanTask,
+    updateTask: updatePlanTask,
+    refreshTasks: refreshPlanTasks,
+  } = useStudyPlans();
   const { cumulativeGPA } = useCourseGrades();
   const [greeting, setGreeting] = useState<string>("Chào buổi sáng");
 
@@ -302,6 +308,10 @@ export default function DashboardPage() {
         subjects={subjects}
         selectedDateStr={selectedDateStr}
         onSelectDate={setSelectedDateStr}
+        tasks={planTasks}
+        onAddTask={addPlanTask}
+        onUpdateTask={updatePlanTask}
+        onRefreshTasks={refreshPlanTasks}
       />
     </div>
   );
