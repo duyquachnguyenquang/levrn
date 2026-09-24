@@ -44,7 +44,7 @@ const pageTitles: Record<string, string> = {
   "/subjects": "Quản lý môn học",
   "/grades": "Quản lý điểm số & GPA",
   "/attendance": "Điểm danh & Chuyên cần",
-  "/groups": "Quản lý nhóm & Đồ án",
+  "/groups": "Quản lý nhóm",
   "/plans": "Kế hoạch học tập",
   "/sessions": "Phiên học tập",
   "/goals": "Mục tiêu học tập",

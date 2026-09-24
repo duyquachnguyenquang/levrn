@@ -171,7 +171,7 @@ export function GroupProjectCard({
           </h3>
 
           <p className="text-xs text-muted-foreground mt-1 line-clamp-2 leading-relaxed">
-            <strong className="text-foreground/90 font-semibold">Đề tài:</strong> {group.topic}
+            <strong className="text-foreground/90 font-semibold">Nhiệm vụ:</strong> {group.topic}
           </p>
 
           {/* Deadline đếm ngược */}

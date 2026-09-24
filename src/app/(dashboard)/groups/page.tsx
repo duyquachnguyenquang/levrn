@@ -7,7 +7,8 @@ import { GroupProjectCard } from "@/components/groups/GroupProjectCard";
 import { GroupProjectModal } from "@/components/groups/GroupProjectModal";
 import { GroupDetailDialog } from "@/components/groups/GroupDetailDialog";
 import { GroupProject, GroupProjectFormData, GroupProjectStatus } from "@/lib/types";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
+import { LedTicker } from "@/components/ui/led-ticker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -18,7 +19,6 @@ import {
   RefreshCw,
   CheckCircle2,
   Clock,
-  FolderGit2,
   TrendingUp,
   AlertCircle,
 } from "lucide-react";
@@ -102,154 +102,139 @@ export default function GroupsPage() {
 
   return (
     <div className="space-y-6 pb-12">
-      {/* Header trang */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-[#7D39EB]/10 border border-[#7D39EB]/25 flex items-center justify-center text-[#7D39EB]">
-              <Users className="h-4.5 w-4.5" />
-            </div>
-            <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-foreground">
-              Quản lý nhóm &amp; Đồ án học phần
-            </h1>
+      {/* 1. Header Trang: Đồng bộ chuẩn Môn học & Kế hoạch học tập, luôn nằm cùng hàng trên mọi thiết bị */}
+      <div className="flex flex-row items-center justify-between gap-2 sm:gap-4 pb-2 border-b border-border/50">
+        <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+          <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-md bg-[#7D39EB]/15 flex items-center justify-center text-[#7D39EB] shrink-0">
+            <Users className="h-4 w-4 sm:h-5 sm:w-5" />
           </div>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-            Theo dõi tiến độ làm việc nhóm, phân công nhiệm vụ và tài liệu chung cho bài tập lớn.
-          </p>
+          <h2 className="text-lg sm:text-2xl md:text-3xl font-black text-foreground tracking-tight truncate">
+            Quản lý nhóm
+          </h2>
         </div>
 
-        <div className="flex items-center gap-2">
+        {/* Cụm 2 nút thao tác bên phải: Đồng bộ + Tạo nhóm mới (+) chỉ icon, luôn ngang hàng */}
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           <Button
             variant="outline"
-            size="sm"
+            size="icon"
             onClick={handleRefresh}
             disabled={isRefreshing}
-            className="h-9 text-xs rounded-lg border-border/80 text-muted-foreground hover:text-foreground"
+            className="rounded-md h-8 w-8 sm:h-10 sm:w-10 border-border/70 text-muted-foreground hover:text-foreground transition-all active:scale-95 shrink-0"
+            title="Đồng bộ dữ liệu"
+            aria-label="Đồng bộ dữ liệu"
           >
-            <RefreshCw
-              className={cn("h-3.5 w-3.5 mr-1.5", isRefreshing && "animate-spin text-[#7D39EB]")}
-            />
-            {isRefreshing ? "Đang đồng bộ..." : "Đồng bộ"}
+            <RefreshCw className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${isRefreshing ? "animate-spin" : ""}`} />
           </Button>
 
           <Button
+            size="icon"
             onClick={() => {
               setGroupToEdit(null);
               setCreateModalOpen(true);
             }}
-            className="h-9 text-xs font-bold rounded-lg bg-[#7D39EB] hover:bg-[#6D28D9] text-white shadow-xs"
+            className="h-8 w-8 sm:h-10 sm:w-10 bg-[#C6FF33] hover:bg-[#B5F51B] text-black font-black rounded-md shadow-md transition-all duration-200 hover:-translate-y-0.5 active:scale-95 shrink-0"
+            title="Tạo nhóm mới"
+            aria-label="Tạo nhóm mới"
           >
-            <Plus className="h-3.5 w-3.5 mr-1.5" />
-            Tạo nhóm mới
+            <Plus className="h-4 w-4 sm:h-5 sm:w-5 stroke-[3]" />
           </Button>
         </div>
       </div>
 
-      {/* 4 Thẻ KPI thống kê nhóm */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
-        {/* 1. Tổng số nhóm */}
-        <Card className="border border-border/80 bg-card hover:border-[#7D39EB]/50 transition-all rounded-lg shadow-xs">
-          <CardContent className="p-4 sm:p-4.5 flex items-center justify-between">
-            <div>
-              <p className="text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Nhóm đồ án
-              </p>
-              <div className="flex items-baseline gap-2 mt-1">
-                <span className="text-2xl sm:text-3xl font-extrabold font-mono tracking-tight text-foreground">
+      {/* 2. 4 Box chỉ số tối giản tinh gọn chuẩn Kế hoạch học tập & Điểm số */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-3.5">
+        {/* Box 1: Tổng số nhóm đồ án */}
+        <Card className="rounded-xl border border-border/80 bg-card p-3 sm:p-4 shadow-xs flex items-center justify-between transition-all hover:border-border/90">
+          <div className="flex-1 min-w-0 pr-2 sm:pr-3">
+            <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block truncate">
+              Nhóm đồ án
+            </span>
+            <LedTicker className="mt-1">
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-xl sm:text-3xl font-black text-foreground">
                   {stats.totalGroups}
                 </span>
-                <span className="text-[10px] sm:text-xs font-bold px-1.5 py-0.5 rounded-md bg-[#7D39EB]/15 text-[#7D39EB]">
-                  {stats.totalMembers} thành viên
+                <span className="text-[11px] font-semibold text-muted-foreground">
+                  ({stats.totalMembers} thành viên)
                 </span>
               </div>
-              <p className="text-[11px] text-muted-foreground mt-1">
-                Đang cùng tham gia
-              </p>
-            </div>
-            <div className="h-11 w-11 rounded-lg bg-[#7D39EB]/10 border border-[#7D39EB]/20 flex items-center justify-center text-[#7D39EB] shrink-0">
-              <Users className="h-5 w-5" />
-            </div>
-          </CardContent>
+            </LedTicker>
+          </div>
+          <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg bg-[#7D39EB]/15 text-[#7D39EB] flex items-center justify-center shrink-0">
+            <Users className="h-4 w-4" />
+          </div>
         </Card>
 
-        {/* 2. Tổng nhiệm vụ */}
-        <Card className="border border-border/80 bg-card hover:border-blue-500/50 transition-all rounded-lg shadow-xs">
-          <CardContent className="p-4 sm:p-4.5 flex items-center justify-between">
-            <div>
-              <p className="text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Nhiệm vụ nhóm
-              </p>
-              <div className="flex items-baseline gap-2 mt-1">
-                <span className="text-2xl sm:text-3xl font-extrabold font-mono tracking-tight text-blue-500">
+        {/* Box 2: Nhiệm vụ nhóm */}
+        <Card className="rounded-xl border border-border/80 bg-card p-3 sm:p-4 shadow-xs flex items-center justify-between transition-all hover:border-border/90">
+          <div className="flex-1 min-w-0 pr-2 sm:pr-3">
+            <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block truncate">
+              Nhiệm vụ nhóm
+            </span>
+            <LedTicker className="mt-1">
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-xl sm:text-3xl font-black text-blue-500">
                   {stats.completedTasks}
                 </span>
-                <span className="text-[10px] sm:text-xs font-bold text-muted-foreground">
+                <span className="text-[11px] font-semibold text-muted-foreground">
                   /{stats.totalTasks} việc
                 </span>
               </div>
-              <p className="text-[11px] text-muted-foreground mt-1">
-                Đã hoàn thành xuất sắc
-              </p>
-            </div>
-            <div className="h-11 w-11 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-500 shrink-0">
-              <CheckCircle2 className="h-5 w-5" />
-            </div>
-          </CardContent>
+            </LedTicker>
+          </div>
+          <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg bg-blue-500/15 text-blue-500 flex items-center justify-center shrink-0">
+            <CheckCircle2 className="h-4 w-4" />
+          </div>
         </Card>
 
-        {/* 3. Tiến độ chung */}
-        <Card className="border border-border/80 bg-card hover:border-emerald-500/50 transition-all rounded-lg shadow-xs">
-          <CardContent className="p-4 sm:p-4.5 flex items-center justify-between">
-            <div>
-              <p className="text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Tiến độ chung
-              </p>
-              <div className="flex items-baseline gap-2 mt-1">
-                <span className="text-2xl sm:text-3xl font-extrabold font-mono tracking-tight text-emerald-500">
+        {/* Box 3: Tiến độ chung */}
+        <Card className="rounded-xl border border-border/80 bg-card p-3 sm:p-4 shadow-xs flex items-center justify-between transition-all hover:border-border/90">
+          <div className="flex-1 min-w-0 pr-2 sm:pr-3">
+            <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block truncate">
+              Tiến độ chung
+            </span>
+            <LedTicker className="mt-1">
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-xl sm:text-3xl font-black text-[#10B981] dark:text-[#C6FF33]">
                   {stats.overallProgress}%
                 </span>
-                <span className="text-[10px] sm:text-xs font-bold px-1.5 py-0.5 rounded-md bg-emerald-500/15 text-emerald-500 inline-flex items-center gap-0.5">
-                  <TrendingUp className="h-3 w-3" /> Ổn định
+                <span className="text-[11px] font-semibold text-muted-foreground">
+                  hoàn thành
                 </span>
               </div>
-              <p className="text-[11px] text-muted-foreground mt-1">
-                Khối lượng công việc đã làm
-              </p>
-            </div>
-            <div className="h-11 w-11 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500 shrink-0">
-              <FolderGit2 className="h-5 w-5" />
-            </div>
-          </CardContent>
+            </LedTicker>
+          </div>
+          <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg bg-[#C6FF33]/20 text-[#1F3E00] dark:text-[#C6FF33] flex items-center justify-center shrink-0">
+            <TrendingUp className="h-4 w-4" />
+          </div>
         </Card>
 
-        {/* 4. Hạn chót sắp tới */}
-        <Card className="border border-border/80 bg-card hover:border-amber-500/50 transition-all rounded-lg shadow-xs">
-          <CardContent className="p-4 sm:p-4.5 flex items-center justify-between">
-            <div>
-              <p className="text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Hạn nộp trong 7 ngày
-              </p>
-              <div className="flex items-baseline gap-2 mt-1">
+        {/* Box 4: Hạn nộp trong 7 ngày */}
+        <Card className="rounded-xl border border-border/80 bg-card p-3 sm:p-4 shadow-xs flex items-center justify-between transition-all hover:border-border/90">
+          <div className="flex-1 min-w-0 pr-2 sm:pr-3">
+            <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block truncate">
+              Hạn trong 7 ngày
+            </span>
+            <LedTicker className="mt-1">
+              <div className="flex items-baseline gap-1.5">
                 <span
                   className={cn(
-                    "text-2xl sm:text-3xl font-extrabold font-mono tracking-tight",
+                    "text-xl sm:text-3xl font-black",
                     stats.upcomingDeadlines > 0 ? "text-amber-500" : "text-foreground"
                   )}
                 >
                   {stats.upcomingDeadlines}
                 </span>
-                <span className="text-[10px] sm:text-xs font-bold px-1.5 py-0.5 rounded-md bg-amber-500/15 text-amber-500">
-                  Cần tập trung
+                <span className="text-[11px] font-semibold text-muted-foreground">
+                  đồ án
                 </span>
               </div>
-              <p className="text-[11px] text-muted-foreground mt-1">
-                Đồ án chuẩn bị báo cáo
-              </p>
-            </div>
-            <div className="h-11 w-11 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 shrink-0">
-              <Clock className="h-5 w-5" />
-            </div>
-          </CardContent>
+            </LedTicker>
+          </div>
+          <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg bg-amber-500/15 text-amber-500 flex items-center justify-center shrink-0">
+            <Clock className="h-4 w-4" />
+          </div>
         </Card>
       </div>
 

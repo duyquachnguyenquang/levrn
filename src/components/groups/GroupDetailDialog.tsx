@@ -34,6 +34,7 @@ import {
   ArrowRight,
   Shield,
   UserPlus,
+  Phone,
 } from "lucide-react";
 import { GroupTaskModal } from "./GroupTaskModal";
 import { cn } from "@/lib/utils";
@@ -67,6 +68,7 @@ export function GroupDetailDialog({
   const [newMemberStudentId, setNewMemberStudentId] = useState("");
   const [newMemberRole, setNewMemberRole] = useState<GroupMemberRole>("member");
   const [newMemberEmail, setNewMemberEmail] = useState("");
+  const [newMemberPhone, setNewMemberPhone] = useState("");
   const [showAddMemberForm, setShowAddMemberForm] = useState(false);
 
   if (!group) return null;
@@ -78,6 +80,7 @@ export function GroupDetailDialog({
     onAddMember(group.id, {
       name: newMemberName.trim(),
       studentId: newMemberStudentId.trim() || undefined,
+      phone: newMemberPhone.trim() || undefined,
       role: newMemberRole,
       email: newMemberEmail.trim() || undefined,
       contributionScore: 100,
@@ -91,6 +94,7 @@ export function GroupDetailDialog({
 
     setNewMemberName("");
     setNewMemberStudentId("");
+    setNewMemberPhone("");
     setNewMemberRole("member");
     setNewMemberEmail("");
     setShowAddMemberForm(false);
@@ -126,7 +130,7 @@ export function GroupDetailDialog({
           </DialogTitle>
 
           <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-            <strong className="text-foreground">Đề tài:</strong> {group.topic}
+            <strong className="text-foreground">Nhiệm vụ:</strong> {group.topic}
           </p>
 
           {/* Quick links & Deadline */}
@@ -354,10 +358,7 @@ export function GroupDetailDialog({
                 onSubmit={handleCreateMember}
                 className="p-3.5 rounded-lg bg-muted/40 border border-[#7D39EB]/30 space-y-3 animate-in fade-in-50 duration-150"
               >
-                <div className="text-xs font-bold text-foreground">
-                  Thêm thành viên mới vào nhóm
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-2.5">
                   <Input
                     placeholder="Họ và tên *"
                     value={newMemberName}
@@ -369,6 +370,12 @@ export function GroupDetailDialog({
                     placeholder="Mã số SV (MSSV)"
                     value={newMemberStudentId}
                     onChange={(e) => setNewMemberStudentId(e.target.value)}
+                    className="h-8 text-xs rounded-md bg-card"
+                  />
+                  <Input
+                    placeholder="Số điện thoại"
+                    value={newMemberPhone}
+                    onChange={(e) => setNewMemberPhone(e.target.value)}
                     className="h-8 text-xs rounded-md bg-card"
                   />
                   <select
@@ -417,7 +424,7 @@ export function GroupDetailDialog({
                     <th className="py-2.5 px-3">Thành viên</th>
                     <th className="py-2.5 px-3">MSSV</th>
                     <th className="py-2.5 px-3">Vai trò</th>
-                    <th className="py-2.5 px-3">Email liên hệ</th>
+                    <th className="py-2.5 px-3">Liên hệ (SĐT / Email)</th>
                     <th className="py-2.5 px-3 text-right">Đóng góp</th>
                     <th className="py-2.5 px-3 text-center">Xoá</th>
                   </tr>
@@ -455,7 +462,20 @@ export function GroupDetailDialog({
                         )}
                       </td>
                       <td className="py-2.5 px-3 text-muted-foreground truncate max-w-[180px]">
-                        {member.email || "—"}
+                        {member.phone ? (
+                          <div className="flex flex-col">
+                            <span className="font-mono text-xs text-foreground flex items-center gap-1 font-semibold">
+                              <Phone className="h-3 w-3 text-[#7D39EB]" /> {member.phone}
+                            </span>
+                            {member.email && (
+                              <span className="text-[10px] text-muted-foreground truncate">{member.email}</span>
+                            )}
+                          </div>
+                        ) : member.email ? (
+                          member.email
+                        ) : (
+                          "—"
+                        )}
                       </td>
                       <td className="py-2.5 px-3 text-right">
                         <span className="font-mono font-bold text-[#7D39EB]">
