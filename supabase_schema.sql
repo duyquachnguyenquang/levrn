@@ -159,6 +159,26 @@ DROP POLICY IF EXISTS "Allow public delete course_grades" ON public.course_grade
 CREATE POLICY "Allow public delete course_grades" ON public.course_grades
     FOR DELETE USING (true);
 
+-- Script hỗ trợ đồng bộ dữ liệu hai bảng subjects <-> course_grades:
+-- (Hệ thống Levrn đã tự động đồng bộ thời gian thực qua mã nguồn ứng dụng,
+--  bạn cũng có thể chạy lệnh này bất cứ lúc nào trong Supabase SQL Editor nếu muốn chuẩn hoá toàn bộ)
+UPDATE public.course_grades cg
+SET 
+    subject_code = s.code,
+    subject_name = s.name,
+    credits = COALESCE(s.credits, 3),
+    semester = CASE WHEN s.semester IS NOT NULL AND TRIM(s.semester) != '' THEN TRIM(s.semester) ELSE 'Chưa xếp kỳ' END,
+    academic_year = s.academic_year,
+    term = s.term,
+    updated_at = now()
+FROM public.subjects s
+WHERE cg.subject_id = s.id::text;
+
+-- Xoá môn điểm mồ côi (nếu môn học tương ứng đã bị xoá khỏi bảng subjects)
+DELETE FROM public.course_grades
+WHERE subject_id IS NOT NULL 
+  AND subject_id NOT IN (SELECT id::text FROM public.subjects);
+
 -- ====================================================================
 -- 6. Bảng study_sessions (Phiên học tập Pomodoro & Lịch sử học)
 -- ====================================================================
@@ -239,5 +259,105 @@ CREATE POLICY "Allow public update quiz_questions" ON public.quiz_questions FOR 
 
 DROP POLICY IF EXISTS "Allow public delete quiz_questions" ON public.quiz_questions;
 CREATE POLICY "Allow public delete quiz_questions" ON public.quiz_questions FOR DELETE USING (true);
+
+-- ====================================================================
+-- 9. Bảng attendance_records (Điểm danh & Quản lý chuyên cần môn học)
+-- ====================================================================
+CREATE TABLE IF NOT EXISTS public.attendance_records (
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    subject_id TEXT NOT NULL,
+    subject_code VARCHAR(20) NOT NULL,
+    subject_name TEXT NOT NULL,
+    session_number INTEGER NOT NULL DEFAULT 1,
+    date DATE NOT NULL,
+    start_time VARCHAR(20),
+    end_time VARCHAR(20),
+    room VARCHAR(50),
+    status VARCHAR(20) NOT NULL DEFAULT 'upcoming', -- present, late, excused, absent, upcoming
+    notes TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+ALTER TABLE public.attendance_records ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow public read attendance_records" ON public.attendance_records;
+CREATE POLICY "Allow public read attendance_records" ON public.attendance_records FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Allow public insert attendance_records" ON public.attendance_records;
+CREATE POLICY "Allow public insert attendance_records" ON public.attendance_records FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow public update attendance_records" ON public.attendance_records;
+CREATE POLICY "Allow public update attendance_records" ON public.attendance_records FOR UPDATE USING (true);
+
+DROP POLICY IF EXISTS "Allow public delete attendance_records" ON public.attendance_records;
+CREATE POLICY "Allow public delete attendance_records" ON public.attendance_records FOR DELETE USING (true);
+
+-- ====================================================================
+-- 10. Bảng group_projects (Quản lý nhóm đồ án & bài tập lớn)
+-- ====================================================================
+CREATE TABLE IF NOT EXISTS public.group_projects (
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    name TEXT NOT NULL,
+    subject_id TEXT,
+    subject_code VARCHAR(20) NOT NULL,
+    subject_name TEXT NOT NULL,
+    topic TEXT NOT NULL,
+    description TEXT,
+    semester TEXT,
+    status VARCHAR(20) NOT NULL DEFAULT 'in_progress', -- planning, in_progress, submitted, completed
+    deadline TIMESTAMPTZ,
+    drive_url TEXT,
+    repo_url TEXT,
+    meeting_url TEXT,
+    chat_url TEXT,
+    members JSONB NOT NULL DEFAULT '[]'::jsonb,
+    tasks JSONB NOT NULL DEFAULT '[]'::jsonb,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+ALTER TABLE public.group_projects ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow public read group_projects" ON public.group_projects;
+CREATE POLICY "Allow public read group_projects" ON public.group_projects FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Allow public insert group_projects" ON public.group_projects;
+CREATE POLICY "Allow public insert group_projects" ON public.group_projects FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow public update group_projects" ON public.group_projects;
+CREATE POLICY "Allow public update group_projects" ON public.group_projects FOR UPDATE USING (true);
+
+DROP POLICY IF EXISTS "Allow public delete group_projects" ON public.group_projects;
+CREATE POLICY "Allow public delete group_projects" ON public.group_projects FOR DELETE USING (true);
+
+-- ====================================================================
+-- 11. Bảng app_notifications (Trung tâm thông báo & Cảnh báo học tập)
+-- ====================================================================
+CREATE TABLE IF NOT EXISTS public.app_notifications (
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    title TEXT NOT NULL,
+    message TEXT NOT NULL,
+    type VARCHAR(30) NOT NULL DEFAULT 'info', -- warning, deadline, attendance, success, info
+    category VARCHAR(30) NOT NULL DEFAULT 'system', -- attendance, groups, schedule, grades, system
+    read BOOLEAN NOT NULL DEFAULT false,
+    link TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+ALTER TABLE public.app_notifications ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow public read app_notifications" ON public.app_notifications;
+CREATE POLICY "Allow public read app_notifications" ON public.app_notifications FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Allow public insert app_notifications" ON public.app_notifications;
+CREATE POLICY "Allow public insert app_notifications" ON public.app_notifications FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow public update app_notifications" ON public.app_notifications;
+CREATE POLICY "Allow public update app_notifications" ON public.app_notifications FOR UPDATE USING (true);
+
+DROP POLICY IF EXISTS "Allow public delete app_notifications" ON public.app_notifications;
+CREATE POLICY "Allow public delete app_notifications" ON public.app_notifications FOR DELETE USING (true);
+
 
 

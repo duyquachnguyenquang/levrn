@@ -381,12 +381,13 @@ export function calculateSemesterGPA(
  * Tính toán thống kê GPA tích lũy toàn bộ các học kỳ
  */
 export function calculateCumulativeGPA(courses: CourseGrade[]): CumulativeGPASummary {
-  // Nhóm các môn theo học kỳ
+  // Nhóm các môn theo học kỳ (chuẩn hóa nếu chưa có kỳ)
   const semesterMap = new Map<string, CourseGrade[]>();
   for (const c of courses) {
-    const list = semesterMap.get(c.semester) || [];
+    const semName = (c.semester && c.semester.trim()) ? c.semester.trim() : "Chưa xếp kỳ";
+    const list = semesterMap.get(semName) || [];
     list.push(c);
-    semesterMap.set(c.semester, list);
+    semesterMap.set(semName, list);
   }
 
   const semesters: SemesterGPASummary[] = [];
@@ -404,9 +405,11 @@ export function calculateCumulativeGPA(courses: CourseGrade[]): CumulativeGPASum
     earnedCredits += semSummary.earnedCredits;
   }
 
-  // Sắp xếp các học kỳ theo thứ tự thời gian
+  // Sắp xếp các học kỳ theo thứ tự thời gian: kỳ mới nhất xếp trước, "Chưa xếp kỳ" ở cuối
   semesters.sort((a, b) => {
-    return a.semester.localeCompare(b.semester, undefined, { numeric: true });
+    if (a.semester === "Chưa xếp kỳ") return 1;
+    if (b.semester === "Chưa xếp kỳ") return -1;
+    return b.semester.localeCompare(a.semester, undefined, { numeric: true });
   });
 
   // Tính GPA tích lũy toàn khóa

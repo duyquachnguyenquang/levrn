@@ -278,20 +278,19 @@ export function SubjectCard({ subject, onEdit, onDelete }: SubjectCardProps) {
           </div>
 
           {/* Dải chân card: Các nút Course, Drive, Chỉnh sửa, Xoá */}
-          <div className="mt-3.5 pt-2.5 border-t border-border/50 flex items-center justify-between gap-1.5">
+          <div className="mt-3.5 pt-2.5 border-t border-border/50 flex items-center justify-between gap-1 flex-wrap">
             {/* Nhóm liên kết Course & Drive */}
-            <div className="flex items-center gap-1.5 min-w-0">
+            <div className="flex items-center gap-1.5 flex-wrap">
               {subject.courseUrl && (
                 <a
                   href={subject.courseUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-bold bg-[#7D39EB]/10 text-[#7D39EB] hover:bg-[#7D39EB]/20 border border-[#7D39EB]/25 transition-all hover:-translate-y-0.5 active:scale-95 shrink-0"
+                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10.5px] font-bold bg-[#7D39EB]/10 text-[#7D39EB] hover:bg-[#7D39EB]/20 border border-[#7D39EB]/25 transition-all hover:-translate-y-0.5 active:scale-95 shrink-0"
                   title="Mở LMS Course"
                 >
                   <BookOpen className="h-3 w-3" />
                   <span>Course</span>
-                  <ExternalLink className="h-2.5 w-2.5 opacity-60" />
                 </a>
               )}
 
@@ -300,12 +299,11 @@ export function SubjectCard({ subject, onEdit, onDelete }: SubjectCardProps) {
                   href={subject.driveUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 border border-amber-500/25 transition-all hover:-translate-y-0.5 active:scale-95 shrink-0"
+                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10.5px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 border border-amber-500/25 transition-all hover:-translate-y-0.5 active:scale-95 shrink-0"
                   title="Mở Google Drive môn học"
                 >
                   <Folder className="h-3 w-3" />
                   <span>Drive</span>
-                  <ExternalLink className="h-2.5 w-2.5 opacity-60" />
                 </a>
               )}
             </div>

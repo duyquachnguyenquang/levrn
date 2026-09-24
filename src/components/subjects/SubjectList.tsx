@@ -81,9 +81,24 @@ export function SubjectList({
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [subjectToDelete, setSubjectToDelete] = useState<Subject | null>(null);
 
-  const semesterOptions = useMemo(() => {
-    return Array.from(new Set(subjects.map((s) => s.semester))).filter(Boolean);
+  const hasUnassigned = useMemo(() => {
+    return subjects.some((s) => !s.semester || s.semester.trim() === "" || s.semester === "Chưa xếp kỳ");
   }, [subjects]);
+
+  const semesterOptions = useMemo(() => {
+    const standard = Array.from(
+      new Set(
+        subjects
+          .map((s) => (s.semester ? s.semester.trim() : ""))
+          .filter((sem) => sem && sem !== "Chưa xếp kỳ")
+      )
+    ).sort((a, b) => b.localeCompare(a, undefined, { numeric: true }));
+
+    if (hasUnassigned) {
+      return [...standard, "Chưa xếp kỳ"];
+    }
+    return standard;
+  }, [subjects, hasUnassigned]);
 
   const creditOptions = useMemo(() => {
     const set = new Set<number>();
@@ -114,7 +129,10 @@ export function SubjectList({
         (subject.category && subject.category.toLowerCase().includes(query));
 
       const matchSemester =
-        selectedSemester === "ALL" || subject.semester === selectedSemester;
+        selectedSemester === "ALL" ||
+        (selectedSemester === "Chưa xếp kỳ"
+          ? (!subject.semester || subject.semester.trim() === "" || subject.semester === "Chưa xếp kỳ")
+          : subject.semester === selectedSemester);
 
       const matchCategory =
         selectedCategory === "ALL" || subject.category === selectedCategory;

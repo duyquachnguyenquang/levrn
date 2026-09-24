@@ -376,3 +376,185 @@ export interface QuizQuestion {
 }
 
 export type QuizQuestionFormData = Omit<QuizQuestion, "id" | "createdAt">;
+
+// ============================================================================
+// ĐIỂM DANH & QUẢN LÝ CHUYÊN CẦN (ATTENDANCE MANAGEMENT)
+// ============================================================================
+
+export type AttendanceStatus = "present" | "late" | "excused" | "absent" | "upcoming";
+
+export interface AttendanceStatusMeta {
+  key: AttendanceStatus;
+  label: string;
+  shortLabel: string;
+  color: string;
+  bgColor: string;
+  badgeClass: string;
+  description: string;
+}
+
+export const ATTENDANCE_STATUS_MAP: Record<AttendanceStatus, AttendanceStatusMeta> = {
+  present: {
+    key: "present",
+    label: "Có mặt",
+    shortLabel: "Có mặt",
+    color: "#10B981", // Emerald
+    bgColor: "rgba(16, 185, 129, 0.15)",
+    badgeClass: "bg-emerald-500/15 text-emerald-500 border-emerald-500/30",
+    description: "Tham dự đầy đủ đúng giờ",
+  },
+  late: {
+    key: "late",
+    label: "Đi trễ",
+    shortLabel: "Trễ",
+    color: "#F59E0B", // Amber
+    bgColor: "rgba(245, 158, 11, 0.15)",
+    badgeClass: "bg-amber-500/15 text-amber-500 border-amber-500/30",
+    description: "Đến lớp trễ sau giờ bắt đầu",
+  },
+  excused: {
+    key: "excused",
+    label: "Vắng có phép",
+    shortLabel: "Nghỉ phép",
+    color: "#3B82F6", // Blue
+    bgColor: "rgba(59, 130, 246, 0.15)",
+    badgeClass: "bg-blue-500/15 text-blue-500 border-blue-500/30",
+    description: "Nghỉ học có đơn xin phép",
+  },
+  absent: {
+    key: "absent",
+    label: "Vắng không phép",
+    shortLabel: "Vắng",
+    color: "#EF4444", // Red
+    bgColor: "rgba(239, 68, 68, 0.15)",
+    badgeClass: "bg-red-500/15 text-red-500 border-red-500/30",
+    description: "Nghỉ học không báo trước (tính vào cấm thi)",
+  },
+  upcoming: {
+    key: "upcoming",
+    label: "Chưa diễn ra",
+    shortLabel: "Sắp tới",
+    color: "#71717A", // Zinc
+    bgColor: "rgba(113, 113, 122, 0.15)",
+    badgeClass: "bg-zinc-500/15 text-zinc-400 border-zinc-500/30",
+    description: "Buổi học trong tương lai",
+  },
+};
+
+export interface AttendanceRecord {
+  id: string;
+  subjectId: string;
+  subjectCode: string;
+  subjectName: string;
+  sessionNumber: number;      // Buổi thứ mấy (1, 2, ..., totalWeeks)
+  date: string;               // YYYY-MM-DD
+  startTime?: string;
+  endTime?: string;
+  room?: string;
+  status: AttendanceStatus;
+  notes?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export type AttendanceRecordFormData = Omit<AttendanceRecord, "id" | "createdAt" | "updatedAt">;
+
+export interface SubjectAttendanceSummary {
+  subjectId: string;
+  subjectCode: string;
+  subjectName: string;
+  color: string;
+  semester: string;
+  totalWeeks: number;
+  totalRecorded: number;      // Đã học (present + late + excused + absent)
+  presentCount: number;
+  lateCount: number;
+  excusedCount: number;
+  absentCount: number;
+  totalAbsences: number;      // absentCount + excusedCount
+  attendanceRate: number;     // % chuyên cần = (present + late) / totalRecorded * 100
+  maxAllowedAbsences: number; // Thường là 20% tổng số buổi (VD: 3 buổi trên 15 tuần)
+  remainingAllowedAbsences: number; // Số buổi còn lại được phép nghỉ trước khi cấm thi
+  isAtRisk: boolean;          // Cận kề nguy cơ cấm thi (còn 1 buổi là bị cấm)
+  isBarredFromExam: boolean;  // Đã vượt quá 20% vắng -> Bị cấm thi!
+  records: AttendanceRecord[];
+}
+
+// ============================================================================
+// QUẢN LÝ NHÓM & ĐỒ ÁN HỌC PHẦN (GROUP / TEAM MANAGEMENT)
+// ============================================================================
+
+export type GroupMemberRole = "leader" | "member" | "secretary";
+
+export interface GroupMember {
+  id: string;
+  name: string;
+  studentId?: string;         // Mã số sinh viên
+  role: GroupMemberRole;
+  email?: string;
+  phone?: string;
+  contributionScore?: number; // Đánh giá đóng góp (0 - 100%)
+  avatarColor?: string;
+}
+
+export type GroupTaskStatus = "todo" | "in_progress" | "review" | "done";
+export type GroupTaskPriority = "low" | "medium" | "high" | "urgent";
+
+export interface GroupTask {
+  id: string;
+  groupId: string;
+  title: string;
+  description?: string;
+  assigneeMemberId?: string; // ID của thành viên phụ trách
+  assigneeName?: string;
+  status: GroupTaskStatus;
+  priority: GroupTaskPriority;
+  dueDate?: string;          // Hạn chót nhiệm vụ (YYYY-MM-DD)
+  createdAt: string;
+}
+
+export type GroupProjectStatus = "planning" | "in_progress" | "submitted" | "completed";
+
+export interface GroupProject {
+  id: string;
+  name: string;              // Tên nhóm (VD: "Nhóm 03 - Logistics Warriors")
+  subjectId?: string;        // ID môn học liên kết
+  subjectCode: string;       // Mã môn (VD: "SCM")
+  subjectName: string;       // Tên môn học
+  topic: string;             // Đề tài đồ án / bài tập lớn
+  description?: string;
+  semester?: string;
+  status: GroupProjectStatus;
+  deadline?: string;         // Hạn nộp đồ án (YYYY-MM-DDTHH:mm)
+  driveUrl?: string;         // Thư mục tài liệu Google Drive
+  repoUrl?: string;          // Repo Github / Figma / Canva
+  meetingUrl?: string;       // Link họp nhóm Google Meet / Zoom
+  chatUrl?: string;          // Link Zalo / Messenger / Discord nhóm
+  members: GroupMember[];
+  tasks: GroupTask[];
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export type GroupProjectFormData = Omit<GroupProject, "id" | "createdAt" | "updatedAt">;
+
+// ============================================================================
+// HỆ THỐNG THÔNG BÁO & NHẮC NHỞ (NOTIFICATION CENTER & ALERTS)
+// ============================================================================
+
+export type NotificationType = "warning" | "info" | "success" | "deadline" | "attendance";
+export type NotificationCategory = "attendance" | "groups" | "grades" | "system" | "schedule";
+
+export interface AppNotification {
+  id: string;
+  title: string;
+  message: string;
+  type: NotificationType;
+  category: NotificationCategory;
+  read: boolean;
+  link?: string;             // Đường dẫn điều hướng nhanh khi click (VD: "/attendance")
+  createdAt: string;
+}
+
+export type AppNotificationFormData = Omit<AppNotification, "id" | "read" | "createdAt">;
+

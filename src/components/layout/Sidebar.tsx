@@ -14,6 +14,9 @@ import {
   ArrowUpRight,
   ChevronLeft,
   ChevronRight,
+  ClipboardCheck,
+  Users,
+  Bell,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BrandLogo } from "@/components/ui/brand-logo";
@@ -30,6 +33,16 @@ export const navigationItems = [
     name: "Môn học",
     href: "/subjects",
     icon: BookOpen,
+  },
+  {
+    name: "Điểm danh",
+    href: "/attendance",
+    icon: ClipboardCheck,
+  },
+  {
+    name: "Quản lý nhóm",
+    href: "/groups",
+    icon: Users,
   },
   {
     name: "Điểm số",
@@ -55,6 +68,11 @@ export const navigationItems = [
     name: "Thống kê",
     href: "/stats",
     icon: BarChart3,
+  },
+  {
+    name: "Thông báo",
+    href: "/notifications",
+    icon: Bell,
   },
 ];
 

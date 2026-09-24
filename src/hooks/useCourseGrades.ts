@@ -98,20 +98,85 @@ export function useCourseGrades() {
             .select("*")
             .order("created_at", { ascending: true });
 
-          if (!subErr && subjectRows && subjectRows.length > 0) {
+          if (!subErr && subjectRows) {
+            const subjectMap = new Map<string, any>(subjectRows.map((s: any) => [s.id, s]));
             const deletedSubjectIds = getDeletedSubjectIds();
+            const validRows: any[] = [];
+            const idsToDelete: string[] = [];
+
+            // 2.1 Đồng bộ thông tin môn học và loại bỏ các môn mồ côi đã bị xoá khỏi subjects
+            for (const g of currentRows) {
+              if (g.subject_id && !subjectMap.has(g.subject_id)) {
+                // Môn học này đã bị người dùng xóa khỏi 'Môn học của tôi'
+                idsToDelete.push(g.id);
+                continue;
+              }
+
+              const s = g.subject_id
+                ? subjectMap.get(g.subject_id)
+                : subjectRows.find((sub: any) => sub.code === g.subject_code);
+
+              if (s) {
+                const targetSemester = (s.semester && s.semester.trim()) ? s.semester.trim() : "Chưa xếp kỳ";
+                const targetYear = s.academic_year || null;
+                const targetTerm = s.term || null;
+                const targetCredits = Number(s.credits) || 3;
+                const targetCode = s.code;
+                const targetName = s.name;
+
+                const isDiff = (
+                  g.subject_code !== targetCode ||
+                  g.subject_name !== targetName ||
+                  Number(g.credits) !== targetCredits ||
+                  g.semester !== targetSemester ||
+                  (g.academic_year || null) !== targetYear ||
+                  (g.term || null) !== targetTerm ||
+                  g.subject_id !== s.id
+                );
+
+                if (isDiff) {
+                  g.subject_id = s.id;
+                  g.subject_code = targetCode;
+                  g.subject_name = targetName;
+                  g.credits = targetCredits;
+                  g.semester = targetSemester;
+                  g.academic_year = targetYear;
+                  g.term = targetTerm;
+
+                  // Update trên Supabase
+                  supabase.from("course_grades").update({
+                    subject_id: s.id,
+                    subject_code: targetCode,
+                    subject_name: targetName,
+                    credits: targetCredits,
+                    semester: targetSemester,
+                    academic_year: targetYear,
+                    term: targetTerm,
+                    updated_at: new Date().toISOString()
+                  }).eq("id", g.id).then();
+                }
+              }
+              validRows.push(g);
+            }
+
+            if (idsToDelete.length > 0) {
+              await supabase.from("course_grades").delete().in("id", idsToDelete);
+            }
+
+            currentRows = validRows;
+
+            // 2.2 Bổ sung các môn trong 'subjects' chưa có trong 'course_grades'
             const existingSubjectIds = new Set(
               currentRows.map((g: any) => g.subject_id).filter(Boolean)
             );
             const existingCodes = new Set(
-              currentRows.map((g: any) => `${g.subject_code}_${g.semester}`)
+              currentRows.map((g: any) => g.subject_code)
             );
 
-            // Tìm các môn trong 'subjects' chưa có trong 'course_grades' và chưa bị người dùng chủ động xóa
             const missingSubjects = subjectRows.filter(
               (s: any) =>
                 !existingSubjectIds.has(s.id) &&
-                !existingCodes.has(`${s.code}_${s.semester}`) &&
+                !existingCodes.has(s.code) &&
                 !deletedSubjectIds.has(s.id)
             );
 
@@ -121,7 +186,7 @@ export function useCourseGrades() {
                 subject_code: s.code,
                 subject_name: s.name,
                 credits: s.credits || 3,
-                semester: s.semester || "HK1 2026-2027",
+                semester: (s.semester && s.semester.trim()) ? s.semester.trim() : "Chưa xếp kỳ",
                 academic_year: s.academic_year || null,
                 term: s.term || null,
                 grading_method: "components",
@@ -158,17 +223,70 @@ export function useCourseGrades() {
 
     // 2. Fallback: Đọc từ localStorage nếu Supabase chưa kết nối
     try {
+      const storedSubjects = localStorage.getItem("levrn_subjects_data");
+      const localSubjects: Subject[] = storedSubjects ? JSON.parse(storedSubjects) : [];
       const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed)) {
-          setGrades(parsed);
-          setIsLoading(false);
-          return;
+      let localGrades: CourseGrade[] = stored ? JSON.parse(stored) : [];
+
+      if (localSubjects.length > 0) {
+        const subMap = new Map<string, Subject>(localSubjects.map((s) => [s.id, s]));
+        const deletedIds = getDeletedSubjectIds();
+
+        // Đồng bộ và loại bỏ môn mồ côi
+        localGrades = localGrades
+          .filter((g) => !g.subjectId || subMap.has(g.subjectId))
+          .map((g) => {
+            const s = g.subjectId ? subMap.get(g.subjectId) : localSubjects.find((sub) => sub.code === g.subjectCode);
+            if (s) {
+              return {
+                ...g,
+                subjectId: s.id,
+                subjectCode: s.code,
+                subjectName: s.name,
+                credits: s.credits || 3,
+                semester: (s.semester && s.semester.trim()) ? s.semester.trim() : "Chưa xếp kỳ",
+                academicYear: s.academicYear,
+                term: s.term,
+              };
+            }
+            return g;
+          });
+
+        const existingSubIds = new Set(localGrades.map((g) => g.subjectId).filter(Boolean));
+        const existingCodes = new Set(localGrades.map((g) => g.subjectCode));
+
+        const missing = localSubjects.filter(
+          (s) => !existingSubIds.has(s.id) && !existingCodes.has(s.code) && !deletedIds.has(s.id)
+        );
+
+        if (missing.length > 0) {
+          const newGrades: CourseGrade[] = missing.map((s, idx) => ({
+            id: `grade-local-${Date.now()}-${idx}`,
+            subjectId: s.id,
+            subjectCode: s.code,
+            subjectName: s.name,
+            credits: s.credits || 3,
+            semester: (s.semester && s.semester.trim()) ? s.semester.trim() : "Chưa xếp kỳ",
+            academicYear: s.academicYear,
+            term: s.term,
+            gradingMethod: "components",
+            finalScore: null,
+            components: [
+              { id: "c1", name: "Chuyên cần & Thái độ", weight: 10, score: null, maxScore: 10 },
+              { id: "c2", name: "Kiểm tra Giữa kỳ", weight: 30, score: null, maxScore: 10 },
+              { id: "c3", name: "Thi Cuối kỳ", weight: 60, score: null, maxScore: 10 },
+            ],
+            targetScore: 8.5,
+            createdAt: new Date().toISOString(),
+          }));
+          localGrades = [...newGrades, ...localGrades];
         }
       }
-      setGrades([]);
-      backupToLocalStorage([]);
+
+      setGrades(localGrades);
+      backupToLocalStorage(localGrades);
+      setIsLoading(false);
+      return;
     } catch (err) {
       console.error("Lỗi khi đọc dữ liệu điểm từ localStorage:", err);
       setGrades([]);
@@ -190,6 +308,7 @@ export function useCourseGrades() {
     const tempId = `grade-${Date.now()}`;
     const newGrade: CourseGrade = {
       ...data,
+      semester: (data.semester && data.semester.trim()) ? data.semester.trim() : "Chưa xếp kỳ",
       id: tempId,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -235,14 +354,16 @@ export function useCourseGrades() {
   ): Promise<CourseGrade | null> => {
     let updatedGrade: CourseGrade | null = null;
 
-    const updatedList = grades.map((g) => {
+    const updatedList: CourseGrade[] = grades.map((g) => {
       if (g.id === id) {
-        updatedGrade = {
+        const item: CourseGrade = {
           ...g,
           ...data,
+          semester: data.semester !== undefined ? (data.semester.trim() || "Chưa xếp kỳ") : g.semester,
           updatedAt: new Date().toISOString(),
         };
-        return updatedGrade;
+        updatedGrade = item;
+        return item;
       }
       return g;
     });
@@ -254,10 +375,45 @@ export function useCourseGrades() {
 
     if (supabase && isSupabaseActive) {
       try {
-        const row = mapCourseGradeToRow(data);
+        const row = mapCourseGradeToRow({
+          ...data,
+          semester: data.semester !== undefined ? (data.semester.trim() || "Chưa xếp kỳ") : undefined,
+        });
         await supabase.from("course_grades").update(row).eq("id", id);
       } catch (err) {
         console.error("Lỗi khi cập nhật điểm trên Supabase:", err);
+      }
+    }
+
+    // Đồng bộ ngược lại sang subjects nếu có subjectId liên kết
+    const curSubId = (updatedGrade as CourseGrade).subjectId;
+    if (curSubId) {
+      const subUpdates: Record<string, any> = {};
+      if (data.subjectCode !== undefined) subUpdates.code = data.subjectCode;
+      if (data.subjectName !== undefined) subUpdates.name = data.subjectName;
+      if (data.credits !== undefined) subUpdates.credits = data.credits;
+      if (data.semester !== undefined) {
+        subUpdates.semester = data.semester === "Chưa xếp kỳ" ? "" : data.semester;
+      }
+
+      if (Object.keys(subUpdates).length > 0) {
+        if (supabase && isSupabaseActive) {
+          try {
+            await supabase.from("subjects").update(subUpdates).eq("id", curSubId);
+          } catch (e) {
+            console.error("Lỗi đồng bộ ngược sang subjects:", e);
+          }
+        }
+        try {
+          const raw = localStorage.getItem("levrn_subjects_data");
+          if (raw) {
+            const list = JSON.parse(raw);
+            if (Array.isArray(list)) {
+              const synced = list.map((s: any) => s.id === curSubId ? { ...s, ...subUpdates } : s);
+              localStorage.setItem("levrn_subjects_data", JSON.stringify(synced));
+            }
+          }
+        } catch {}
       }
     }
 
@@ -353,15 +509,18 @@ export function useCourseGrades() {
     return calculateCumulativeGPA(grades);
   }, [grades]);
 
-  // Danh sách các học kỳ duy nhất (đã sắp xếp)
+  // Danh sách các học kỳ duy nhất (đã sắp xếp, các kỳ có năm học xếp trước, "Chưa xếp kỳ" ở cuối)
   const allSemesters = useMemo(() => {
     const semSet = new Set<string>();
     grades.forEach((g) => {
-      if (g.semester) semSet.add(g.semester);
+      const sem = (g.semester && g.semester.trim()) ? g.semester.trim() : "Chưa xếp kỳ";
+      semSet.add(sem);
     });
-    return Array.from(semSet).sort((a, b) =>
-      b.localeCompare(a, undefined, { numeric: true })
-    );
+    return Array.from(semSet).sort((a, b) => {
+      if (a === "Chưa xếp kỳ") return 1;
+      if (b === "Chưa xếp kỳ") return -1;
+      return b.localeCompare(a, undefined, { numeric: true });
+    });
   }, [grades]);
 
   return {

@@ -13,6 +13,9 @@ import {
   CheckCircle2,
   BookOpen,
   Search,
+  ArrowUpRight,
+  AlertTriangle,
+  Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,15 +35,21 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { MobileNav } from "./MobileNav";
 import { BrandLogo } from "@/components/ui/brand-logo";
+import { useNotifications } from "@/hooks/useNotifications";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 const pageTitles: Record<string, string> = {
   "/dashboard": "Dashboard Tổng quan",
   "/subjects": "Quản lý môn học",
   "/grades": "Quản lý điểm số & GPA",
+  "/attendance": "Điểm danh & Chuyên cần",
+  "/groups": "Quản lý nhóm & Đồ án",
   "/plans": "Kế hoạch học tập",
   "/sessions": "Phiên học tập",
   "/goals": "Mục tiêu học tập",
   "/stats": "Thống kê tiến độ",
+  "/notifications": "Trung tâm thông báo",
 };
 
 
@@ -51,7 +60,7 @@ export function Topbar() {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const [hasNotification, setHasNotification] = useState(true);
+  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
 
   useEffect(() => {
     setMounted(true);
@@ -102,49 +111,76 @@ export function Topbar() {
               size="icon"
               className="relative rounded-lg h-9 w-9 text-muted-foreground hover:text-foreground bg-card/60 border border-border/40 hover:bg-card hover:border-[#7D39EB]/40 transition-all duration-200 active:scale-90"
               aria-label="Xem thông báo"
-              onClick={() => setHasNotification(false)}
             >
               <Bell className="h-4 w-4 transition-transform hover:rotate-12 duration-200" />
-              {hasNotification && (
-                <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-[#C6FF33] ring-2 ring-background animate-pulse" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 h-4 min-w-4 px-1 rounded-full bg-[#C6FF33] text-black font-extrabold text-[9px] flex items-center justify-center ring-2 ring-background animate-pulse">
+                  {unreadCount}
+                </span>
               )}
             </Button>
           </PopoverTrigger>
           <PopoverContent align="end" className="w-80 p-3 rounded-lg border-border/80 shadow-2xl animate-in fade-in-50 zoom-in-95 duration-150">
             <div className="flex items-center justify-between pb-2 border-b border-border/60">
               <span className="text-xs font-bold text-foreground">
-                Thông báo mới
+                Thông báo {unreadCount > 0 ? `(${unreadCount} mới)` : ""}
               </span>
-              <span className="text-[10px] text-[#7D39EB] font-semibold hover:underline cursor-pointer">
-                Đánh dấu đã đọc
-              </span>
+              {unreadCount > 0 && (
+                <button
+                  type="button"
+                  onClick={() => markAllAsRead()}
+                  className="text-[10px] text-[#7D39EB] font-semibold hover:underline cursor-pointer"
+                >
+                  Đánh dấu đã đọc
+                </button>
+              )}
             </div>
-            <div className="mt-2 space-y-2">
-              <div className="flex items-start gap-2.5 p-2 rounded-md bg-[#7D39EB]/10 border border-[#7D39EB]/20 transition-all hover:bg-[#7D39EB]/15">
-                <BookOpen className="h-4 w-4 text-[#7D39EB] shrink-0 mt-0.5" />
-                <div className="text-xs">
-                  <p className="font-semibold text-foreground">Giao diện mới đã sẵn sàng!</p>
-                  <p className="text-muted-foreground text-[11px] mt-0.5">
-                    Trải nghiệm phong cách Eduplex với bảng màu Violet &amp; Lime năng động.
-                  </p>
-                  <span className="text-[9px] text-muted-foreground/70 mt-1 block">
-                    Vừa xong
-                  </span>
-                </div>
-              </div>
 
-              <div className="flex items-start gap-2.5 p-2 rounded-md hover:bg-muted/50 transition-colors">
-                <CheckCircle2 className="h-4 w-4 text-[#C6FF33] shrink-0 mt-0.5" />
-                <div className="text-xs">
-                  <p className="font-medium text-foreground">Tiến độ tuần này</p>
-                  <p className="text-muted-foreground text-[11px] mt-0.5">
-                    Bạn đã hoàn thành 85% mục tiêu ôn tập môn Giải Tích.
-                  </p>
-                  <span className="text-[9px] text-muted-foreground/70 mt-1 block">
-                    Hôm nay
-                  </span>
+            <div className="mt-2 space-y-2 max-h-72 overflow-y-auto">
+              {notifications.slice(0, 4).map((notif) => (
+                <div
+                  key={notif.id}
+                  onClick={() => markAsRead(notif.id)}
+                  className={cn(
+                    "flex items-start gap-2.5 p-2 rounded-md transition-all cursor-pointer",
+                    !notif.read
+                      ? "bg-[#7D39EB]/10 border border-[#7D39EB]/20 hover:bg-[#7D39EB]/15"
+                      : "hover:bg-muted/50 border border-transparent"
+                  )}
+                >
+                  <div className="mt-0.5 shrink-0">
+                    {notif.type === "warning" ? (
+                      <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
+                    ) : notif.type === "deadline" ? (
+                      <Clock className="h-3.5 w-3.5 text-red-500" />
+                    ) : (
+                      <CheckCircle2 className="h-3.5 w-3.5 text-[#C6FF33]" />
+                    )}
+                  </div>
+                  <div className="text-xs min-w-0 flex-1">
+                    <p className="font-semibold text-foreground truncate">{notif.title}</p>
+                    <p className="text-muted-foreground text-[11px] line-clamp-2 mt-0.5">
+                      {notif.message}
+                    </p>
+                  </div>
                 </div>
-              </div>
+              ))}
+
+              {notifications.length === 0 && (
+                <div className="py-6 text-center text-xs text-muted-foreground">
+                  Không có thông báo mới
+                </div>
+              )}
+            </div>
+
+            <div className="pt-2 mt-2 border-t border-border/50 text-center">
+              <Link
+                href="/notifications"
+                className="text-xs font-bold text-[#7D39EB] hover:underline inline-flex items-center gap-1"
+              >
+                <span>Xem tất cả thông báo</span>
+                <ArrowUpRight className="h-3 w-3" />
+              </Link>
             </div>
           </PopoverContent>
         </Popover>

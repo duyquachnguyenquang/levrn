@@ -105,13 +105,13 @@ export function CourseGradeModal({
       }
     } else {
       const defaultSemester =
-        existingSubjects.length > 0 ? existingSubjects[0].semester : "HK1 2026-2027";
+        existingSubjects.length > 0 && existingSubjects[0].semester ? existingSubjects[0].semester : "HK1 2026-2027";
       setGradingMethod("final_only");
       setSubjectId("");
       setSubjectCode("");
       setSubjectName("");
       setCredits(3);
-      setSemester(defaultSemester);
+      setSemester(defaultSemester || "Chưa xếp kỳ");
       setTargetScore("");
       setFinalScoreInput("");
       setComponents([
@@ -150,7 +150,7 @@ export function CourseGradeModal({
     setSubjectCode(sub.code);
     setSubjectName(sub.name);
     setCredits(sub.credits || 3);
-    setSemester(sub.semester || "HK1 2026-2027");
+    setSemester((sub.semester && sub.semester.trim()) ? sub.semester.trim() : "Chưa xếp kỳ");
   };
 
   // Thêm thành phần điểm mới
@@ -196,7 +196,7 @@ export function CourseGradeModal({
         subjectCode: subjectCode.trim() || "MON",
         subjectName: subjectName.trim(),
         credits: Number(credits) || 3,
-        semester: semester.trim() || "HK1 2026-2027",
+        semester: (semester && semester.trim()) ? semester.trim() : "Chưa xếp kỳ",
         gradingMethod,
         finalScore: effectiveFinalScore10,
         components: gradingMethod === "components" ? components : [],
@@ -282,7 +282,7 @@ export function CourseGradeModal({
                 <option value="">-- Chọn môn học --</option>
                 {existingSubjects.map((s) => (
                   <option key={s.id} value={s.id}>
-                    [{s.code}] {s.name} ({s.credits || 3} TC - {s.semester})
+                    [{s.code}] {s.name} ({s.credits || 3} TC - {(s.semester && s.semester.trim()) ? s.semester.trim() : "Chưa xếp kỳ"})
                   </option>
                 ))}
               </select>

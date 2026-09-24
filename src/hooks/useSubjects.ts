@@ -79,6 +79,140 @@ const INITIAL_DEMO_SUBJECTS: Subject[] = [
 ];
 
 
+const GRADES_STORAGE_KEY = "levrn_course_grades_data";
+
+// Đồng bộ thêm môn học vào bảng điểm (course_grades)
+async function syncAddGrade(subject: Subject, isSupabaseActive: boolean) {
+  const targetSemester = (subject.semester && subject.semester.trim()) ? subject.semester.trim() : "Chưa xếp kỳ";
+  const defaultComponents = [
+    { id: "c1", name: "Chuyên cần & Thái độ", weight: 10, score: null, maxScore: 10 },
+    { id: "c2", name: "Kiểm tra Giữa kỳ", weight: 30, score: null, maxScore: 10 },
+    { id: "c3", name: "Thi Cuối kỳ", weight: 60, score: null, maxScore: 10 },
+  ];
+
+  if (supabase && isSupabaseActive) {
+    try {
+      await supabase.from("course_grades").insert([{
+        subject_id: subject.id,
+        subject_code: subject.code,
+        subject_name: subject.name,
+        credits: subject.credits || 3,
+        semester: targetSemester,
+        academic_year: subject.academicYear || null,
+        term: subject.term || null,
+        grading_method: "components",
+        final_score: null,
+        components: defaultComponents,
+        target_score: 8.5,
+      }]);
+    } catch (e) {
+      console.error("Lỗi đồng bộ thêm vào course_grades:", e);
+    }
+  }
+
+  if (typeof window !== "undefined") {
+    try {
+      const raw = localStorage.getItem(GRADES_STORAGE_KEY);
+      const grades = raw ? JSON.parse(raw) : [];
+      if (Array.isArray(grades) && !grades.some((g: any) => g.subjectId === subject.id || g.subjectCode === subject.code)) {
+        grades.unshift({
+          id: `grade-${Date.now()}`,
+          subjectId: subject.id,
+          subjectCode: subject.code,
+          subjectName: subject.name,
+          credits: subject.credits || 3,
+          semester: targetSemester,
+          academicYear: subject.academicYear,
+          term: subject.term,
+          gradingMethod: "components",
+          finalScore: null,
+          components: defaultComponents,
+          targetScore: 8.5,
+          createdAt: new Date().toISOString(),
+        });
+        localStorage.setItem(GRADES_STORAGE_KEY, JSON.stringify(grades));
+      }
+    } catch {}
+  }
+}
+
+// Đồng bộ sửa thông tin môn học sang bảng điểm (course_grades)
+async function syncUpdateGrade(id: string, formData: Partial<SubjectFormData>, isSupabaseActive: boolean) {
+  const gradeUpdates: Record<string, any> = {};
+  if (formData.code !== undefined) gradeUpdates.subject_code = formData.code;
+  if (formData.name !== undefined) gradeUpdates.subject_name = formData.name;
+  if (formData.credits !== undefined) gradeUpdates.credits = formData.credits;
+  if (formData.semester !== undefined) {
+    gradeUpdates.semester = formData.semester && formData.semester.trim() ? formData.semester.trim() : "Chưa xếp kỳ";
+  }
+  if (formData.academicYear !== undefined) gradeUpdates.academic_year = formData.academicYear || null;
+  if (formData.term !== undefined) gradeUpdates.term = formData.term || null;
+
+  if (Object.keys(gradeUpdates).length === 0) return;
+
+  if (supabase && isSupabaseActive) {
+    try {
+      await supabase
+        .from("course_grades")
+        .update({ ...gradeUpdates, updated_at: new Date().toISOString() })
+        .eq("subject_id", id);
+    } catch (e) {
+      console.error("Lỗi đồng bộ sửa sang course_grades:", e);
+    }
+  }
+
+  if (typeof window !== "undefined") {
+    try {
+      const raw = localStorage.getItem(GRADES_STORAGE_KEY);
+      if (raw) {
+        const grades = JSON.parse(raw);
+        if (Array.isArray(grades)) {
+          const updated = grades.map((g: any) => {
+            if (g.subjectId === id) {
+              return {
+                ...g,
+                subjectCode: gradeUpdates.subject_code ?? g.subjectCode,
+                subjectName: gradeUpdates.subject_name ?? g.subjectName,
+                credits: gradeUpdates.credits ?? g.credits,
+                semester: gradeUpdates.semester ?? g.semester,
+                academicYear: gradeUpdates.academic_year !== undefined ? gradeUpdates.academic_year : g.academicYear,
+                term: gradeUpdates.term !== undefined ? gradeUpdates.term : g.term,
+                updatedAt: new Date().toISOString(),
+              };
+            }
+            return g;
+          });
+          localStorage.setItem(GRADES_STORAGE_KEY, JSON.stringify(updated));
+        }
+      }
+    } catch {}
+  }
+}
+
+// Đồng bộ xóa môn học khỏi bảng điểm (course_grades)
+async function syncDeleteGrade(id: string, isSupabaseActive: boolean) {
+  if (supabase && isSupabaseActive) {
+    try {
+      await supabase.from("course_grades").delete().eq("subject_id", id);
+    } catch (e) {
+      console.error("Lỗi xóa course_grades liên quan:", e);
+    }
+  }
+
+  if (typeof window !== "undefined") {
+    try {
+      const raw = localStorage.getItem(GRADES_STORAGE_KEY);
+      if (raw) {
+        const grades = JSON.parse(raw);
+        if (Array.isArray(grades)) {
+          const filtered = grades.filter((g: any) => g.subjectId !== id);
+          localStorage.setItem(GRADES_STORAGE_KEY, JSON.stringify(filtered));
+        }
+      }
+    } catch {}
+  }
+}
+
 /**
  * Custom hook quản lý danh sách môn học đồng bộ trực tiếp với Supabase Database
  * Có cơ chế dự phòng an toàn (fallback) với localStorage khi mạng yếu hoặc chưa tạo bảng
@@ -198,6 +332,7 @@ export function useSubjects() {
       return { success: false, error: "Vui lòng chọn hoặc nhập học kỳ." };
     }
 
+
     // Thử lưu vào Supabase trước
     if (supabase && isSupabaseActive) {
       try {
@@ -222,6 +357,8 @@ export function useSubjects() {
           const updatedList = [newSubject, ...subjects];
           setSubjects(updatedList);
           backupToLocalStorage(updatedList);
+          // Đồng bộ tự động sang Quản lý điểm số
+          await syncAddGrade(newSubject, true);
           return { success: true };
         }
       } catch (err: any) {
@@ -241,12 +378,14 @@ export function useSubjects() {
     const updatedList = [newSubject, ...subjects];
     setSubjects(updatedList);
     backupToLocalStorage(updatedList);
+    // Đồng bộ sang Quản lý điểm số (localStorage)
+    await syncAddGrade(newSubject, false);
 
     return { success: true };
   };
 
   /**
-   * Cập nhật thông tin môn học - Đồng bộ trực tiếp vào Supabase
+   * Cập nhật thông tin môn học - Đồng bộ trực tiếp vào Supabase và Bảng điểm (course_grades)
    */
   const updateSubject = async (
     id: string,
@@ -292,6 +431,8 @@ export function useSubjects() {
           );
           setSubjects(updatedList);
           backupToLocalStorage(updatedList);
+          // Đồng bộ tự động sang Quản lý điểm số
+          await syncUpdateGrade(id, formData, true);
           return { success: true };
         }
       } catch (err: any) {
@@ -309,11 +450,13 @@ export function useSubjects() {
 
     setSubjects(updatedList);
     backupToLocalStorage(updatedList);
+    // Đồng bộ sang Quản lý điểm số (localStorage)
+    await syncUpdateGrade(id, formData, false);
     return { success: true };
   };
 
   /**
-   * Xoá môn học khỏi Supabase và cập nhật danh sách
+   * Xoá môn học khỏi Supabase và cập nhật danh sách, đồng thời xoá khỏi Bảng điểm (course_grades)
    */
   const deleteSubject = async (id: string) => {
     if (supabase && isSupabaseActive) {
@@ -330,6 +473,9 @@ export function useSubjects() {
     const updatedList = subjects.filter((sub) => sub.id !== id);
     setSubjects(updatedList);
     backupToLocalStorage(updatedList);
+
+    // Đồng bộ xoá khỏi bảng điểm
+    await syncDeleteGrade(id, isSupabaseActive);
   };
 
   const availableSemesters = Array.from(
