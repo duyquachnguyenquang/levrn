@@ -159,4 +159,85 @@ DROP POLICY IF EXISTS "Allow public delete course_grades" ON public.course_grade
 CREATE POLICY "Allow public delete course_grades" ON public.course_grades
     FOR DELETE USING (true);
 
+-- ====================================================================
+-- 6. Bảng study_sessions (Phiên học tập Pomodoro & Lịch sử học)
+-- ====================================================================
+CREATE TABLE IF NOT EXISTS public.study_sessions (
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    subject_id TEXT,
+    duration_minutes INTEGER NOT NULL DEFAULT 25,
+    mode VARCHAR(20) NOT NULL DEFAULT 'focus',
+    notes TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+ALTER TABLE public.study_sessions ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow public read study_sessions" ON public.study_sessions;
+CREATE POLICY "Allow public read study_sessions" ON public.study_sessions FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Allow public insert study_sessions" ON public.study_sessions;
+CREATE POLICY "Allow public insert study_sessions" ON public.study_sessions FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow public delete study_sessions" ON public.study_sessions;
+CREATE POLICY "Allow public delete study_sessions" ON public.study_sessions FOR DELETE USING (true);
+
+-- ====================================================================
+-- 7. Bảng flashcards (Thẻ ghi nhớ ôn tập theo môn học)
+-- ====================================================================
+CREATE TABLE IF NOT EXISTS public.flashcards (
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    subject_id TEXT,
+    deck_name TEXT NOT NULL DEFAULT 'Chung',
+    front TEXT NOT NULL,
+    back TEXT NOT NULL,
+    hint TEXT,
+    difficulty VARCHAR(20) DEFAULT 'medium',
+    review_count INTEGER DEFAULT 0,
+    is_mastered BOOLEAN DEFAULT false,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+ALTER TABLE public.flashcards ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow public read flashcards" ON public.flashcards;
+CREATE POLICY "Allow public read flashcards" ON public.flashcards FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Allow public insert flashcards" ON public.flashcards;
+CREATE POLICY "Allow public insert flashcards" ON public.flashcards FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow public update flashcards" ON public.flashcards;
+CREATE POLICY "Allow public update flashcards" ON public.flashcards FOR UPDATE USING (true);
+
+DROP POLICY IF EXISTS "Allow public delete flashcards" ON public.flashcards;
+CREATE POLICY "Allow public delete flashcards" ON public.flashcards FOR DELETE USING (true);
+
+-- ====================================================================
+-- 8. Bảng quiz_questions (Ngân hàng câu hỏi trắc nghiệm ôn tập)
+-- ====================================================================
+CREATE TABLE IF NOT EXISTS public.quiz_questions (
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    subject_id TEXT,
+    topic TEXT,
+    question TEXT NOT NULL,
+    options JSONB NOT NULL DEFAULT '[]'::jsonb,
+    correct_index INTEGER NOT NULL DEFAULT 0,
+    explanation TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+ALTER TABLE public.quiz_questions ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow public read quiz_questions" ON public.quiz_questions;
+CREATE POLICY "Allow public read quiz_questions" ON public.quiz_questions FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Allow public insert quiz_questions" ON public.quiz_questions;
+CREATE POLICY "Allow public insert quiz_questions" ON public.quiz_questions FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow public update quiz_questions" ON public.quiz_questions;
+CREATE POLICY "Allow public update quiz_questions" ON public.quiz_questions FOR UPDATE USING (true);
+
+DROP POLICY IF EXISTS "Allow public delete quiz_questions" ON public.quiz_questions;
+CREATE POLICY "Allow public delete quiz_questions" ON public.quiz_questions FOR DELETE USING (true);
+
 

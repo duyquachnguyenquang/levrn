@@ -334,3 +334,45 @@ export interface CumulativeGPASummary {
   semesters: SemesterGPASummary[]; // Thống kê chi tiết theo từng kỳ
 }
 
+// ============================================================================
+// PHIÊN HỌC TẬP, POMODORO, FLASHCARD & TRẮC NGHIỆM (STUDY SESSIONS)
+// ============================================================================
+
+export type PomodoroMode = "focus" | "short_break" | "long_break";
+
+export interface StudySession {
+  id: string;
+  subjectId?: string;
+  durationMinutes: number;
+  mode: PomodoroMode;
+  notes?: string;
+  createdAt: string;
+}
+
+export interface Flashcard {
+  id: string;
+  subjectId: string;
+  deckName: string;
+  front: string;          // Khái niệm, thuật ngữ hoặc câu hỏi
+  back: string;           // Định nghĩa, câu trả lời, công thức
+  hint?: string;          // Gợi ý
+  difficulty?: "easy" | "medium" | "hard";
+  reviewCount: number;
+  isMastered: boolean;
+  createdAt: string;
+}
+
+export type FlashcardFormData = Omit<Flashcard, "id" | "reviewCount" | "isMastered" | "createdAt">;
+
+export interface QuizQuestion {
+  id: string;
+  subjectId: string;
+  topic?: string;
+  question: string;
+  options: string[];      // Danh sách các đáp án A, B, C, D
+  correctIndex: number;   // Index đáp án đúng (0, 1, 2, 3)
+  explanation?: string;   // Giải thích chi tiết đáp án
+  createdAt: string;
+}
+
+export type QuizQuestionFormData = Omit<QuizQuestion, "id" | "createdAt">;
