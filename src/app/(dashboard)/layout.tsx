@@ -23,7 +23,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         <SidebarSpacer />
 
         {/* 3. Cột nội dung chính chứa Topbar và nội dung trang */}
-        <div className="flex-1 flex flex-col min-w-0 transition-all duration-300">
+        <div className="flex-1 flex flex-col min-w-0">
           {/* Topbar ngang sticky trên cùng */}
           <Topbar />
 

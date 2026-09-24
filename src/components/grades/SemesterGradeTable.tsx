@@ -13,6 +13,7 @@ import {
   CheckCircle2,
   AlertCircle,
   HelpCircle,
+  GraduationCap,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -160,10 +161,62 @@ export function SemesterGradeTable({
               </div>
             </div>
 
-            {/* Nội dung bảng danh sách môn */}
+            {/* Nội dung danh sách môn */}
             {!isCollapsed && (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs border-collapse">
+              <>
+                {/* 1. Giao diện Mobile: Card tinh gọn chỉ hiển thị điểm final, tên môn, mã môn và số tín chỉ */}
+                <div className="md:hidden p-3 space-y-2">
+                  {courses.map((course) => {
+                    let displayScore10: number | null = null;
+                    if (course.gradingMethod === "final_only") {
+                      displayScore10 = course.finalScore;
+                    } else {
+                      const compCalc = calculateComponentsScore(course.components);
+                      displayScore10 = course.finalScore ?? compCalc.finalScore;
+                    }
+
+                    return (
+                      <div
+                        key={course.id}
+                        onClick={() => onEditCourse(course)}
+                        className="w-full text-left p-3.5 rounded-xl border border-border/70 bg-card hover:border-[#7D39EB]/50 hover:bg-muted/20 transition-all active:scale-[0.99] cursor-pointer flex items-center justify-between gap-3 shadow-2xs group"
+                      >
+                        {/* Cụm bên trái: Mã môn + Số tín chỉ (hàng trên) & Tên môn (hàng dưới) */}
+                        <div className="flex-1 min-w-0 space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono font-bold text-[11px] px-2 py-0.5 rounded-md bg-[#7D39EB]/15 text-[#7D39EB] border border-[#7D39EB]/25 shrink-0">
+                              {course.subjectCode}
+                            </span>
+                            <span className="text-[11px] text-muted-foreground font-semibold flex items-center gap-1 shrink-0">
+                              <GraduationCap className="h-3 w-3" />
+                              <span>{course.credits} TC</span>
+                            </span>
+                          </div>
+                          <h4 className="font-bold text-xs sm:text-sm text-foreground line-clamp-1 group-hover:text-[#7D39EB] transition-colors">
+                            {course.subjectName}
+                          </h4>
+                        </div>
+
+                        {/* Cụm bên phải: Điểm Final & Mũi tên chỉ thị mở pop-up */}
+                        <div className="flex items-center gap-2 shrink-0">
+                          <div className="text-right">
+                            <span className="text-[9px] uppercase font-bold text-muted-foreground block">
+                              Final
+                            </span>
+                            <span className="font-mono font-black text-base text-foreground">
+                              {displayScore10 !== null ? displayScore10.toFixed(2) : "--"}
+                            </span>
+                          </div>
+                          <ChevronRight className="h-4 w-4 text-muted-foreground/50 group-hover:text-foreground transition-colors shrink-0" />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* 2. Giao diện Desktop: Bảng tính chi tiết đầy đủ cột */}
+                <div className="hidden md:block overflow-x-auto">
+                  <table className="w-full text-left text-xs border-collapse">
                   <thead>
                     <tr className="border-b border-border/60 bg-muted/10 text-muted-foreground uppercase text-[10px] font-bold tracking-wider">
                       <th className="py-3 px-4 w-28">Mã môn</th>
@@ -407,7 +460,8 @@ export function SemesterGradeTable({
                   </tbody>
                 </table>
               </div>
-            )}
+            </>
+          )}
           </Card>
         );
       })}

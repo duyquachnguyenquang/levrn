@@ -20,6 +20,7 @@ import {
   Trash2,
   GraduationCap,
   Calendar,
+  CalendarDays,
   ExternalLink,
   Folder,
   Clock,
@@ -91,7 +92,7 @@ export function SubjectCard({ subject, onEdit, onDelete }: SubjectCardProps) {
 
         <CardContent className="p-3.5 pl-4.5 flex-1 flex flex-col justify-between">
           <div>
-            {/* Hàng trên: Mã môn + Phân loại + Tín chỉ + Menu hành động */}
+            {/* Hàng trên: Mã môn + Phân loại + Tín chỉ + Pie-chart tiến độ ở góc phải */}
             <div className="flex items-center justify-between gap-1.5 mb-2">
               <div className="flex flex-wrap items-center gap-1.5 min-w-0">
                 {/* Mã môn */}
@@ -132,28 +133,47 @@ export function SubjectCard({ subject, onEdit, onDelete }: SubjectCardProps) {
                 )}
               </div>
 
-              {/* 2 nút thao tác nhanh: Chỉnh sửa & Xoá */}
-              <div className="flex items-center gap-0.5 shrink-0 opacity-80 group-hover:opacity-100 transition-opacity">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => onEdit(subject)}
-                  className="h-6.5 w-6.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-all active:scale-90"
-                  title="Chỉnh sửa môn học"
-                  aria-label={`Chỉnh sửa môn ${subject.name}`}
-                >
-                  <Pencil className="h-3 w-3" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setShowDeleteConfirm(true)}
-                  className="h-6.5 w-6.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all active:scale-90"
-                  title="Xoá môn học"
-                  aria-label={`Xoá môn ${subject.name}`}
-                >
-                  <Trash2 className="h-3 w-3" />
-                </Button>
+              {/* Pie-chart tiến độ lịch học ở góc phải bên trên */}
+              <div
+                className="relative flex items-center justify-center shrink-0 cursor-default"
+                title={
+                  weekProgress
+                    ? `Tiến độ: ${weekProgress.label} (${weekProgress.percent}%)`
+                    : subject.startDate
+                    ? `Bắt đầu: ${formatDateVi(subject.startDate)}`
+                    : "Chưa có tiến độ lịch học"
+                }
+              >
+                <svg className="w-8 h-8 -rotate-90 transform" viewBox="0 0 36 36">
+                  {/* Vòng nền */}
+                  <circle
+                    cx="18"
+                    cy="18"
+                    r="14"
+                    stroke="currentColor"
+                    strokeWidth="3.2"
+                    fill="transparent"
+                    className="text-muted/40"
+                  />
+                  {/* Vòng tiến độ */}
+                  <circle
+                    cx="18"
+                    cy="18"
+                    r="14"
+                    stroke={cardColor}
+                    strokeWidth="3.2"
+                    strokeDasharray="88"
+                    strokeDashoffset={
+                      88 - (88 * (weekProgress ? weekProgress.percent : 0)) / 100
+                    }
+                    strokeLinecap="round"
+                    fill="transparent"
+                    className="transition-all duration-700 ease-out"
+                  />
+                </svg>
+                <span className="absolute text-[8px] font-black text-foreground font-mono">
+                  {weekProgress ? `${weekProgress.percent}%` : "0%"}
+                </span>
               </div>
             </div>
 
@@ -162,34 +182,43 @@ export function SubjectCard({ subject, onEdit, onDelete }: SubjectCardProps) {
               {subject.name}
             </h3>
 
-            {/* Thông tin học kỳ & Lịch học */}
-            <div className="space-y-1 text-xs text-muted-foreground pt-0.5">
-              <div className="flex items-center gap-1.5">
-                <Calendar className="h-3 w-3 text-muted-foreground/80 shrink-0" />
-                <span className="font-semibold text-foreground/80 text-[11px] truncate">{subject.semester}</span>
+            {/* Thông tin học kỳ & Lịch học: Căn lề thẳng hàng 100% giữa icon và chữ */}
+            <div className="space-y-1.5 text-xs text-muted-foreground pt-0.5">
+              {/* Hàng 1: Học kỳ */}
+              <div className="flex items-center gap-2 text-[11px] leading-tight">
+                <div className="w-3.5 h-3.5 flex items-center justify-center shrink-0 text-muted-foreground/80">
+                  <Calendar className="h-3.5 w-3.5" />
+                </div>
+                <span className="font-semibold text-foreground/80 truncate">{subject.semester}</span>
               </div>
 
-              {/* Lịch học & Thứ trong tuần */}
+              {/* Hàng 2: Thời lượng tuần */}
               {subject.totalWeeks ? (
-                <div className="flex items-center gap-2 text-[11px]">
-                  <Clock className="h-3.5 w-3.5 text-muted-foreground/80 shrink-0" />
-                  <span>
+                <div className="flex items-center gap-2 text-[11px] leading-tight">
+                  <div className="w-3.5 h-3.5 flex items-center justify-center shrink-0 text-muted-foreground/80">
+                    <Clock className="h-3.5 w-3.5" />
+                  </div>
+                  <span className="truncate">
                     {subject.totalWeeks} tuần
                     {subject.startDate ? ` (từ ${formatDateVi(subject.startDate)})` : ""}
                   </span>
                 </div>
               ) : subject.startDate ? (
-                <div className="flex items-center gap-2 text-[11px]">
-                  <Clock className="h-3.5 w-3.5 text-muted-foreground/80 shrink-0" />
-                  <span>Bắt đầu: {formatDateVi(subject.startDate)}</span>
+                <div className="flex items-center gap-2 text-[11px] leading-tight">
+                  <div className="w-3.5 h-3.5 flex items-center justify-center shrink-0 text-muted-foreground/80">
+                    <Clock className="h-3.5 w-3.5" />
+                  </div>
+                  <span className="truncate">Bắt đầu: {formatDateVi(subject.startDate)}</span>
                 </div>
               ) : null}
 
-              {/* Thứ học */}
+              {/* Hàng 3: Thứ học (Dùng icon CalendarDays đồng bộ kích thước w-3.5 h-3.5) */}
               {((subject.scheduleDays && subject.scheduleDays.length > 0) || subject.startDate) && (
-                <div className="flex items-center gap-2 text-[11px] text-foreground/85">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#7D39EB] shrink-0" />
-                  <span>
+                <div className="flex items-center gap-2 text-[11px] leading-tight text-foreground/85">
+                  <div className="w-3.5 h-3.5 flex items-center justify-center shrink-0 text-[#7D39EB]">
+                    <CalendarDays className="h-3.5 w-3.5" />
+                  </div>
+                  <span className="truncate">
                     Lịch học:{" "}
                     <strong className="text-foreground font-semibold">
                       {subject.scheduleDays && subject.scheduleDays.length > 0
@@ -202,11 +231,13 @@ export function SubjectCard({ subject, onEdit, onDelete }: SubjectCardProps) {
                 </div>
               )}
 
-              {/* Giờ học */}
+              {/* Hàng 4: Ca học */}
               {(subject.startTime || subject.endTime) && (
-                <div className="flex items-center gap-2 text-[11px] text-foreground/85">
-                  <Clock className="h-3 w-3 text-[#7D39EB] shrink-0" />
-                  <span>
+                <div className="flex items-center gap-2 text-[11px] leading-tight text-foreground/85">
+                  <div className="w-3.5 h-3.5 flex items-center justify-center shrink-0 text-[#7D39EB]">
+                    <Clock className="h-3.5 w-3.5" />
+                  </div>
+                  <span className="truncate">
                     Ca học:{" "}
                     <strong className="text-foreground font-mono font-bold">
                       {subject.startTime || "--:--"} - {subject.endTime || "--:--"}
@@ -215,11 +246,13 @@ export function SubjectCard({ subject, onEdit, onDelete }: SubjectCardProps) {
                 </div>
               )}
 
-              {/* Phòng học & Cơ sở */}
+              {/* Hàng 5: Phòng học & Cơ sở */}
               {(subject.room || subject.campus) && (
-                <div className="flex items-center gap-1.5 text-[11px] text-foreground/80 truncate">
-                  <MapPin className="h-3 w-3 text-[#C6FF33] shrink-0" />
-                  <span className="truncate">
+                <div className="flex items-center gap-2 text-[11px] leading-tight text-foreground/80">
+                  <div className="w-3.5 h-3.5 flex items-center justify-center shrink-0 text-[#C6FF33]">
+                    <MapPin className="h-3.5 w-3.5" />
+                  </div>
+                  <span className="truncate min-w-0 flex-1">
                     {subject.room && <strong className="text-foreground font-semibold mr-1">{subject.room}</strong>}
                     {subject.campus && (
                       <span className="text-muted-foreground">
@@ -242,70 +275,64 @@ export function SubjectCard({ subject, onEdit, onDelete }: SubjectCardProps) {
                 </div>
               )}
             </div>
-
-            {/* Cụm liên kết nhanh: Course LMS & Google Drive */}
-            {(subject.courseUrl || subject.driveUrl) && (
-              <div className="flex flex-wrap items-center gap-2 mt-3 pt-2">
-                {subject.courseUrl && (
-                  <a
-                    href={subject.courseUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold bg-[#7D39EB]/10 text-[#7D39EB] hover:bg-[#7D39EB]/20 border border-[#7D39EB]/20 transition-all hover:-translate-y-0.5 active:scale-95"
-                    title="Mở LMS Course của trường"
-                  >
-                    <BookOpen className="h-3 w-3" />
-                    <span>LMS Course</span>
-                    <ExternalLink className="h-2.5 w-2.5 opacity-70" />
-                  </a>
-                )}
-
-                {subject.driveUrl && (
-                  <a
-                    href={subject.driveUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 border border-amber-500/20 transition-all hover:-translate-y-0.5 active:scale-95"
-                    title="Mở Google Drive môn học"
-                  >
-                    <Folder className="h-3 w-3" />
-                    <span>Drive</span>
-                    <ExternalLink className="h-2.5 w-2.5 opacity-70" />
-                  </a>
-                )}
-              </div>
-            )}
           </div>
 
-          {/* Dải chân card: Tiến độ lịch học */}
-          <div className="mt-4 pt-3 border-t border-border/50">
-            {weekProgress ? (
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between text-[11px] font-semibold">
-                  <span className="text-muted-foreground">Tiến độ lịch học</span>
-                  <span
-                    style={{ color: cardColor }}
-                    className="font-bold text-[11px]"
-                  >
-                    {weekProgress.label}
-                  </span>
-                </div>
-                <div className="h-1.5 rounded-sm bg-muted overflow-hidden">
-                  <div
-                    className="h-full rounded-sm transition-all duration-500"
-                    style={{
-                      width: `${weekProgress.percent}%`,
-                      backgroundColor: cardColor,
-                    }}
-                  />
-                </div>
-              </div>
-            ) : (
-              <div className="text-[10px] text-muted-foreground/80 flex items-center justify-between">
-                <span>{subject.startDate ? `Bắt đầu: ${formatDateVi(subject.startDate)}` : "Chưa đặt lịch học"}</span>
-                <span>{subject.endDate ? `Kết thúc: ${formatDateVi(subject.endDate)}` : ""}</span>
-              </div>
-            )}
+          {/* Dải chân card: Các nút Course, Drive, Chỉnh sửa, Xoá */}
+          <div className="mt-3.5 pt-2.5 border-t border-border/50 flex items-center justify-between gap-1.5">
+            {/* Nhóm liên kết Course & Drive */}
+            <div className="flex items-center gap-1.5 min-w-0">
+              {subject.courseUrl && (
+                <a
+                  href={subject.courseUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-bold bg-[#7D39EB]/10 text-[#7D39EB] hover:bg-[#7D39EB]/20 border border-[#7D39EB]/25 transition-all hover:-translate-y-0.5 active:scale-95 shrink-0"
+                  title="Mở LMS Course"
+                >
+                  <BookOpen className="h-3 w-3" />
+                  <span>Course</span>
+                  <ExternalLink className="h-2.5 w-2.5 opacity-60" />
+                </a>
+              )}
+
+              {subject.driveUrl && (
+                <a
+                  href={subject.driveUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 border border-amber-500/25 transition-all hover:-translate-y-0.5 active:scale-95 shrink-0"
+                  title="Mở Google Drive môn học"
+                >
+                  <Folder className="h-3 w-3" />
+                  <span>Drive</span>
+                  <ExternalLink className="h-2.5 w-2.5 opacity-60" />
+                </a>
+              )}
+            </div>
+
+            {/* Nhóm thao tác Chỉnh sửa & Xoá */}
+            <div className="flex items-center gap-0.5 ml-auto shrink-0">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => onEdit(subject)}
+                className="h-7 w-7 rounded-md text-muted-foreground hover:text-[#7D39EB] hover:bg-[#7D39EB]/10 transition-all active:scale-90"
+                title="Chỉnh sửa môn học"
+                aria-label={`Chỉnh sửa môn ${subject.name}`}
+              >
+                <Pencil className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowDeleteConfirm(true)}
+                className="h-7 w-7 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all active:scale-90"
+                title="Xoá môn học"
+                aria-label={`Xoá môn ${subject.name}`}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>

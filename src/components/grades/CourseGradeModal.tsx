@@ -45,6 +45,7 @@ interface CourseGradeModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (data: CourseGradeFormData) => Promise<any>;
+  onDelete?: (id: string) => void;
   initialData?: CourseGrade | null;
   existingSubjects?: Subject[];
 }
@@ -53,6 +54,7 @@ export function CourseGradeModal({
   isOpen,
   onClose,
   onSave,
+  onDelete,
   initialData,
   existingSubjects = [],
 }: CourseGradeModalProps) {
@@ -508,23 +510,42 @@ export function CourseGradeModal({
           )}
 
           {/* Footer nút hành động */}
-          <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-border/50">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              className="text-xs font-semibold rounded-lg px-4 h-9"
-              disabled={isSubmitting}
-            >
-              Hủy
-            </Button>
-            <Button
-              type="submit"
-              className="text-xs font-bold rounded-lg px-5 h-9 bg-[#C6FF33] hover:bg-[#B5F51B] text-black shadow-md transition-all active:scale-95"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? "Đang lưu..." : initialData ? "Lưu thay đổi" : "Thêm môn học"}
-            </Button>
+          <div className="flex items-center justify-between gap-2.5 pt-3 border-t border-border/50">
+            {initialData && onDelete ? (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  if (confirm(`Bạn có chắc chắn muốn xóa môn ${initialData.subjectName}?`)) {
+                    onDelete(initialData.id);
+                    onClose();
+                  }
+                }}
+                className="text-xs font-semibold rounded-lg px-3 h-9 text-destructive border-destructive/30 hover:bg-destructive/10 gap-1.5 active:scale-95"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                <span>Xóa môn</span>
+              </Button>
+            ) : <div />}
+
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onClose}
+                className="text-xs font-semibold rounded-lg px-4 h-9"
+                disabled={isSubmitting}
+              >
+                Hủy
+              </Button>
+              <Button
+                type="submit"
+                className="text-xs font-bold rounded-lg px-5 h-9 bg-[#C6FF33] hover:bg-[#B5F51B] text-black shadow-md transition-all active:scale-95"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Đang lưu..." : initialData ? "Lưu thay đổi" : "Thêm môn học"}
+              </Button>
+            </div>
           </div>
         </form>
       </DialogContent>

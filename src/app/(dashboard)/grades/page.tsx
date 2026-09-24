@@ -8,9 +8,16 @@ import {
   RefreshCw,
   Download,
   AlertCircle,
+  Filter,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { useCourseGrades } from "@/hooks/useCourseGrades";
 import { useSubjects } from "@/hooks/useSubjects";
 import { GPASummaryCard } from "@/components/grades/GPASummaryCard";
@@ -38,6 +45,11 @@ export default function GradesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSemester, setSelectedSemester] = useState<string>("");
   const [methodFilter, setMethodFilter] = useState<string>("all");
+  const [filterOpen, setFilterOpen] = useState(false);
+
+  const isFilterActive = selectedSemester !== "" || methodFilter !== "all";
+  const activeFilterCount =
+    (selectedSemester !== "" ? 1 : 0) + (methodFilter !== "all" ? 1 : 0);
 
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -107,31 +119,29 @@ export default function GradesPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in-50 duration-300">
-      {/* 1. Header Trang: Đồng bộ chuẩn Môn học & Kế hoạch học tập, không dòng chữ thừa */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-border/50">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <div className="h-9 w-9 rounded-md bg-[#7D39EB]/15 flex items-center justify-center text-[#7D39EB]">
-              <GraduationCap className="h-5 w-5" />
-            </div>
-            <h2 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
-              Quản lý điểm số
-            </h2>
+      {/* 1. Header Trang: Đồng bộ chuẩn Môn học & Kế hoạch học tập, luôn nằm cùng hàng */}
+      <div className="flex flex-row items-center justify-between gap-2 sm:gap-4 pb-2 border-b border-border/50">
+        <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+          <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-md bg-[#7D39EB]/15 flex items-center justify-center text-[#7D39EB] shrink-0">
+            <GraduationCap className="h-4 w-4 sm:h-5 sm:w-5" />
           </div>
+          <h2 className="text-lg sm:text-2xl md:text-3xl font-black text-foreground tracking-tight truncate">
+            Quản lý điểm số
+          </h2>
         </div>
 
         {/* Nút thao tác bên phải: Tải lại, Tải dữ liệu xuống, Thêm môn học (+) */}
-        <div className="flex items-center gap-2 self-start sm:self-center">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {/* Nút Tải lại (icon Lặp lại) */}
           <Button
             variant="outline"
             size="icon"
             onClick={handleRefresh}
             disabled={isRefreshing}
-            className="rounded-md h-10 w-10 border-border/70 text-muted-foreground hover:text-foreground transition-all active:scale-95"
+            className="rounded-md h-8 w-8 sm:h-10 sm:w-10 border-border/70 text-muted-foreground hover:text-foreground transition-all active:scale-95 shrink-0"
             title="Tải lại dữ liệu"
           >
-            <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+            <RefreshCw className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${isRefreshing ? "animate-spin" : ""}`} />
           </Button>
 
           {/* Nút Tải dữ liệu xuống */}
@@ -139,21 +149,21 @@ export default function GradesPage() {
             variant="outline"
             size="icon"
             onClick={handleExportCSV}
-            className="rounded-md h-10 w-10 border-border/70 text-muted-foreground hover:text-foreground transition-all active:scale-95"
+            className="rounded-md h-8 w-8 sm:h-10 sm:w-10 border-border/70 text-muted-foreground hover:text-foreground transition-all active:scale-95 shrink-0"
             title="Tải dữ liệu xuống (CSV)"
           >
-            <Download className="h-4 w-4" />
+            <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           </Button>
 
           {/* Nút Thêm môn học (dấu cộng chuẩn trang Môn học) */}
           <Button
             size="icon"
             onClick={handleOpenAddModal}
-            className="h-10 w-10 bg-[#C6FF33] hover:bg-[#B5F51B] text-black font-black rounded-md shadow-md transition-all duration-200 hover:-translate-y-0.5 active:scale-95 shrink-0"
+            className="h-8 w-8 sm:h-10 sm:w-10 bg-[#C6FF33] hover:bg-[#B5F51B] text-black font-black rounded-md shadow-md transition-all duration-200 hover:-translate-y-0.5 active:scale-95 shrink-0"
             title="Thêm môn học"
             aria-label="Thêm môn học"
           >
-            <Plus className="h-5 w-5 stroke-[3]" />
+            <Plus className="h-4 w-4 sm:h-5 sm:w-5 stroke-[3]" />
           </Button>
         </div>
       </div>
@@ -177,44 +187,107 @@ export default function GradesPage() {
       {/* 2. 4 thẻ thống kê GPA tinh gọn */}
       <GPASummaryCard summary={cumulativeGPA} />
 
-      {/* 3. Thanh tìm kiếm và Bộ lọc */}
-      <div className="p-3 sm:p-4 rounded-xl border border-border/80 bg-card/60 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+      {/* 3. Thanh tìm kiếm và Nút Bộ lọc Popover (đồng bộ theo trang Môn học) */}
+      <div className="flex flex-row items-center justify-between gap-2.5 bg-card p-2 sm:p-2.5 rounded-lg border border-border/70 shadow-xs">
+        {/* Input Tìm kiếm */}
+        <div className="relative flex-1 min-w-0">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
           <Input
             placeholder="Tìm theo tên môn hoặc mã môn..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-9 pl-9 text-xs rounded-lg bg-background"
+            className="pl-8 pr-8 h-9 text-xs bg-background/60 rounded-md border-border/60 focus-visible:ring-[#7D39EB] transition-all"
           />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
         </div>
 
-        <div className="flex items-center gap-2">
-          {/* Lọc theo học kỳ */}
-          <select
-            value={selectedSemester}
-            onChange={(e) => setSelectedSemester(e.target.value)}
-            className="text-xs rounded-lg border border-border/80 bg-background px-3 py-2 font-medium focus:ring-1 focus:ring-primary focus:outline-none"
+        {/* Nút Bộ lọc Popover duy nhất (icon bộ lọc) với Popover chứa drop-boxes */}
+        <Popover open={filterOpen} onOpenChange={setFilterOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className={`h-9 px-3 rounded-md text-xs font-bold gap-2 border-border/80 transition-all active:scale-95 shrink-0 ${
+                isFilterActive
+                  ? "border-[#7D39EB] text-[#7D39EB] bg-[#7D39EB]/10"
+                  : "text-muted-foreground hover:text-foreground hover:border-[#7D39EB]/40"
+              }`}
+              title="Bộ lọc điểm số"
+            >
+              <Filter className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Bộ lọc</span>
+              {activeFilterCount > 0 && (
+                <span className="h-4 w-4 rounded-full bg-[#7D39EB] text-white text-[10px] flex items-center justify-center font-black">
+                  {activeFilterCount}
+                </span>
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent
+            align="end"
+            className="w-72 p-4 rounded-xl border border-border/80 shadow-2xl bg-card text-foreground space-y-3 z-50"
           >
-            <option value="">Tất cả học kỳ ({allSemesters.length} kỳ)</option>
-            {allSemesters.map((sem) => (
-              <option key={sem} value={sem}>
-                {sem}
-              </option>
-            ))}
-          </select>
+            <div className="flex items-center justify-between pb-2 border-b border-border/60">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-foreground">
+                <Filter className="h-3.5 w-3.5 text-[#7D39EB]" />
+                <span>Bộ lọc điểm số</span>
+              </div>
+              {isFilterActive && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedSemester("");
+                    setMethodFilter("all");
+                  }}
+                  className="text-[11px] text-muted-foreground hover:text-destructive transition-colors font-semibold cursor-pointer"
+                >
+                  Đặt lại
+                </button>
+              )}
+            </div>
 
-          {/* Lọc theo cơ chế chấm điểm */}
-          <select
-            value={methodFilter}
-            onChange={(e) => setMethodFilter(e.target.value)}
-            className="text-xs rounded-lg border border-border/80 bg-background px-3 py-2 font-medium focus:ring-1 focus:ring-primary focus:outline-none"
-          >
-            <option value="all">Tất cả cơ chế</option>
-            <option value="final_only">Chỉ môn điểm Final</option>
-            <option value="components">Chỉ môn có tỷ trọng thành phần</option>
-          </select>
-        </div>
+            {/* Drop-box 1: Học kỳ */}
+            <div className="space-y-1">
+              <label className="text-[11px] font-bold text-muted-foreground">
+                Học kỳ
+              </label>
+              <select
+                value={selectedSemester}
+                onChange={(e) => setSelectedSemester(e.target.value)}
+                className="w-full h-9 text-xs font-semibold rounded-md border border-border/80 bg-background px-2.5 py-1 text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7D39EB] transition-all"
+              >
+                <option value="">Tất cả học kỳ ({allSemesters.length} kỳ)</option>
+                {allSemesters.map((sem) => (
+                  <option key={sem} value={sem}>
+                    {sem}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Drop-box 2: Cơ chế tính điểm */}
+            <div className="space-y-1">
+              <label className="text-[11px] font-bold text-muted-foreground">
+                Cơ chế tính điểm
+              </label>
+              <select
+                value={methodFilter}
+                onChange={(e) => setMethodFilter(e.target.value)}
+                className="w-full h-9 text-xs font-semibold rounded-md border border-border/80 bg-background px-2.5 py-1 text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7D39EB] transition-all"
+              >
+                <option value="all">Tất cả cơ chế</option>
+                <option value="final_only">Chỉ môn điểm Final</option>
+                <option value="components">Chỉ môn có tỷ trọng thành phần</option>
+              </select>
+            </div>
+          </PopoverContent>
+        </Popover>
       </div>
 
       {/* 4. Bảng danh sách điểm theo từng học kỳ */}
@@ -231,6 +304,7 @@ export default function GradesPage() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSave={handleSaveCourse}
+        onDelete={deleteCourseGrade}
         initialData={editingCourse}
         existingSubjects={subjects}
       />

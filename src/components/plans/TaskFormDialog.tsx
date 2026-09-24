@@ -344,8 +344,7 @@ export function TaskFormDialog({
                 onChange={(e) => setStatus(e.target.value as StudyTaskStatus)}
                 className="w-full h-10 rounded-lg border border-input bg-background/80 px-3 text-xs sm:text-sm font-bold text-foreground focus:outline-none focus:ring-1 focus:ring-[#7D39EB] cursor-pointer"
               >
-                <option value="todo">Chưa làm</option>
-                <option value="in_progress">Đang làm</option>
+                <option value="todo">Chưa xong</option>
                 <option value="completed">Đã xong</option>
               </select>
             </div>

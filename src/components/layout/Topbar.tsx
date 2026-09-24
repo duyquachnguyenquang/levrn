@@ -64,7 +64,7 @@ export function Topbar() {
       : "LEVRN Study");
 
   return (
-    <header className="h-16 sticky top-0 z-20 w-full border-b border-border/60 bg-background/80 backdrop-blur-md px-4 sm:px-8 flex items-center justify-between transition-colors">
+    <header className="h-16 sticky top-0 z-40 w-full border-b border-border/60 bg-background/95 backdrop-blur-md px-4 sm:px-8 flex items-center justify-between transition-colors">
       {/* Cụm bên trái: Hamburger + Icon logo nhỏ (mobile) + Tiêu đề trang */}
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2 lg:hidden">

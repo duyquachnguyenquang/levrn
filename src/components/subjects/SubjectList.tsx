@@ -162,21 +162,21 @@ export function SubjectList({
 
   return (
     <div className="space-y-5 animate-in fade-in-50 duration-300">
-      {/* Thanh công cụ: Tìm kiếm + Nút Bộ lọc Popover + Chuyển đổi Grid/List */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-card p-2.5 rounded-lg border border-border/70 shadow-xs">
+      {/* Thanh công cụ: Tìm kiếm + Nút Bộ lọc Popover + Chuyển đổi Grid/List (luôn ngang hàng) */}
+      <div className="flex flex-row items-center justify-between gap-2 bg-card p-2 sm:p-2.5 rounded-lg border border-border/70 shadow-xs">
         {/* Input Tìm kiếm */}
-        <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <div className="relative flex-1 min-w-0">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
           <Input
             placeholder="Tìm kiếm môn học"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 pr-8 h-10 text-xs sm:text-sm bg-background/60 rounded-md border-border/60 focus-visible:ring-[#7D39EB] transition-all"
+            className="pl-8 pr-7 h-9 text-xs sm:text-sm bg-background/60 rounded-md border-border/60 focus-visible:ring-[#7D39EB] transition-all"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -184,23 +184,23 @@ export function SubjectList({
         </div>
 
         {/* Cụm công cụ bên phải: Nút 'Bộ lọc' + Nút chuyển Grid/List */}
-        <div className="flex items-center gap-2 self-end sm:self-center">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {/* Nút Bộ lọc duy nhất (icon bộ lọc) với Popover chứa 3 drop-box */}
           <Popover open={filterOpen} onOpenChange={setFilterOpen}>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
-                className={`h-10 px-3 rounded-md text-xs font-bold gap-2 border-border/80 transition-all active:scale-95 ${
+                className={`h-9 px-2.5 sm:px-3 rounded-md text-xs font-bold gap-1.5 border-border/80 transition-all active:scale-95 shrink-0 ${
                   isFilterActive
                     ? "border-[#7D39EB] text-[#7D39EB] bg-[#7D39EB]/10"
                     : "text-muted-foreground hover:text-foreground hover:border-[#7D39EB]/40"
                 }`}
                 title="Bộ lọc môn học"
               >
-                <Filter className="h-4 w-4" />
+                <Filter className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">Bộ lọc</span>
                 {activeFilterCount > 0 && (
-                  <span className="h-5 w-5 rounded-full bg-[#7D39EB] text-white text-[10px] flex items-center justify-center font-black">
+                  <span className="h-4 w-4 rounded-full bg-[#7D39EB] text-white text-[10px] flex items-center justify-center font-black">
                     {activeFilterCount}
                   </span>
                 )}
@@ -290,24 +290,24 @@ export function SubjectList({
           </Popover>
 
           {/* Nút chuyển đổi giao diện: Xem theo Khối (5 môn/hàng) hoặc theo List */}
-          <div className="flex items-center p-0.5 bg-muted/60 rounded-md border border-border/70 h-10">
+          <div className="flex items-center p-0.5 bg-muted/60 rounded-md border border-border/70 h-9 shrink-0">
             <button
               type="button"
               onClick={() => setViewMode("grid")}
-              className={`h-8.5 px-2.5 rounded-sm flex items-center gap-1 text-xs transition-all active:scale-95 ${
+              className={`h-8 w-8 sm:w-auto sm:px-2.5 rounded-sm flex items-center justify-center gap-1 text-xs transition-all active:scale-95 cursor-pointer ${
                 viewMode === "grid"
                   ? "bg-card text-foreground shadow-xs font-bold border border-border/40"
                   : "text-muted-foreground hover:text-foreground"
               }`}
-              title="Xem dạng khối (5 môn/hàng)"
+              title="Xem dạng khối"
               aria-label="Xem dạng khối"
             >
-              <LayoutGrid className="h-4 w-4" />
+              <LayoutGrid className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </button>
             <button
               type="button"
               onClick={() => setViewMode("list")}
-              className={`h-8.5 px-2.5 rounded-sm flex items-center gap-1 text-xs transition-all active:scale-95 ${
+              className={`h-8 w-8 sm:w-auto sm:px-2.5 rounded-sm flex items-center justify-center gap-1 text-xs transition-all active:scale-95 cursor-pointer ${
                 viewMode === "list"
                   ? "bg-card text-foreground shadow-xs font-bold border border-border/40"
                   : "text-muted-foreground hover:text-foreground"
@@ -315,7 +315,7 @@ export function SubjectList({
               title="Xem dạng danh sách"
               aria-label="Xem dạng danh sách"
             >
-              <List className="h-4 w-4" />
+              <List className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </button>
           </div>
         </div>

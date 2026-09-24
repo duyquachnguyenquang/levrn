@@ -94,6 +94,16 @@
   }
 }
 
+/* LED signboard ticker animation */
+@keyframes led-ticker {
+  0%, 20% {
+    transform: translateX(0);
+  }
+  80%, 100% {
+    transform: translateX(var(--ticker-distance, 0px));
+  }
+}
+
 /* Custom smooth scrollbar */
 ::-webkit-scrollbar {
   width: 6px;

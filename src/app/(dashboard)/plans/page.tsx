@@ -5,10 +5,8 @@ import { useSubjects } from "@/hooks/useSubjects";
 import { useStudyPlans } from "@/hooks/useStudyPlans";
 import { PlanHeader } from "@/components/plans/PlanHeader";
 import { PlanToolbar, PlanDisplayMode } from "@/components/plans/PlanToolbar";
-import { TaskKanbanBoard } from "@/components/plans/TaskKanbanBoard";
 import { TaskGrid } from "@/components/plans/TaskGrid";
 import { TaskListView } from "@/components/plans/TaskListView";
-import { TimeblockTimeline } from "@/components/plans/TimeblockTimeline";
 import { TaskFormDialog } from "@/components/plans/TaskFormDialog";
 import {
   StudyTask,
@@ -51,8 +49,8 @@ export default function PlansPage() {
     refreshTasks,
   } = useStudyPlans();
 
-  // Dạng hiển thị: "kanban" (Cột kéo thả) | "grid" (Thẻ) | "list" (Danh sách) | "timeline" (Khung giờ)
-  const [displayMode, setDisplayMode] = useState<PlanDisplayMode>("kanban");
+  // Dạng hiển thị: "grid" (Thẻ) | "list" (Danh sách)
+  const [displayMode, setDisplayMode] = useState<PlanDisplayMode>("grid");
 
   // Bộ lọc
   const [searchQuery, setSearchQuery] = useState("");
@@ -232,20 +230,7 @@ export default function PlansPage() {
         </div>
       ) : (
         <div>
-          {/* Chế độ 1: Cột Kanban (Chưa làm, Đang làm, Đã xong) có Kéo - Thả */}
-          {displayMode === "kanban" && (
-            <TaskKanbanBoard
-              tasks={filteredTasks}
-              subjects={subjects}
-              onStatusChange={updateTaskStatus}
-              onEditTask={handleEditTask}
-              onDeleteTask={deleteTask}
-              onRescheduleTomorrow={handleRescheduleTomorrow}
-              onAddNewWithStatus={handleAddNewWithStatus}
-            />
-          )}
-
-          {/* Chế độ 2: Dạng Thẻ (Grid) */}
+          {/* Chế độ 1: Dạng Thẻ (Grid) */}
           {displayMode === "grid" && (
             <TaskGrid
               tasks={filteredTasks}
@@ -260,19 +245,6 @@ export default function PlansPage() {
           {/* Chế độ 3: Dạng Danh sách (List) */}
           {displayMode === "list" && (
             <TaskListView
-              tasks={filteredTasks}
-              subjects={subjects}
-              onToggleComplete={toggleTaskComplete}
-              onEditTask={handleEditTask}
-              onDeleteTask={deleteTask}
-              onRescheduleTomorrow={handleRescheduleTomorrow}
-            />
-          )}
-
-          {/* Chế độ 4: Dạng Khung giờ (Timeblock timeline) */}
-          {displayMode === "timeline" && (
-            <TimeblockTimeline
-              dateStr={getTodayString()}
               tasks={filteredTasks}
               subjects={subjects}
               onToggleComplete={toggleTaskComplete}

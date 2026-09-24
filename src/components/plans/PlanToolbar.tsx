@@ -5,7 +5,6 @@ import {
   Search,
   Filter,
   X,
-  Columns3,
   LayoutGrid,
   List,
   Clock,
@@ -27,7 +26,7 @@ import {
 } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-export type PlanDisplayMode = "kanban" | "grid" | "list" | "timeline";
+export type PlanDisplayMode = "grid" | "list";
 
 interface PlanToolbarProps {
   searchQuery: string;
@@ -77,45 +76,45 @@ export function PlanToolbar({
     (selectedPriority !== "ALL" ? 1 : 0);
 
   return (
-    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-card p-2.5 rounded-lg border border-border/70 shadow-xs">
+    <div className="flex flex-row items-center justify-between gap-2 bg-card p-2 sm:p-2.5 rounded-lg border border-border/70 shadow-xs">
       {/* 1. Input Tìm kiếm */}
-      <div className="relative flex-1 min-w-[200px]">
-        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      <div className="relative flex-1 min-w-0">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
         <Input
           placeholder="Tìm kiếm nhiệm vụ, nội dung..."
           value={searchQuery}
           onChange={(e) => onSearchQueryChange(e.target.value)}
-          className="pl-9 pr-8 h-10 text-xs sm:text-sm bg-background/60 rounded-md border-border/60 focus-visible:ring-[#7D39EB] transition-all"
+          className="pl-8 pr-7 h-9 text-xs bg-background/60 rounded-md border-border/60 focus-visible:ring-[#7D39EB] transition-all"
         />
         {searchQuery && (
           <button
             onClick={() => onSearchQueryChange("")}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
           >
             <X className="h-3.5 w-3.5" />
           </button>
         )}
       </div>
 
-      {/* 2. Nút Bộ lọc Popover duy nhất + Chuyển đổi Dạng xem */}
-      <div className="flex items-center gap-2 self-end sm:self-center">
-        {/* Nút Bộ lọc (icon Phễu) */}
+      {/* 2. Nút Bộ lọc Popover duy nhất + Chuyển đổi Dạng xem (ngang hàng, icon trên mobile) */}
+      <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        {/* Nút Bộ lọc (icon Phễu, ẩn chữ trên mobile) */}
         <Popover open={filterOpen} onOpenChange={setFilterOpen}>
           <PopoverTrigger asChild>
             <Button
               variant="outline"
               className={cn(
-                "h-10 px-3 rounded-md text-xs font-bold gap-2 border-border/80 transition-all active:scale-95 cursor-pointer",
+                "h-9 px-2.5 sm:px-3 rounded-md text-xs font-bold gap-1.5 border-border/80 transition-all active:scale-95 cursor-pointer shrink-0",
                 isFilterActive
                   ? "border-[#7D39EB] text-[#7D39EB] bg-[#7D39EB]/10"
                   : "text-muted-foreground hover:text-foreground hover:border-[#7D39EB]/40"
               )}
               title="Bộ lọc nhiệm vụ"
             >
-              <Filter className="h-4 w-4" />
-              <span>Bộ lọc</span>
+              <Filter className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Bộ lọc</span>
               {activeFilterCount > 0 && (
-                <span className="h-5 w-5 rounded-full bg-[#7D39EB] text-white text-[10px] flex items-center justify-center font-black">
+                <span className="h-4 w-4 rounded-full bg-[#7D39EB] text-white text-[10px] flex items-center justify-center font-black">
                   {activeFilterCount}
                 </span>
               )}
@@ -213,38 +212,22 @@ export function PlanToolbar({
           </PopoverContent>
         </Popover>
 
-        {/* Chuyển đổi Dạng xem: Kanban (Cột kéo thả) | Thẻ (Grid) | Danh sách (List) | Khung giờ (Timeline) */}
-        <div className="flex items-center bg-muted/60 p-1 rounded-md border border-border/60">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onDisplayModeChange("kanban")}
-            className={cn(
-              "h-8 px-2.5 rounded-xs transition-all cursor-pointer font-bold text-xs gap-1.5",
-              displayMode === "kanban"
-                ? "bg-[#C6FF33] text-black shadow-xs font-black"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-            title="Dạng cột kéo thả (Chưa làm, Đang làm, Đã xong)"
-          >
-            <Columns3 className="h-4 w-4" />
-            <span className="hidden md:inline">Cột</span>
-          </Button>
-
+        {/* Chuyển đổi Dạng xem: Thẻ (Grid) | Danh sách (List) */}
+        <div className="flex items-center bg-muted/60 p-0.5 rounded-md border border-border/60 h-9 shrink-0">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => onDisplayModeChange("grid")}
             className={cn(
-              "h-8 px-2.5 rounded-xs transition-all cursor-pointer font-bold text-xs gap-1.5",
+              "h-8 w-8 p-0 sm:w-auto sm:px-2.5 sm:gap-1.5 rounded-xs transition-all cursor-pointer font-bold text-xs",
               displayMode === "grid"
                 ? "bg-[#C6FF33] text-black shadow-xs font-black"
                 : "text-muted-foreground hover:text-foreground"
             )}
             title="Dạng thẻ (Grid)"
           >
-            <LayoutGrid className="h-4 w-4" />
-            <span className="hidden md:inline">Thẻ</span>
+            <LayoutGrid className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <span className="hidden sm:inline">Thẻ</span>
           </Button>
 
           <Button
@@ -252,31 +235,15 @@ export function PlanToolbar({
             size="sm"
             onClick={() => onDisplayModeChange("list")}
             className={cn(
-              "h-8 px-2.5 rounded-xs transition-all cursor-pointer font-bold text-xs gap-1.5",
+              "h-8 w-8 p-0 sm:w-auto sm:px-2.5 sm:gap-1.5 rounded-xs transition-all cursor-pointer font-bold text-xs",
               displayMode === "list"
                 ? "bg-[#C6FF33] text-black shadow-xs font-black"
                 : "text-muted-foreground hover:text-foreground"
             )}
             title="Dạng danh sách (List)"
           >
-            <List className="h-4 w-4" />
-            <span className="hidden md:inline">List</span>
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onDisplayModeChange("timeline")}
-            className={cn(
-              "h-8 px-2.5 rounded-xs transition-all cursor-pointer font-bold text-xs gap-1.5",
-              displayMode === "timeline"
-                ? "bg-[#C6FF33] text-black shadow-xs font-black"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-            title="Dạng khung giờ tự học (Timeblock)"
-          >
-            <Clock className="h-4 w-4" />
-            <span className="hidden md:inline">Giờ</span>
+            <List className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <span className="hidden sm:inline">List</span>
           </Button>
         </div>
       </div>
