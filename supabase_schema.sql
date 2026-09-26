@@ -41,29 +41,34 @@ ALTER TABLE public.subjects ADD COLUMN IF NOT EXISTS end_time VARCHAR(20);
 ALTER TABLE public.subjects ADD COLUMN IF NOT EXISTS room VARCHAR(50);
 ALTER TABLE public.subjects ADD COLUMN IF NOT EXISTS campus TEXT;
 ALTER TABLE public.subjects ADD COLUMN IF NOT EXISTS map_url TEXT;
+ALTER TABLE public.subjects ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES auth.users(id) DEFAULT auth.uid();
 
--- 2. Thiết lập Row Level Security (RLS) để bảo vệ và cấp quyền truy cập
+-- 2. Thiết lập Row Level Security (RLS) để bảo vệ và cấp quyền truy cập cá nhân hóa
 ALTER TABLE public.subjects ENABLE ROW LEVEL SECURITY;
 
--- Cho phép đọc dữ liệu môn học
+-- Cho phép đọc: Chỉ đọc môn học của chính mình (hoặc môn công khai nếu chưa phân quyền)
 DROP POLICY IF EXISTS "Allow public read access" ON public.subjects;
-CREATE POLICY "Allow public read access" ON public.subjects
-    FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Users can read own subjects" ON public.subjects;
+CREATE POLICY "Users can read own subjects" ON public.subjects
+    FOR SELECT USING (auth.uid() = user_id OR user_id IS NULL);
 
--- Cho phép tạo môn học mới
+-- Cho phép tạo môn học mới: Tự động gán user_id của người tạo
 DROP POLICY IF EXISTS "Allow public insert access" ON public.subjects;
-CREATE POLICY "Allow public insert access" ON public.subjects
-    FOR INSERT WITH CHECK (true);
+DROP POLICY IF EXISTS "Users can insert own subjects" ON public.subjects;
+CREATE POLICY "Users can insert own subjects" ON public.subjects
+    FOR INSERT WITH CHECK (auth.uid() = user_id OR user_id IS NULL);
 
--- Cho phép chỉnh sửa thông tin môn học
+-- Cho phép chỉnh sửa thông tin môn học của chính mình
 DROP POLICY IF EXISTS "Allow public update access" ON public.subjects;
-CREATE POLICY "Allow public update access" ON public.subjects
-    FOR UPDATE USING (true);
+DROP POLICY IF EXISTS "Users can update own subjects" ON public.subjects;
+CREATE POLICY "Users can update own subjects" ON public.subjects
+    FOR UPDATE USING (auth.uid() = user_id OR user_id IS NULL);
 
--- Cho phép xoá môn học
+-- Cho phép xoá môn học của chính mình
 DROP POLICY IF EXISTS "Allow public delete access" ON public.subjects;
-CREATE POLICY "Allow public delete access" ON public.subjects
-    FOR DELETE USING (true);
+DROP POLICY IF EXISTS "Users can delete own subjects" ON public.subjects;
+CREATE POLICY "Users can delete own subjects" ON public.subjects
+    FOR DELETE USING (auth.uid() = user_id OR user_id IS NULL);
 
 -- 3. Tạo dữ liệu mẫu ban đầu (tuỳ chọn)
 INSERT INTO public.subjects (code, name, semester, credits, instructor, color, target_hours, note)

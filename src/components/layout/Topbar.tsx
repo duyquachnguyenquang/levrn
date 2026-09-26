@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Bell,
   Sun,
@@ -57,6 +58,8 @@ const pageTitles: Record<string, string> = {
  */
 export function Topbar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, signOut } = useAuth();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
@@ -64,6 +67,20 @@ export function Topbar() {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  const displayName = user?.user_metadata?.full_name || (user?.email ? user.email.split("@")[0] : "Sinh viên");
+  const displayEmail = user?.email || "Chưa đăng nhập";
+  const avatarInitials = displayName
+    .split(" ")
+    .map((w: string) => w[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase() || "SV";
+
+  const handleLogout = async () => {
+    await signOut();
+    router.push("/login");
+  };
 
   const currentTitle =
     pageTitles[pathname] ||
@@ -211,7 +228,7 @@ export function Topbar() {
             >
               <Avatar className="h-9 w-9 rounded-lg">
                 <AvatarFallback className="bg-gradient-to-tr from-[#7D39EB] to-[#9A5CF8] text-white font-bold text-xs rounded-lg shadow-xs">
-                  TL
+                  {avatarInitials}
                 </AvatarFallback>
               </Avatar>
             </Button>
@@ -219,28 +236,31 @@ export function Topbar() {
           <DropdownMenuContent align="end" className="w-56 rounded-lg p-1.5 shadow-2xl animate-in fade-in-50 zoom-in-95 duration-150">
             <DropdownMenuLabel>
               <div className="flex flex-col space-y-1">
-                <p className="text-xs font-bold leading-none text-foreground">
-                  Taylor Sinh Viên
+                <p className="text-xs font-bold leading-none text-foreground truncate">
+                  {displayName}
                 </p>
-                <p className="text-[11px] leading-none text-muted-foreground">
-                  taylor@levrn.edu.vn
+                <p className="text-[11px] leading-none text-muted-foreground truncate">
+                  {displayEmail}
                 </p>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="gap-2 cursor-pointer text-xs rounded-md transition-colors hover:bg-muted/80">
-              <User className="h-4 w-4 text-muted-foreground" />
-              <span>Hồ sơ cá nhân</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem className="gap-2 cursor-pointer text-xs rounded-md transition-colors hover:bg-muted/80">
-              <Settings className="h-4 w-4 text-muted-foreground" />
-              <span>Cài đặt tài khoản</span>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="gap-2 text-destructive focus:text-destructive cursor-pointer text-xs rounded-md transition-colors hover:bg-destructive/10">
-              <LogOut className="h-4 w-4" />
-              <span>Đăng xuất</span>
-            </DropdownMenuItem>
+            {user ? (
+              <DropdownMenuItem
+                onClick={handleLogout}
+                className="gap-2 text-destructive focus:text-destructive cursor-pointer text-xs rounded-md transition-colors hover:bg-destructive/10"
+              >
+                <LogOut className="h-4 w-4" />
+                <span>Đăng xuất</span>
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuItem asChild className="gap-2 cursor-pointer text-xs rounded-md transition-colors hover:bg-muted/80">
+                <Link href="/login">
+                  <User className="h-4 w-4 text-[#7D39EB]" />
+                  <span>Đăng nhập</span>
+                </Link>
+              </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

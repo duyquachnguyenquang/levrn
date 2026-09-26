@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Be_Vietnam_Pro } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 // Cấu hình font Be Vietnam Pro: Chuẩn học thuật, tối giản, hỗ trợ 100% tiếng Việt không lỗi dấu, cả chữ và số dùng chung font
 const beVietnamPro = Be_Vietnam_Pro({
@@ -37,7 +38,9 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <AuthProvider>
+            {children}
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>
