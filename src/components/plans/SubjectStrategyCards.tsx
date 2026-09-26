@@ -6,7 +6,6 @@ import {
   Clock,
   Target,
   Plus,
-  Edit,
   BookOpen,
   Sparkles,
   CheckCircle2,
@@ -23,6 +22,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { getSubjectCoverImage } from "@/lib/imagePresets";
 
 interface SubjectStrategyCardsProps {
   subjects: Subject[];
@@ -60,12 +60,12 @@ export function SubjectStrategyCards({
             <span>Chiến lược học tập theo từng môn học</span>
           </h3>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Cá nhân hoá phương pháp tự học (lý thuyết, trắc nghiệm, flashcard, bài tập) và mục tiêu giờ học hàng tuần
+            Cá nhân hoá phương pháp tự học và mục tiêu giờ học hàng tuần theo từng môn.
           </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
         {subjects.map((sub) => {
           const strategy = strategies[sub.id] || {
             subjectId: sub.id,
@@ -80,136 +80,147 @@ export function SubjectStrategyCards({
             subjectTasks.reduce((acc, t) => acc + (t.durationMinutes || 0), 0) / 60
           ).toFixed(1);
 
+          const coverUrl = getSubjectCoverImage(sub);
+
           return (
             <div
               key={sub.id}
-              className="rounded-xl border border-border/80 bg-card p-4 sm:p-5 shadow-xs flex flex-col justify-between transition-all duration-200 hover:border-border/90 hover:shadow-md relative overflow-hidden group"
+              className="group relative rounded-xl border border-border/70 dark:border-border/60 bg-card overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between"
             >
-              {/* Vạch màu môn học trên đỉnh card */}
-              <div
-                className="absolute top-0 left-0 right-0 h-1.5"
-                style={{ backgroundColor: sub.color }}
-              />
+              {/* 1. Ảnh bìa môn học (Visual Banner) */}
+              <div className="relative h-40 sm:h-44 w-full overflow-hidden bg-muted/40 shrink-0">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={coverUrl}
+                  alt={sub.name}
+                  className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                />
 
-              <div className="space-y-4">
-                {/* Header: Mã môn, Tên môn, Nút chỉnh sửa chiến lược */}
-                <div className="flex items-start justify-between gap-2 pt-1">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span
-                        className="px-2 py-0.5 rounded text-xs font-black"
-                        style={{
-                          backgroundColor: `${sub.color}20`,
-                          color: sub.color,
-                        }}
-                      >
-                        {sub.code}
-                      </span>
-                      <span className="text-[11px] font-semibold text-muted-foreground">
-                        {sub.credits ? `${sub.credits} tín chỉ` : "Học phần"}
-                      </span>
-                    </div>
-                    <h4 className="text-sm font-extrabold text-foreground mt-1 line-clamp-1">
-                      {sub.name}
-                    </h4>
-                  </div>
+                {/* Badge mã môn học nổi trên ảnh góc trái */}
+                <div className="absolute top-3.5 left-3.5 z-10 flex items-center gap-1.5 flex-wrap">
+                  <span
+                    className="font-mono font-black text-[11px] px-2.5 py-1 rounded-md text-white backdrop-blur-md border border-white/20 shadow-sm"
+                    style={{ backgroundColor: `${sub.color || "#7D39EB"}cc` }}
+                  >
+                    {sub.code}
+                  </span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-black/50 backdrop-blur-md text-white/90 border border-white/10 shadow-2xs">
+                    {sub.credits ? `${sub.credits} Tín chỉ` : "Học phần"}
+                  </span>
+                </div>
 
+                {/* Gradient tối nhẹ ở đáy ảnh */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent pointer-events-none" />
+
+                {/* Đường viền chuyển tiếp cứng cáp (Structured shelf notch) */}
+                <div className="absolute -bottom-[1px] left-0 right-0 z-10 pointer-events-none">
+                  <svg
+                    className="w-full h-5 fill-card text-card block"
+                    viewBox="0 0 400 20"
+                    preserveAspectRatio="none"
+                  >
+                    <path d="M 0,20 L 0,8 L 300,8 C 312,8 316,0 326,0 L 374,0 C 384,0 388,8 400,8 L 400,20 Z" />
+                  </svg>
+                </div>
+
+                {/* Nút chỉnh sửa chiến lược nằm trong khía notch */}
+                <div className="absolute bottom-1 right-3.5 z-20">
                   <Button
                     size="icon"
                     variant="ghost"
                     onClick={() => onEditStrategy(sub)}
-                    className="h-7 w-7 rounded-md text-muted-foreground hover:text-foreground shrink-0"
+                    className="h-7 w-7 rounded-md bg-card shadow-xs border border-border/70 hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-transform hover:scale-105"
                     title="Điều chỉnh mục tiêu & chiến lược"
                   >
                     <Sliders className="h-3.5 w-3.5" />
                   </Button>
                 </div>
-
-                {/* Chỉ số giờ học mục tiêu & Tiến độ nhiệm vụ */}
-                <div className="grid grid-cols-2 gap-2 p-2.5 rounded-lg bg-muted/40 border border-border/50 text-xs">
-                  <div>
-                    <span className="text-[10px] text-muted-foreground block font-medium">Mục tiêu tuần</span>
-                    <span className="font-extrabold text-foreground flex items-center gap-1 mt-0.5">
-                      <Clock className="h-3 w-3 text-[#7D39EB]" />
-                      {strategy.weeklyTargetHours} giờ/tuần
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-muted-foreground block font-medium">Tiến độ nhiệm vụ</span>
-                    <span className="font-extrabold text-foreground flex items-center gap-1 mt-0.5">
-                      <CheckCircle2 className="h-3 w-3 text-[#C6FF33]" />
-                      {completedTasks.length}/{subjectTasks.length} nhiệm vụ
-                    </span>
-                  </div>
-                </div>
-
-                {/* Phương pháp học tập trọng tâm */}
-                <div className="space-y-1.5">
-                  <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">
-                    Phương pháp trọng tâm:
-                  </span>
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    {strategy.recommendedMethods.map((methodKey) => {
-                      const meta = STUDY_CLASSIFICATIONS[methodKey];
-                      if (!meta) return null;
-                      return (
-                        <span
-                          key={methodKey}
-                          className="px-2 py-0.5 rounded text-[10px] font-bold border"
-                          style={{
-                            backgroundColor: meta.bgColor,
-                            borderColor: meta.borderColor,
-                            color: meta.color,
-                          }}
-                        >
-                          {meta.label}
-                        </span>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Các chủ đề trọng tâm cần tập trung */}
-                {strategy.focusTopics && strategy.focusTopics.length > 0 && (
-                  <div className="space-y-1.5">
-                    <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">
-                      Trọng tâm ôn luyện:
-                    </span>
-                    <div className="flex flex-wrap gap-1">
-                      {strategy.focusTopics.map((topic, i) => (
-                        <span
-                          key={i}
-                          className="px-2 py-0.5 rounded bg-muted/60 text-foreground/80 text-[10px] font-medium border border-border/50"
-                        >
-                          {topic}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Ghi chú chiến lược */}
-                {strategy.notes && (
-                  <p className="text-[11px] text-muted-foreground italic bg-muted/20 p-2 rounded border border-border/40">
-                    "{strategy.notes}"
-                  </p>
-                )}
               </div>
 
-              {/* Footer action: Thêm nhiệm vụ cho môn này */}
-              <div className="pt-4 mt-4 border-t border-border/50 flex items-center justify-between">
-                <span className="text-[11px] text-muted-foreground font-mono">
-                  Đã xếp {totalHoursPlanned}h tự học
-                </span>
+              {/* 2. Thân nội dung Card - Thoáng đãng, có khoảng thở đầy đủ */}
+              <div className="px-5 pt-3.5 pb-4 space-y-3 flex-1 flex flex-col justify-between bg-card">
+                <div className="space-y-2">
+                  {/* Hàng meta: Giờ mục tiêu • Số task (pr-9 để chừa khoảng cho notch) */}
+                  <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground/85 pr-9 pt-0.5">
+                    <span className="font-semibold text-foreground/90 flex items-center gap-1">
+                      <Clock className="h-3.5 w-3.5 text-[#7D39EB]" />
+                      Mục tiêu: {strategy.weeklyTargetHours}h/tuần
+                    </span>
+                    <span className="text-muted-foreground/40">•</span>
+                    <span className="text-muted-foreground/90">
+                      {completedTasks.length}/{subjectTasks.length} việc xong
+                    </span>
+                  </div>
 
-                <Button
-                  size="sm"
-                  onClick={() => onAddTaskForSubject(sub.id)}
-                  className="h-8 text-xs font-bold bg-[#C6FF33] hover:bg-[#B5F51B] text-black rounded-md gap-1"
-                >
-                  <Plus className="h-3.5 w-3.5 stroke-[3]" />
-                  <span>Lên nhiệm vụ</span>
-                </Button>
+                  {/* Tên môn học */}
+                  <h4
+                    className="text-base sm:text-lg font-bold text-foreground line-clamp-1 leading-snug group-hover:text-[#7D39EB] transition-colors pt-0.5"
+                    title={sub.name}
+                  >
+                    {sub.name}
+                  </h4>
+
+                  {/* Phương pháp học tập trọng tâm */}
+                  <div className="space-y-1.5 pt-1">
+                    <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">
+                      Phương pháp trọng tâm:
+                    </span>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {strategy.recommendedMethods.map((methodKey) => {
+                        const meta = STUDY_CLASSIFICATIONS[methodKey];
+                        if (!meta) return null;
+                        return (
+                          <span
+                            key={methodKey}
+                            className="px-2.5 py-0.5 rounded-md text-[11px] font-bold border shadow-2xs"
+                            style={{
+                              backgroundColor: meta.bgColor,
+                              borderColor: meta.borderColor,
+                              color: meta.color,
+                            }}
+                          >
+                            {meta.label}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Các chủ đề trọng tâm */}
+                  {strategy.focusTopics && strategy.focusTopics.length > 0 && (
+                    <div className="space-y-1">
+                      <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">
+                        Trọng tâm ôn luyện:
+                      </span>
+                      <div className="flex flex-wrap gap-1">
+                        {strategy.focusTopics.map((topic, i) => (
+                          <span
+                            key={i}
+                            className="px-2.5 py-0.5 rounded-md bg-muted/60 text-foreground/80 text-[10.5px] font-medium border border-border/50"
+                          >
+                            {topic}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* 4. Footer */}
+                <div className="pt-3 border-t border-border/40 flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground font-mono font-medium">
+                    Đã xếp: <strong className="text-foreground">{totalHoursPlanned}h</strong> tự học
+                  </span>
+
+                  <Button
+                    size="sm"
+                    onClick={() => onAddTaskForSubject(sub.id)}
+                    className="h-8 text-xs font-bold bg-[#C6FF33] hover:bg-[#B5F51B] text-black rounded-md gap-1 shadow-sm"
+                  >
+                    <Plus className="h-3.5 w-3.5 stroke-[3]" />
+                    <span>Lên nhiệm vụ</span>
+                  </Button>
+                </div>
               </div>
             </div>
           );

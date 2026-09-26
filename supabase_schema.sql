@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS public.subjects (
     color VARCHAR(30) NOT NULL DEFAULT '#7D39EB',
     course_url TEXT,
     drive_url TEXT,
+    image_url TEXT,
     start_date DATE,
     end_date DATE,
     total_weeks INTEGER DEFAULT 15,
@@ -32,7 +33,14 @@ ALTER TABLE public.subjects ADD COLUMN IF NOT EXISTS term TEXT;
 ALTER TABLE public.subjects ADD COLUMN IF NOT EXISTS category TEXT DEFAULT 'Môn chuyên ngành';
 ALTER TABLE public.subjects ADD COLUMN IF NOT EXISTS course_url TEXT;
 ALTER TABLE public.subjects ADD COLUMN IF NOT EXISTS drive_url TEXT;
+ALTER TABLE public.subjects ADD COLUMN IF NOT EXISTS image_url TEXT;
 ALTER TABLE public.subjects ADD COLUMN IF NOT EXISTS total_weeks INTEGER DEFAULT 15;
+ALTER TABLE public.subjects ADD COLUMN IF NOT EXISTS schedule_days INTEGER[];
+ALTER TABLE public.subjects ADD COLUMN IF NOT EXISTS start_time VARCHAR(20);
+ALTER TABLE public.subjects ADD COLUMN IF NOT EXISTS end_time VARCHAR(20);
+ALTER TABLE public.subjects ADD COLUMN IF NOT EXISTS room VARCHAR(50);
+ALTER TABLE public.subjects ADD COLUMN IF NOT EXISTS campus TEXT;
+ALTER TABLE public.subjects ADD COLUMN IF NOT EXISTS map_url TEXT;
 
 -- 2. Thiết lập Row Level Security (RLS) để bảo vệ và cấp quyền truy cập
 ALTER TABLE public.subjects ENABLE ROW LEVEL SECURITY;
@@ -274,10 +282,13 @@ CREATE TABLE IF NOT EXISTS public.attendance_records (
     end_time VARCHAR(20),
     room VARCHAR(50),
     status VARCHAR(20) NOT NULL DEFAULT 'upcoming', -- present, late, excused, absent, upcoming
+    checked_in_at TIMESTAMPTZ,
     notes TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+ALTER TABLE public.attendance_records ADD COLUMN IF NOT EXISTS checked_in_at TIMESTAMPTZ;
 
 ALTER TABLE public.attendance_records ENABLE ROW LEVEL SECURITY;
 
@@ -311,11 +322,24 @@ CREATE TABLE IF NOT EXISTS public.group_projects (
     repo_url TEXT,
     meeting_url TEXT,
     chat_url TEXT,
+    image_url TEXT,
+    grade_component_id TEXT,
+    grade_component_name TEXT,
+    grade_weight NUMERIC,
+    grade_score NUMERIC,
     members JSONB NOT NULL DEFAULT '[]'::jsonb,
     tasks JSONB NOT NULL DEFAULT '[]'::jsonb,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Lệnh cập nhật bổ sung cột gán trọng số điểm và ảnh bìa (chạy trong Supabase SQL Editor nếu đã tạo bảng trước đó)
+ALTER TABLE public.group_projects 
+ADD COLUMN IF NOT EXISTS image_url TEXT,
+ADD COLUMN IF NOT EXISTS grade_component_id TEXT,
+ADD COLUMN IF NOT EXISTS grade_component_name TEXT,
+ADD COLUMN IF NOT EXISTS grade_weight NUMERIC,
+ADD COLUMN IF NOT EXISTS grade_score NUMERIC;
 
 ALTER TABLE public.group_projects ENABLE ROW LEVEL SECURITY;
 

@@ -391,7 +391,7 @@ export function TimeblockTimeline({
           </div>
         ) : (
           <div className="py-12 flex flex-col items-center justify-center text-center space-y-3">
-            <div className="h-14 w-14 rounded-2xl bg-muted/60 flex items-center justify-center text-muted-foreground">
+            <div className="h-14 w-14 rounded-lg bg-muted/60 flex items-center justify-center text-muted-foreground">
               <Calendar className="h-7 w-7" />
             </div>
             <div className="max-w-xs space-y-1">
@@ -451,7 +451,7 @@ export function TimeblockTimeline({
 
       {/* Các nhiệm vụ trong ngày nhưng không cố định giờ (Linh hoạt) */}
       {flexibleTasks.length > 0 && (
-        <div className="p-4 rounded-xl bg-card border border-border/70 space-y-3">
+        <div className="p-4 rounded-lg bg-card border border-border/70 space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
               <Calendar className="h-4 w-4 text-muted-foreground" />

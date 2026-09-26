@@ -61,7 +61,8 @@ export function PlanHeader({
             onClick={onRefresh}
             disabled={isRefreshing}
             className="rounded-md h-8 w-8 sm:h-10 sm:w-10 border-border/70 text-muted-foreground hover:text-foreground transition-all active:scale-95 shrink-0"
-            title="Tải lại dữ liệu từ Supabase"
+            title="Tải lại dữ liệu"
+            aria-label="Tải lại dữ liệu"
           >
             <RefreshCw className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${isRefreshing ? "animate-spin" : ""}`} />
           </Button>
@@ -104,7 +105,7 @@ export function PlanHeader({
       {/* 2. 4 Box chỉ số tối giản: Hạn chế tối đa chữ, tập trung vào số liệu & biểu đồ */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-3.5">
         {/* Box 1: Số nhiệm vụ trong ngày */}
-        <Card className="rounded-xl border border-border/80 bg-card p-3 sm:p-4 shadow-xs flex items-center justify-between transition-all hover:border-border/90">
+        <Card className="rounded-lg border border-border/80 bg-card p-3 sm:p-4 shadow-xs flex items-center justify-between transition-all hover:border-border/90">
           <div className="flex-1 min-w-0 pr-2 sm:pr-3">
             <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block truncate">
               Trong ngày
@@ -126,7 +127,7 @@ export function PlanHeader({
         </Card>
 
         {/* Box 2: Số nhiệm vụ trong tuần */}
-        <Card className="rounded-xl border border-border/80 bg-card p-3 sm:p-4 shadow-xs flex items-center justify-between transition-all hover:border-border/90">
+        <Card className="rounded-lg border border-border/80 bg-card p-3 sm:p-4 shadow-xs flex items-center justify-between transition-all hover:border-border/90">
           <div className="flex-1 min-w-0 pr-2 sm:pr-3">
             <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block truncate">
               Trong tuần
@@ -146,7 +147,7 @@ export function PlanHeader({
         </Card>
 
         {/* Box 3: Số nhiệm vụ đã hoàn thành */}
-        <Card className="rounded-xl border border-border/80 bg-card p-3 sm:p-4 shadow-xs flex items-center justify-between transition-all hover:border-border/90">
+        <Card className="rounded-lg border border-border/80 bg-card p-3 sm:p-4 shadow-xs flex items-center justify-between transition-all hover:border-border/90">
           <div className="flex-1 min-w-0 pr-2 sm:pr-3">
             <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block truncate">
               Đã hoàn thành
@@ -168,7 +169,7 @@ export function PlanHeader({
         </Card>
 
         {/* Box 4: Tiến độ theo tuần (Biểu đồ mini progress bar) */}
-        <Card className="rounded-xl border border-border/80 bg-card p-3 sm:p-4 shadow-xs flex flex-col justify-between transition-all hover:border-border/90">
+        <Card className="rounded-lg border border-border/80 bg-card p-3 sm:p-4 shadow-xs flex flex-col justify-between transition-all hover:border-border/90">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
               Tiến độ tuần

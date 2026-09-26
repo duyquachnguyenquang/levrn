@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Subject, FlashcardFormData } from "@/lib/types";
-import { Sparkles, BookOpen, Layers } from "lucide-react";
+import { Sparkles, BookOpen, Layers, FileText, CheckCircle2 } from "lucide-react";
 
 interface FlashcardModalProps {
   open: boolean;
@@ -65,7 +65,7 @@ export function FlashcardModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg p-5 sm:p-6 rounded-xl border border-border/80 bg-card shadow-2xl">
+      <DialogContent className="max-w-lg p-5 sm:p-6 rounded-lg border border-border/80 bg-card shadow-2xl">
         <DialogHeader className="pb-3 border-b border-border/60">
           <DialogTitle className="text-base sm:text-lg font-black text-foreground flex items-center gap-2">
             <span className="h-2.5 w-2.5 rounded-full bg-[#C6FF33]" />
@@ -116,8 +116,10 @@ export function FlashcardModal({
 
           {/* Mặt trước: Khái niệm / Câu hỏi */}
           <div className="space-y-1.5">
-            <Label className="text-xs font-bold text-foreground">
-              Mặt trước (Khái niệm, Câu hỏi, Thuật ngữ) <span className="text-destructive">*</span>
+            <Label className="text-xs font-bold text-foreground flex items-center gap-1.5">
+              <FileText className="h-3.5 w-3.5 text-[#7D39EB]" />
+              <span>Mặt trước (Khái niệm, Câu hỏi, Thuật ngữ)</span>
+              <span className="text-destructive">*</span>
             </Label>
             <Textarea
               value={front}
@@ -131,8 +133,10 @@ export function FlashcardModal({
 
           {/* Mặt sau: Định nghĩa / Đáp án */}
           <div className="space-y-1.5">
-            <Label className="text-xs font-bold text-foreground">
-              Mặt sau (Định nghĩa, Câu trả lời, Công thức) <span className="text-destructive">*</span>
+            <Label className="text-xs font-bold text-foreground flex items-center gap-1.5">
+              <CheckCircle2 className="h-3.5 w-3.5 text-[#7D39EB]" />
+              <span>Mặt sau (Định nghĩa, Câu trả lời, Công thức)</span>
+              <span className="text-destructive">*</span>
             </Label>
             <Textarea
               value={back}
@@ -146,8 +150,9 @@ export function FlashcardModal({
 
           {/* Gợi ý (tuỳ chọn) */}
           <div className="space-y-1.5">
-            <Label className="text-xs font-bold text-muted-foreground">
-              Gợi ý bổ trợ (Tuỳ chọn)
+            <Label className="text-xs font-bold text-muted-foreground flex items-center gap-1.5">
+              <Sparkles className="h-3.5 w-3.5 text-[#7D39EB]" />
+              <span>Gợi ý bổ trợ (Tuỳ chọn)</span>
             </Label>
             <Input
               value={hint}

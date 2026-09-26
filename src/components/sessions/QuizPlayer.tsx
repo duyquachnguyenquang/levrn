@@ -105,7 +105,7 @@ export function QuizPlayer({
 
   if (filteredQuizzes.length === 0) {
     return (
-      <div className="py-16 text-center space-y-4 bg-card rounded-2xl border border-dashed border-border/80 p-8">
+      <div className="py-16 text-center space-y-4 bg-card rounded-lg border border-dashed border-border/80 p-8">
         <HelpCircle className="h-12 w-12 text-muted-foreground/60 mx-auto" />
         <div className="space-y-1">
           <h3 className="text-base font-bold text-foreground">Chưa có câu hỏi trắc nghiệm nào</h3>
@@ -118,7 +118,7 @@ export function QuizPlayer({
         <Button
           type="button"
           onClick={onOpenAddModal}
-          className="h-9 px-4 text-xs font-bold bg-[#C6FF33] hover:bg-[#B5F51B] text-black shadow-xs gap-1.5"
+          className="h-9 px-4 text-xs font-bold bg-[#C6FF33] hover:bg-[#B5F51B] text-black shadow-xs gap-1.5 rounded-lg"
         >
           <Plus className="h-4 w-4" />
           <span>Thêm câu hỏi trắc nghiệm</span>
@@ -131,13 +131,13 @@ export function QuizPlayer({
   if (isFinished) {
     return (
       <div className="space-y-6 animate-in zoom-in-95 duration-300 max-w-lg mx-auto py-6">
-        <Card className="p-8 text-center space-y-6 border border-border/80 bg-card shadow-2xl relative overflow-hidden">
+        <Card className="p-8 text-center space-y-6 border border-border/80 bg-card shadow-2xl relative overflow-hidden rounded-lg">
           <div
             className="absolute -top-20 left-1/2 -translate-x-1/2 w-64 h-64 rounded-full blur-3xl opacity-20 pointer-events-none"
             style={{ backgroundColor: scorePercent >= 70 ? "#C6FF33" : "#7D39EB" }}
           />
 
-          <div className="h-16 w-16 mx-auto rounded-2xl bg-[#C6FF33]/15 flex items-center justify-center text-[#9ED811] dark:text-[#C6FF33]">
+          <div className="h-16 w-16 mx-auto rounded-lg bg-[#C6FF33]/15 flex items-center justify-center text-[#9ED811] dark:text-[#C6FF33]">
             <Award className="h-8 w-8" />
           </div>
 
@@ -155,7 +155,7 @@ export function QuizPlayer({
           </div>
 
           {/* Vòng điểm số */}
-          <div className="p-5 rounded-2xl bg-muted/40 border border-border/50 max-w-xs mx-auto space-y-1">
+          <div className="p-5 rounded-lg bg-muted/40 border border-border/50 max-w-xs mx-auto space-y-1">
             <span className="text-4xl font-black text-foreground font-mono">
               {correctAnswersCount} / {totalQuestions}
             </span>
@@ -197,7 +197,7 @@ export function QuizPlayer({
   return (
     <div className="space-y-5">
       {/* 1. Thanh công cụ & Bộ lọc câu hỏi */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-card p-3 rounded-xl border border-border/70 shadow-xs">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-card p-3 rounded-lg border border-border/70 shadow-xs">
         <div className="flex items-center gap-2 w-full sm:w-auto">
           <span className="text-xs text-muted-foreground font-semibold flex items-center gap-1 shrink-0">
             <BookOpen className="h-3.5 w-3.5 text-[#7D39EB]" />
@@ -229,6 +229,7 @@ export function QuizPlayer({
             onClick={handleRestartQuiz}
             className="h-8 px-2.5 rounded-md text-xs font-semibold gap-1.5 border-border/80"
             title="Bắt đầu lại từ câu đầu tiên"
+            aria-label="Bắt đầu lại từ câu đầu tiên"
           >
             <RotateCcw className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Làm lại</span>
@@ -265,7 +266,7 @@ export function QuizPlayer({
       </div>
 
       {/* 3. Thẻ câu hỏi trắc nghiệm */}
-      <Card className="relative overflow-hidden border border-border/80 bg-card p-6 sm:p-8 space-y-6 shadow-xl">
+      <Card className="relative overflow-hidden border border-border/80 bg-card p-6 sm:p-8 space-y-6 shadow-xl rounded-lg">
         {/* Vạch màu môn học ở đỉnh */}
         <div
           className="absolute top-0 left-0 right-0 h-1.5"
@@ -296,6 +297,7 @@ export function QuizPlayer({
             onClick={() => onDeleteQuestion(currentQuestion.id)}
             className="text-muted-foreground hover:text-destructive p-1 rounded transition-colors"
             title="Xoá câu hỏi này"
+            aria-label="Xoá câu hỏi này"
           >
             <Trash2 className="h-3.5 w-3.5" />
           </button>
@@ -339,14 +341,14 @@ export function QuizPlayer({
                 onClick={() => handleSelectOption(idx)}
                 disabled={isAnswered}
                 className={cn(
-                  "w-full p-3.5 rounded-xl border text-left flex items-center justify-between gap-3 transition-all cursor-pointer disabled:cursor-default",
+                  "w-full p-3.5 rounded-lg border text-left flex items-center justify-between gap-3 transition-all cursor-pointer disabled:cursor-default",
                   btnClasses
                 )}
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <span
                     className={cn(
-                      "h-7 w-7 rounded-lg border flex items-center justify-center font-bold text-xs shrink-0 transition-colors",
+                      "h-7 w-7 rounded-md border flex items-center justify-center font-bold text-xs shrink-0 transition-colors",
                       badgeClasses
                     )}
                   >
@@ -374,7 +376,7 @@ export function QuizPlayer({
 
         {/* Hộp giải thích chi tiết sau khi đã trả lời */}
         {isAnswered && (
-          <div className="p-4 rounded-xl bg-muted/40 border border-border/60 space-y-2 animate-in fade-in-50 duration-200">
+          <div className="p-4 rounded-lg bg-muted/40 border border-border/60 space-y-2 animate-in fade-in-50 duration-200">
             <div className="flex items-center justify-between">
               <span className="text-xs font-black uppercase tracking-wider flex items-center gap-1.5 text-foreground">
                 <Sparkles className="h-3.5 w-3.5 text-[#C6FF33]" />

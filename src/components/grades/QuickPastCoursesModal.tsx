@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   Layers,
   GraduationCap,
+  Calendar,
 } from "lucide-react";
 import {
   Dialog,
@@ -143,25 +144,23 @@ export function QuickPastCoursesModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-0 border border-border/80 bg-background text-foreground shadow-2xl">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-0 border border-border/80 bg-background text-foreground shadow-2xl rounded-lg">
         <DialogHeader className="p-6 pb-4 border-b border-border/60">
           <DialogTitle className="text-xl font-black text-foreground flex items-center gap-2">
             <Zap className="h-5 w-5 text-amber-500" />
             <span>Nhập nhanh môn cũ (Năm 1, Năm 2)</span>
           </DialogTitle>
-          <p className="text-xs text-muted-foreground mt-1">
-            Tính năng chuyên dụng dành cho sinh viên năm 3: Nhập liền 5-10 môn đã có điểm Final của từng học kỳ mà không cần cấu hình điểm thành phần.
-          </p>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
           {/* Chọn Học Kỳ chung cho nhóm môn này */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-border/80 bg-muted/20">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-lg border border-border/80 bg-muted/20">
             <div>
-              <Label className="text-xs font-bold text-foreground">Học kỳ nhập điểm *</Label>
-              <p className="text-[11px] text-muted-foreground">
-                Tất cả môn nhập trong bảng này sẽ được gắn vào học kỳ này
-              </p>
+              <Label className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                <Calendar className="h-3.5 w-3.5 text-[#7D39EB]" />
+                <span>Học kỳ nhập điểm</span>
+                <span className="text-destructive">*</span>
+              </Label>
             </div>
             <div className="w-full sm:w-60">
               <Input
@@ -193,7 +192,7 @@ export function QuickPastCoursesModal({
                 return (
                   <div
                     key={r.id}
-                    className="p-3 sm:p-2 rounded-xl border border-border/70 bg-card flex flex-col sm:grid sm:grid-cols-12 gap-2 items-center hover:border-border/90 transition-colors"
+                    className="p-3 sm:p-2 rounded-lg border border-border/70 bg-card flex flex-col sm:grid sm:grid-cols-12 gap-2 items-center hover:border-border/90 transition-colors"
                   >
                     <div className="w-full sm:col-span-2">
                       <Input

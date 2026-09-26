@@ -100,6 +100,7 @@ export function useAttendance(subjects: Subject[] = []) {
             room: row.room,
             status: row.status as AttendanceStatus,
             notes: row.notes,
+            checkinTime: row.checked_in_at || row.checkin_time || undefined,
             createdAt: row.created_at,
             updatedAt: row.updated_at,
           }));
@@ -162,6 +163,7 @@ export function useAttendance(subjects: Subject[] = []) {
             room: r.room,
             status: r.status,
             notes: r.notes,
+            checked_in_at: r.checkinTime || null,
             updated_at: new Date().toISOString(),
           }));
           await supabase.from("attendance_records").upsert(rows);
@@ -204,11 +206,82 @@ export function useAttendance(subjects: Subject[] = []) {
     [records, saveRecords]
   );
 
+  // Điểm danh môn học hôm nay (cập nhật trạng thái present + thời gian điểm danh thực tế)
+  const checkinSubjectToday = useCallback(
+    async (
+      subject: Subject,
+      targetDateStr?: string
+    ): Promise<{ success: boolean; message: string; record?: AttendanceRecord }> => {
+      const now = new Date();
+      const nowIso = now.toISOString();
+      const dateStr = targetDateStr || nowIso.split("T")[0];
+      const totalWeeks = subject.totalWeeks || 15;
+
+      // 1. Tìm xem hôm nay đã có bản ghi của môn này chưa
+      const existingIdx = records.findIndex(
+        (r) => r.subjectId === subject.id && r.date === dateStr
+      );
+
+      let updatedRecord: AttendanceRecord;
+      let newRecords: AttendanceRecord[];
+
+      if (existingIdx >= 0) {
+        const existing = records[existingIdx];
+        updatedRecord = {
+          ...existing,
+          status: "present",
+          checkinTime: nowIso,
+          updatedAt: nowIso,
+        };
+        newRecords = [...records];
+        newRecords[existingIdx] = updatedRecord;
+      } else {
+        // Tìm số buổi đã học để xác định sessionNumber tiếp theo
+        const attendedCount = records.filter(
+          (r) => r.subjectId === subject.id && (r.status === "present" || r.status === "late")
+        ).length;
+        const nextSessionNum = Math.min(totalWeeks, attendedCount + 1);
+
+        updatedRecord = {
+          id: `att-${subject.id}-${Date.now()}`,
+          subjectId: subject.id,
+          subjectCode: subject.code,
+          subjectName: subject.name,
+          sessionNumber: nextSessionNum,
+          date: dateStr,
+          startTime: subject.startTime || "08:00",
+          endTime: subject.endTime || "10:30",
+          room: subject.room || "P.101",
+          status: "present",
+          checkinTime: nowIso,
+          createdAt: nowIso,
+          updatedAt: nowIso,
+        };
+        newRecords = [updatedRecord, ...records];
+      }
+
+      await saveRecords(newRecords);
+      return {
+        success: true,
+        message: `Điểm danh thành công môn [${subject.code}] ${subject.name}`,
+        record: updatedRecord,
+      };
+    },
+    [records, saveRecords]
+  );
+
   // Điểm danh cả ngày (đánh dấu có mặt cho tất cả buổi học của ngày hôm nay)
   const markTodayPresent = useCallback(
     async (todayDateString: string) => {
       const updated = records.map((r) =>
-        r.date === todayDateString ? { ...r, status: "present" as AttendanceStatus } : r
+        r.date === todayDateString
+          ? {
+              ...r,
+              status: "present" as AttendanceStatus,
+              checkinTime: r.checkinTime || new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            }
+          : r
       );
       await saveRecords(updated);
     },
@@ -290,6 +363,7 @@ export function useAttendance(subjects: Subject[] = []) {
         subjectId: sub.id,
         subjectCode: sub.code,
         subjectName: sub.name,
+        imageUrl: sub.imageUrl,
         color: sub.color || "#7D39EB",
         semester: sub.semester || "Chưa xếp kỳ",
         totalWeeks,
@@ -352,6 +426,7 @@ export function useAttendance(subjects: Subject[] = []) {
     errorMessage,
     updateSessionStatus,
     quickMarkSession,
+    checkinSubjectToday,
     markTodayPresent,
     regenerateForSubject,
     addExtraSession,

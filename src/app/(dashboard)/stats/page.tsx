@@ -15,15 +15,12 @@ export default function StatsPage() {
       </div>
 
       <div className="max-w-md space-y-2">
-        <h2 className="text-2xl font-extrabold text-foreground tracking-tight">
-          Thống Kê Tiến Độ
+        <h2 className="text-2xl font-extrabold text-foreground tracking-tight flex items-center justify-center gap-2">
+          <span>Thống Kê Tiến Độ</span>
+          <span className="text-xs font-bold px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/30">
+            Đang phát triển
+          </span>
         </h2>
-        <p className="text-sm text-muted-foreground font-medium">
-          🚧 Tính năng đang được phát triển
-        </p>
-        <p className="text-xs text-muted-foreground/80">
-          Biểu đồ phân tích hiệu suất học tập và so sánh tiến độ thực tế với mục tiêu đã đề ra.
-        </p>
       </div>
     </div>
   );

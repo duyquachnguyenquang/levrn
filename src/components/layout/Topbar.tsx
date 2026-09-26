@@ -43,7 +43,6 @@ const pageTitles: Record<string, string> = {
   "/dashboard": "Dashboard Tổng quan",
   "/subjects": "Quản lý môn học",
   "/grades": "Quản lý điểm số & GPA",
-  "/attendance": "Điểm danh & Chuyên cần",
   "/groups": "Quản lý nhóm",
   "/plans": "Kế hoạch học tập",
   "/sessions": "Phiên học tập",
@@ -81,7 +80,7 @@ export function Topbar() {
           <BrandLogo
             variant="icon"
             asLink
-            className="h-8 w-8 rounded-xl shadow-xs"
+            className="h-8 w-8 rounded-lg shadow-xs"
             alt="LEVRN"
           />
         </div>

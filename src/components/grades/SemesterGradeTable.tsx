@@ -14,7 +14,10 @@ import {
   AlertCircle,
   HelpCircle,
   GraduationCap,
+  Users,
 } from "lucide-react";
+import Link from "next/link";
+import { useGroups } from "@/hooks/useGroups";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -48,6 +51,7 @@ export function SemesterGradeTable({
   filterSemester,
   searchQuery = "",
 }: SemesterGradeTableProps) {
+  const { groups } = useGroups();
   // Trạng thái thu gọn/mở rộng từng bảng học kỳ
   const [collapsedSemesters, setCollapsedSemesters] = useState<Record<string, boolean>>({});
 
@@ -66,7 +70,7 @@ export function SemesterGradeTable({
 
   if (filteredSummaries.length === 0) {
     return (
-      <div className="p-12 text-center border border-dashed border-border/80 rounded-2xl bg-card/50 space-y-3">
+      <div className="p-12 text-center border border-dashed border-border/80 rounded-lg bg-card/50 space-y-3">
         <HelpCircle className="h-10 w-10 text-muted-foreground mx-auto" />
         <h4 className="font-bold text-base text-foreground">Không tìm thấy môn học nào</h4>
         <p className="text-xs text-muted-foreground max-w-sm mx-auto">
@@ -98,7 +102,7 @@ export function SemesterGradeTable({
         return (
           <Card
             key={summary.semester}
-            className="rounded-2xl border border-border/80 bg-card overflow-hidden shadow-xs transition-all hover:border-border/90"
+            className="rounded-lg border border-border/80 bg-card overflow-hidden shadow-xs transition-all hover:border-border/90"
           >
             {/* Header học kỳ */}
             <div className="p-4 sm:p-5 bg-muted/20 border-b border-border/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -179,7 +183,7 @@ export function SemesterGradeTable({
                       <div
                         key={course.id}
                         onClick={() => onEditCourse(course)}
-                        className="w-full text-left p-3.5 rounded-xl border border-border/70 bg-card hover:border-[#7D39EB]/50 hover:bg-muted/20 transition-all active:scale-[0.99] cursor-pointer flex items-center justify-between gap-3 shadow-2xs group"
+                        className="w-full text-left p-3.5 rounded-lg border border-border/70 bg-card hover:border-[#7D39EB]/50 hover:bg-muted/20 transition-all active:scale-[0.99] cursor-pointer flex items-center justify-between gap-3 shadow-2xs group"
                       >
                         {/* Cụm bên trái: Mã môn + Số tín chỉ (hàng trên) & Tên môn (hàng dưới) */}
                         <div className="flex-1 min-w-0 space-y-1">
@@ -300,11 +304,19 @@ export function SemesterGradeTable({
                                       comp.score !== null &&
                                       comp.score !== undefined &&
                                       !isNaN(Number(comp.score));
+
+                                    const linkedGroup = groups.find(
+                                      (g) =>
+                                        ((g.subjectId && course.subjectId && g.subjectId === course.subjectId) ||
+                                         (g.subjectCode && course.subjectCode && g.subjectCode === course.subjectCode)) &&
+                                        (g.gradeComponentId === comp.id || (g.gradeComponentName && g.gradeComponentName === comp.name))
+                                    );
+
                                     return (
                                       <span
                                         key={comp.id}
                                         className={cn(
-                                          "inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono border",
+                                          "inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono border gap-0.5",
                                           hasScore
                                             ? "bg-muted/70 text-foreground border-border/80"
                                             : "bg-amber-500/10 text-amber-500 border-amber-500/30"
@@ -313,7 +325,7 @@ export function SemesterGradeTable({
                                           hasScore ? comp.score + "đ" : "Chưa có điểm"
                                         }`}
                                       >
-                                        <span className="font-sans mr-1">{comp.name}</span>
+                                        <span className="font-sans mr-0.5">{comp.name}</span>
                                         <strong>{comp.weight}%</strong>:{" "}
                                         {hasScore ? (
                                           <strong className="text-foreground ml-0.5">
@@ -321,6 +333,18 @@ export function SemesterGradeTable({
                                           </strong>
                                         ) : (
                                           <span className="text-amber-500 ml-0.5">--</span>
+                                        )}
+
+                                        {linkedGroup && (
+                                          <Link
+                                            href="/groups"
+                                            onClick={(e) => e.stopPropagation()}
+                                            className="inline-flex items-center gap-0.5 px-1 py-0.2 rounded bg-[#7D39EB]/15 text-[#7D39EB] hover:bg-[#7D39EB]/25 border border-[#7D39EB]/30 text-[9px] font-sans font-bold transition-colors ml-0.5"
+                                            title={`Đồ án: ${linkedGroup.name} (Bấm để mở Quản lý nhóm)`}
+                                          >
+                                            <Users className="h-2.5 w-2.5" />
+                                            <span className="truncate max-w-[70px]">{linkedGroup.name}</span>
+                                          </Link>
                                         )}
                                       </span>
                                     );
@@ -336,7 +360,7 @@ export function SemesterGradeTable({
                                         <span>Xem điểm thi cần đạt</span>
                                       </button>
                                     </PopoverTrigger>
-                                    <PopoverContent className="w-72 p-3 text-xs border-border bg-card shadow-xl" align="start">
+                                    <PopoverContent className="w-72 p-3 text-xs border-border bg-card shadow-xl rounded-lg" align="start">
                                       <h5 className="font-bold text-foreground mb-1.5 flex items-center gap-1.5">
                                         <Sparkles className="h-3.5 w-3.5 text-cyan-500" />
                                         <span>Mô phỏng điểm thi cuối kỳ</span>
@@ -436,6 +460,7 @@ export function SemesterGradeTable({
                                 onClick={() => onEditCourse(course)}
                                 className="h-8 w-8 text-muted-foreground hover:text-foreground rounded-lg"
                                 title="Chỉnh sửa điểm"
+                                aria-label="Chỉnh sửa điểm"
                               >
                                 <Edit2 className="h-3.5 w-3.5" />
                               </Button>
@@ -449,6 +474,7 @@ export function SemesterGradeTable({
                                 }}
                                 className="h-8 w-8 text-muted-foreground hover:text-red-500 rounded-lg"
                                 title="Xóa môn"
+                                aria-label="Xóa môn"
                               >
                                 <Trash2 className="h-3.5 w-3.5" />
                               </Button>

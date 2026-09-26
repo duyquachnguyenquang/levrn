@@ -17,7 +17,8 @@ import {
   GroupTaskPriority,
   GroupTaskStatus,
 } from "@/lib/types";
-import { Calendar, User, Flag, CheckCircle2 } from "lucide-react";
+import { Calendar, User, Flag, CheckSquare, FileText } from "lucide-react";
+import { DateTimePicker } from "@/components/ui/datetime-picker";
 
 interface GroupTaskModalProps {
   open: boolean;
@@ -78,16 +79,15 @@ export function GroupTaskModal({
           <DialogTitle className="text-base font-bold text-foreground">
             Giao nhiệm vụ mới cho nhóm
           </DialogTitle>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Phân công công việc cho từng thành viên kèm hạn chót.
-          </p>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 py-2">
           {/* Tiêu đề nhiệm vụ */}
           <div className="space-y-1.5">
-            <Label htmlFor="task-title" className="text-xs font-bold text-foreground">
-              Tiêu đề nhiệm vụ <span className="text-destructive">*</span>
+            <Label htmlFor="task-title" className="text-xs font-bold text-foreground flex items-center gap-1.5">
+              <CheckSquare className="h-3.5 w-3.5 text-[#7D39EB]" />
+              <span>Tiêu đề nhiệm vụ</span>
+              <span className="text-destructive">*</span>
             </Label>
             <Input
               id="task-title"
@@ -141,20 +141,21 @@ export function GroupTaskModal({
               <Label htmlFor="task-duedate" className="text-xs font-bold text-foreground flex items-center gap-1">
                 <Calendar className="h-3.5 w-3.5" /> Hạn chót
               </Label>
-              <Input
+              <DateTimePicker
                 id="task-duedate"
-                type="date"
                 value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-                className="h-9 text-xs rounded-lg bg-card border-border/80"
+                onChange={setDueDate}
+                placeholder="Chọn hạn chót..."
+                includeTime={false}
               />
             </div>
           </div>
 
           {/* Mô tả chi tiết */}
           <div className="space-y-1.5">
-            <Label htmlFor="task-desc" className="text-xs font-bold text-foreground">
-              Mô tả chi tiết / Ghi chú
+            <Label htmlFor="task-desc" className="text-xs font-bold text-foreground flex items-center gap-1.5">
+              <FileText className="h-3.5 w-3.5 text-[#7D39EB]" />
+              <span>Mô tả chi tiết / Ghi chú</span>
             </Label>
             <Textarea
               id="task-desc"
@@ -180,7 +181,6 @@ export function GroupTaskModal({
               disabled={!title.trim()}
               className="text-xs h-8 bg-[#7D39EB] hover:bg-[#6D28D9] text-white font-bold"
             >
-              <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
               Tạo nhiệm vụ
             </Button>
           </DialogFooter>

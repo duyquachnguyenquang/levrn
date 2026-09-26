@@ -31,7 +31,16 @@ import {
   Trash2,
   Crown,
   Phone,
+  Award,
+  ExternalLink,
+  CheckCircle2,
+  Image as ImageIcon,
+  Sparkles,
 } from "lucide-react";
+import Link from "next/link";
+import { DateTimePicker } from "@/components/ui/datetime-picker";
+import { useCourseGrades } from "@/hooks/useCourseGrades";
+import { IMAGE_PRESETS } from "@/lib/imagePresets";
 
 interface GroupProjectModalProps {
   open: boolean;
@@ -82,9 +91,27 @@ export function GroupProjectModal({
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [newTaskDueDate, setNewTaskDueDate] = useState("");
 
-  // 4. Liên kết chung (Google Drive & Zalo/Discord)
+  // Tích hợp Quản lý điểm số môn học
+  const { grades: allCourseGrades, updateComponentScore } = useCourseGrades();
+  const [gradeComponentId, setGradeComponentId] = useState("");
+  const [gradeComponentName, setGradeComponentName] = useState("");
+  const [gradeWeight, setGradeWeight] = useState<number | undefined>(undefined);
+  const [gradeScore, setGradeScore] = useState<string>("");
+
+  // Tìm bảng điểm môn học tương ứng
+  const currentCourseGrade = useMemo(() => {
+    return allCourseGrades.find(
+      (g) =>
+        (subjectId && g.subjectId === subjectId) ||
+        (subjectCode && g.subjectCode === subjectCode)
+    );
+  }, [allCourseGrades, subjectId, subjectCode]);
+
+  // 4. Liên kết chung (Google Drive & Zalo/Discord) & Ảnh bìa
   const [driveUrl, setDriveUrl] = useState("");
   const [chatUrl, setChatUrl] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
+  const [previewError, setPreviewError] = useState(false);
 
   // 5. Danh sách Thành viên (kèm SĐT)
   const [members, setMembers] = useState<GroupMember[]>([
@@ -134,12 +161,24 @@ export function GroupProjectModal({
 
       setDriveUrl(groupToEdit.driveUrl || "");
       setChatUrl(groupToEdit.chatUrl || "");
+      setImageUrl(groupToEdit.imageUrl || "");
+      setPreviewError(false);
       setMembers(groupToEdit.members || []);
       setNewTaskTitle("");
       setNewTaskDueDate("");
       setNewMemberName("");
       setNewMemberId("");
       setNewMemberPhone("");
+
+      // Nạp thông tin trọng số điểm
+      setGradeComponentId(groupToEdit.gradeComponentId || "");
+      setGradeComponentName(groupToEdit.gradeComponentName || "");
+      setGradeWeight(groupToEdit.gradeWeight);
+      setGradeScore(
+        groupToEdit.gradeScore !== null && groupToEdit.gradeScore !== undefined
+          ? String(groupToEdit.gradeScore)
+          : ""
+      );
     } else {
       setName("");
 
@@ -158,6 +197,8 @@ export function GroupProjectModal({
       setNewTaskDueDate("");
       setDriveUrl("");
       setChatUrl("");
+      setImageUrl("");
+      setPreviewError(false);
       setMembers([
         {
           id: `mem-${Date.now()}`,
@@ -170,8 +211,34 @@ export function GroupProjectModal({
       setNewMemberName("");
       setNewMemberId("");
       setNewMemberPhone("");
+
+      setGradeComponentId("");
+      setGradeComponentName("");
+      setGradeWeight(undefined);
+      setGradeScore("");
     }
   }, [groupToEdit, subjects, semesters, open]);
+
+  // Chọn cột điểm thành phần từ Quản lý điểm số
+  const handleSelectGradeComponent = (compId: string) => {
+    setGradeComponentId(compId);
+    if (!compId) {
+      setGradeComponentName("");
+      setGradeWeight(undefined);
+      setGradeScore("");
+      return;
+    }
+    const comp = currentCourseGrade?.components.find((c) => c.id === compId);
+    if (comp) {
+      setGradeComponentName(comp.name);
+      setGradeWeight(comp.weight);
+      if (comp.score !== null && comp.score !== undefined) {
+        setGradeScore(String(comp.score));
+      } else {
+        setGradeScore("");
+      }
+    }
+  };
 
   // Khi chọn học kỳ mới -> cập nhật môn học phù hợp
   const handleSelectSemester = (newSem: string) => {
@@ -281,6 +348,9 @@ export function GroupProjectModal({
       };
     });
 
+    const parsedScore = gradeScore.trim() !== "" ? parseFloat(gradeScore) : null;
+    const validScore = parsedScore !== null && !isNaN(parsedScore) ? Math.min(10, Math.max(0, parsedScore)) : null;
+
     const data: GroupProjectFormData = {
       name: name.trim(),
       subjectId: subjectId || undefined,
@@ -293,8 +363,14 @@ export function GroupProjectModal({
       deadline: earliestDeadline || groupToEdit?.deadline || undefined,
       driveUrl: driveUrl.trim() || undefined,
       chatUrl: chatUrl.trim() || undefined,
+      imageUrl: imageUrl.trim() || undefined,
       repoUrl: groupToEdit?.repoUrl || undefined,
       meetingUrl: groupToEdit?.meetingUrl || undefined,
+      // Gán Trọng số điểm & Điểm số
+      gradeComponentId: gradeComponentId || undefined,
+      gradeComponentName: gradeComponentName || undefined,
+      gradeWeight: gradeWeight,
+      gradeScore: validScore,
       members: members.map((m) => ({
         ...m,
         avatarColor: m.role === "leader" ? "#7D39EB" : "#3B82F6",
@@ -304,6 +380,12 @@ export function GroupProjectModal({
     };
 
     onSave(data, groupToEdit?.id);
+
+    // Đồng bộ điểm sang bảng điểm môn học
+    if (gradeComponentId && (subjectId || subjectCode)) {
+      updateComponentScore(subjectId || subjectCode, gradeComponentId, validScore);
+    }
+
     onOpenChange(false);
   };
 
@@ -409,13 +491,12 @@ export function GroupProjectModal({
               </div>
 
               <div className="flex items-center gap-2 shrink-0">
-                <div className="relative w-full sm:w-44">
-                  <Input
-                    type="datetime-local"
+                <div className="w-full sm:w-48">
+                  <DateTimePicker
                     value={newTaskDueDate}
-                    onChange={(e) => setNewTaskDueDate(e.target.value)}
-                    className="h-9 text-[11px] rounded-lg bg-card"
-                    title="Hạn nộp"
+                    onChange={setNewTaskDueDate}
+                    placeholder="Hạn nộp..."
+                    includeTime={true}
                   />
                 </div>
 
@@ -431,6 +512,101 @@ export function GroupProjectModal({
                   <Plus className="h-4 w-4 stroke-[2.5]" />
                 </Button>
               </div>
+            </div>
+
+            {/* Gán Trọng số điểm từ phần Quản lý điểm số của môn học */}
+            <div className="p-3 rounded-lg border border-[#7D39EB]/30 bg-[#7D39EB]/5 space-y-2 mt-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                  <Award className="h-3.5 w-3.5 text-[#7D39EB]" />
+                  <span>Gán trọng số điểm từ Quản lý điểm số</span>
+                </Label>
+                <Link
+                  href="/grades"
+                  target="_blank"
+                  className="text-[11px] font-semibold text-[#7D39EB] hover:underline flex items-center gap-1"
+                  title="Xem bảng điểm môn học"
+                >
+                  <span>Quản lý điểm số</span>
+                  <ExternalLink className="h-3 w-3" />
+                </Link>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-end">
+                {/* Chọn cột điểm thành phần */}
+                <div className="sm:col-span-7 space-y-1">
+                  <Label htmlFor="grade-comp-select" className="text-[10px] font-semibold text-muted-foreground">
+                    Cột điểm của môn {subjectCode ? `[${subjectCode}]` : ""}
+                  </Label>
+                  <select
+                    id="grade-comp-select"
+                    value={gradeComponentId}
+                    onChange={(e) => handleSelectGradeComponent(e.target.value)}
+                    className="w-full h-8 text-xs px-2 rounded-md bg-card border border-border/80 text-foreground focus:outline-none focus:ring-1 focus:ring-[#7D39EB]"
+                  >
+                    <option value="">-- Chưa gán cột điểm --</option>
+                    {currentCourseGrade?.components && currentCourseGrade.components.length > 0 ? (
+                      currentCourseGrade.components.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name} ({c.weight}%) {c.score !== null && c.score !== undefined ? `• Điểm: ${c.score}/10` : "• Chưa có điểm"}
+                        </option>
+                      ))
+                    ) : (
+                      <option value="" disabled>
+                        Môn học này chưa có cột điểm thành phần
+                      </option>
+                    )}
+                  </select>
+                </div>
+
+                {/* Trọng số (%) & Điểm số đạt được */}
+                <div className="sm:col-span-5 grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <Label className="text-[10px] font-semibold text-muted-foreground">
+                      Trọng số (%)
+                    </Label>
+                    <div className="relative">
+                      <Input
+                        type="number"
+                        min={0}
+                        max={100}
+                        placeholder="30"
+                        value={gradeWeight ?? ""}
+                        onChange={(e) => setGradeWeight(e.target.value ? Number(e.target.value) : undefined)}
+                        className="h-8 text-xs font-mono font-bold rounded-md bg-card pr-5"
+                      />
+                      <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground font-bold">
+                        %
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label className="text-[10px] font-semibold text-muted-foreground">
+                      Điểm (Hệ 10)
+                    </Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      max={10}
+                      step={0.1}
+                      placeholder="VD: 8.5"
+                      value={gradeScore}
+                      onChange={(e) => setGradeScore(e.target.value)}
+                      className="h-8 text-xs font-mono font-black text-[#7D39EB] rounded-md bg-card"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {gradeComponentId && (
+                <div className="flex items-center gap-1.5 text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
+                  <CheckCircle2 className="h-3 w-3 shrink-0" />
+                  <span>
+                    Đã liên kết với <strong>{gradeComponentName}</strong> ({gradeWeight || 0}%). Điểm nhập ở đây sẽ đồng bộ tức thì sang Quản lý điểm số.
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Danh sách nhiệm vụ đã thêm */}
@@ -503,7 +679,51 @@ export function GroupProjectModal({
             </div>
           </div>
 
-          {/* 6. Thành viên (kèm Số điện thoại, nút chỉ dấu cộng) */}
+          {/* 6. Ảnh bìa đồ án (Permanent link) */}
+          <div className="space-y-2 pt-2 border-t border-border/50">
+            <Label className="text-xs font-bold text-foreground flex items-center gap-1.5">
+              <ImageIcon className="h-3.5 w-3.5 text-[#7D39EB]" />
+              <span>Ảnh bìa đồ án (Permanent Link)</span>
+            </Label>
+
+            <div className="space-y-2">
+              <div className="relative">
+                <Input
+                  placeholder="Dán link ảnh vĩnh viễn (Unsplash, Imgur, Cloudinary...)"
+                  value={imageUrl}
+                  onChange={(e) => {
+                    setImageUrl(e.target.value);
+                    setPreviewError(false);
+                  }}
+                  className="h-8 text-xs rounded-md bg-card font-mono pr-8"
+                />
+                {imageUrl && (
+                  <button
+                    type="button"
+                    onClick={() => setImageUrl("")}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground text-xs"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+
+              {/* Xem trước ảnh nếu có */}
+              {imageUrl && !previewError && (
+                <div className="relative w-full h-24 rounded-lg overflow-hidden border border-border/70">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={imageUrl}
+                    alt="Preview cover"
+                    className="w-full h-full object-cover"
+                    onError={() => setPreviewError(true)}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* 7. Thành viên (kèm Số điện thoại, nút chỉ dấu cộng) */}
           <div className="space-y-2 pt-2 border-t border-border/50">
             <div className="flex items-center justify-between">
               <Label className="text-xs font-bold text-foreground flex items-center gap-1.5">

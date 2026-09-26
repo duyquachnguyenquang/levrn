@@ -21,6 +21,7 @@ export function mapRowToSubject(row: any): Subject {
   let room: string | undefined = row.room || undefined;
   let campus: string | undefined = row.campus || undefined;
   let mapUrl: string | undefined = row.map_url || row.mapUrl || undefined;
+  let imageUrl: string | undefined = row.image_url || row.imageUrl || undefined;
 
   if (Array.isArray(row.schedule_days)) {
     scheduleDays = row.schedule_days;
@@ -41,6 +42,7 @@ export function mapRowToSubject(row: any): Subject {
           if (meta.room) room = meta.room;
           if (meta.campus) campus = meta.campus;
           if (meta.mapUrl) mapUrl = meta.mapUrl;
+          if (meta.imageUrl) imageUrl = meta.imageUrl;
         }
       } catch {}
     } else if (row.note.includes("levrn_schedule:")) {
@@ -69,6 +71,7 @@ export function mapRowToSubject(row: any): Subject {
     color: row.color || "#7D39EB",
     courseUrl: row.course_url || row.courseUrl || undefined,
     driveUrl: row.drive_url || row.driveUrl || undefined,
+    imageUrl: imageUrl || row.image_url || row.imageUrl || undefined,
     startDate: row.start_date || row.startDate || undefined,
     endDate: row.end_date || row.endDate || undefined,
     totalWeeks: row.total_weeks ?? row.totalWeeks ?? undefined,
@@ -101,6 +104,7 @@ export function mapSubjectToRow(data: Partial<SubjectFormData>) {
   if (data.color !== undefined) row.color = data.color;
   if (data.courseUrl !== undefined) row.course_url = data.courseUrl || null;
   if (data.driveUrl !== undefined) row.drive_url = data.driveUrl || null;
+  if (data.imageUrl !== undefined) row.image_url = data.imageUrl || null;
   if (data.startDate !== undefined) row.start_date = data.startDate || null;
   if (data.endDate !== undefined) row.end_date = data.endDate || null;
   if (data.totalWeeks !== undefined) row.total_weeks = data.totalWeeks ?? null;
@@ -115,6 +119,7 @@ export function mapSubjectToRow(data: Partial<SubjectFormData>) {
   if (data.room) meta.room = data.room;
   if (data.campus) meta.campus = data.campus;
   if (data.mapUrl) meta.mapUrl = data.mapUrl;
+  if (data.imageUrl) meta.imageUrl = data.imageUrl;
 
   if (Object.keys(meta).length > 0) {
     const tag = `levrn_meta:${JSON.stringify(meta)}`;

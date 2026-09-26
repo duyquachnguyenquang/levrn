@@ -14,7 +14,6 @@ import {
   ArrowUpRight,
   ChevronLeft,
   ChevronRight,
-  ClipboardCheck,
   Users,
   Bell,
 } from "lucide-react";
@@ -33,11 +32,6 @@ export const navigationItems = [
     name: "Môn học",
     href: "/subjects",
     icon: BookOpen,
-  },
-  {
-    name: "Điểm danh",
-    href: "/attendance",
-    icon: ClipboardCheck,
   },
   {
     name: "Quản lý nhóm",

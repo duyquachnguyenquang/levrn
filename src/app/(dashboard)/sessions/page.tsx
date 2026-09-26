@@ -105,36 +105,39 @@ export default function SessionsPage() {
             disabled={isRefreshing}
             className="rounded-md h-8 w-8 sm:h-10 sm:w-10 border-border/70 text-muted-foreground hover:text-foreground transition-all active:scale-95 shrink-0"
             title="Tải lại dữ liệu"
+            aria-label="Tải lại dữ liệu"
           >
             <RefreshCw className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${isRefreshing ? "animate-spin" : ""}`} />
           </Button>
 
           {activeTab === "flashcard" && (
             <Button
-              size="sm"
+              size="icon"
               onClick={() => setFlashcardModalOpen(true)}
-              className="h-8 sm:h-10 px-3 bg-[#C6FF33] hover:bg-[#B5F51B] text-black font-black rounded-md shadow-md gap-1 transition-all"
+              className="h-8 w-8 sm:h-10 sm:w-10 bg-[#C6FF33] hover:bg-[#B5F51B] text-black font-black rounded-md shadow-md transition-all active:scale-95 shrink-0"
+              title="Thêm Flashcard"
+              aria-label="Thêm Flashcard"
             >
-              <Plus className="h-4 w-4" />
-              <span className="hidden sm:inline">Thêm Flashcard</span>
+              <Plus className="h-4 w-4 sm:h-5 sm:w-5 stroke-[3]" />
             </Button>
           )}
 
           {activeTab === "quiz" && (
             <Button
-              size="sm"
+              size="icon"
               onClick={() => setQuizModalOpen(true)}
-              className="h-8 sm:h-10 px-3 bg-[#C6FF33] hover:bg-[#B5F51B] text-black font-black rounded-md shadow-md gap-1 transition-all"
+              className="h-8 w-8 sm:h-10 sm:w-10 bg-[#C6FF33] hover:bg-[#B5F51B] text-black font-black rounded-md shadow-md transition-all active:scale-95 shrink-0"
+              title="Thêm câu hỏi"
+              aria-label="Thêm câu hỏi"
             >
-              <Plus className="h-4 w-4" />
-              <span className="hidden sm:inline">Thêm câu hỏi</span>
+              <Plus className="h-4 w-4 sm:h-5 sm:w-5 stroke-[3]" />
             </Button>
           )}
         </div>
       </div>
 
       {/* 2. Thanh Tabs chuyển đổi 3 công cụ chính */}
-      <div className="flex items-center bg-card p-1 rounded-xl border border-border/70 shadow-xs max-w-md mx-auto sm:mx-0">
+      <div className="flex items-center bg-card p-1 rounded-lg border border-border/70 shadow-xs max-w-md mx-auto sm:mx-0">
         <button
           type="button"
           onClick={() => setActiveTab("pomodoro")}

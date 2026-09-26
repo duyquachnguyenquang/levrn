@@ -141,7 +141,7 @@ export function FlashcardPlayer({
 
   if (deckList.length === 0) {
     return (
-      <div className="py-16 text-center space-y-4 bg-card rounded-2xl border border-dashed border-border/80 p-8">
+      <div className="py-16 text-center space-y-4 bg-card rounded-lg border border-dashed border-border/80 p-8">
         <Sparkles className="h-12 w-12 text-muted-foreground/60 mx-auto" />
         <div className="space-y-1">
           <h3 className="text-base font-bold text-foreground">Chưa có Flashcard nào</h3>
@@ -154,7 +154,7 @@ export function FlashcardPlayer({
         <Button
           type="button"
           onClick={onOpenAddModal}
-          className="h-9 px-4 text-xs font-bold bg-[#C6FF33] hover:bg-[#B5F51B] text-black shadow-xs gap-1.5"
+          className="h-9 px-4 text-xs font-bold bg-[#C6FF33] hover:bg-[#B5F51B] text-black shadow-xs gap-1.5 rounded-lg"
         >
           <Plus className="h-4 w-4" />
           <span>Thêm Flashcard mới</span>
@@ -166,7 +166,7 @@ export function FlashcardPlayer({
   return (
     <div className="space-y-5">
       {/* 1. Thanh công cụ & Bộ lọc bộ thẻ */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-card p-3 rounded-xl border border-border/70 shadow-xs">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-card p-3 rounded-lg border border-border/70 shadow-xs">
         <div className="flex items-center gap-2 w-full sm:w-auto">
           <span className="text-xs text-muted-foreground font-semibold flex items-center gap-1 shrink-0">
             <BookOpen className="h-3.5 w-3.5 text-[#7D39EB]" />
@@ -242,7 +242,7 @@ export function FlashcardPlayer({
       >
         <div
           className={cn(
-            "relative w-full h-full min-h-[300px] sm:min-h-[340px] rounded-2xl transition-transform duration-500 transform-style-3d shadow-xl border border-border/80",
+            "relative w-full h-full min-h-[300px] sm:min-h-[340px] rounded-lg transition-transform duration-500 transform-style-3d shadow-xl border border-border/80",
             isFlipped ? "rotate-y-180" : ""
           )}
           style={{
@@ -254,7 +254,7 @@ export function FlashcardPlayer({
               MẶT TRƯỚC (FRONT): Khái niệm / Câu hỏi
           ========================================== */}
           <div
-            className="absolute inset-0 w-full h-full p-6 sm:p-8 rounded-2xl bg-card flex flex-col justify-between backface-hidden overflow-hidden"
+            className="absolute inset-0 w-full h-full p-6 sm:p-8 rounded-lg bg-card flex flex-col justify-between backface-hidden overflow-hidden"
             style={{ backfaceVisibility: "hidden" }}
           >
             {/* Vạch màu môn học ở đỉnh */}
@@ -338,7 +338,7 @@ export function FlashcardPlayer({
               MẶT SAU (BACK): Định nghĩa / Câu trả lời
           ========================================== */}
           <div
-            className="absolute inset-0 w-full h-full p-6 sm:p-8 rounded-2xl bg-card border-2 border-[#7D39EB]/40 flex flex-col justify-between backface-hidden overflow-hidden rotate-y-180"
+            className="absolute inset-0 w-full h-full p-6 sm:p-8 rounded-lg bg-card border-2 border-[#7D39EB]/40 flex flex-col justify-between backface-hidden overflow-hidden rotate-y-180"
             style={{
               backfaceVisibility: "hidden",
               transform: "rotateY(180deg)",
@@ -357,6 +357,7 @@ export function FlashcardPlayer({
                 }}
                 className="text-muted-foreground hover:text-destructive p-1 rounded transition-colors"
                 title="Xoá thẻ này"
+                aria-label="Xoá thẻ này"
               >
                 <Trash2 className="h-3.5 w-3.5" />
               </button>
@@ -382,7 +383,7 @@ export function FlashcardPlayer({
                     e.stopPropagation();
                     handleRating("hard");
                   }}
-                  className="h-8 px-4 text-xs font-bold bg-destructive/15 text-destructive hover:bg-destructive/25 border border-destructive/30"
+                  className="h-8 px-4 text-xs font-bold bg-destructive/15 text-destructive hover:bg-destructive/25 border border-destructive/30 rounded-md"
                 >
                   🔴 Khó
                 </Button>
@@ -394,7 +395,7 @@ export function FlashcardPlayer({
                     e.stopPropagation();
                     handleRating("medium");
                   }}
-                  className="h-8 px-4 text-xs font-bold bg-amber-500/15 text-amber-500 hover:bg-amber-500/25 border border-amber-500/30"
+                  className="h-8 px-4 text-xs font-bold bg-amber-500/15 text-amber-500 hover:bg-amber-500/25 border border-amber-500/30 rounded-md"
                 >
                   🟡 Vừa
                 </Button>
@@ -406,7 +407,7 @@ export function FlashcardPlayer({
                     e.stopPropagation();
                     handleRating("easy");
                   }}
-                  className="h-8 px-4 text-xs font-black bg-[#C6FF33] hover:bg-[#B5F51B] text-black shadow-xs"
+                  className="h-8 px-4 text-xs font-black bg-[#C6FF33] hover:bg-[#B5F51B] text-black shadow-xs rounded-md"
                 >
                   🟢 Đã thuộc!
                 </Button>
@@ -424,17 +425,18 @@ export function FlashcardPlayer({
           size="icon"
           onClick={handlePrev}
           disabled={currentIndex === 0}
-          className="h-10 w-10 rounded-full border-border/80 text-foreground transition-all disabled:opacity-40"
-          title="Thẻ trước (Mũi tên trái)"
+          className="h-9 w-9 rounded-lg border-border/80 text-foreground transition-all disabled:opacity-40"
+          title="Thẻ trước"
+          aria-label="Thẻ trước"
         >
-          <ChevronLeft className="h-5 w-5" />
+          <ChevronLeft className="h-4 w-4" />
         </Button>
 
         <Button
           type="button"
           variant="secondary"
           onClick={handleFlip}
-          className="h-10 px-5 rounded-full text-xs font-bold gap-1.5 shadow-xs"
+          className="h-9 px-4 rounded-lg text-xs font-bold gap-1.5 shadow-xs"
         >
           <RotateCw className="h-3.5 w-3.5" />
           <span>Lật thẻ (Space)</span>
@@ -446,10 +448,11 @@ export function FlashcardPlayer({
           size="icon"
           onClick={handleNext}
           disabled={currentIndex === deckList.length - 1}
-          className="h-10 w-10 rounded-full border-border/80 text-foreground transition-all disabled:opacity-40"
-          title="Thẻ tiếp theo (Mũi tên phải)"
+          className="h-9 w-9 rounded-lg border-border/80 text-foreground transition-all disabled:opacity-40"
+          title="Thẻ tiếp theo"
+          aria-label="Thẻ tiếp theo"
         >
-          <ChevronRight className="h-5 w-5" />
+          <ChevronRight className="h-4 w-4" />
         </Button>
       </div>
     </div>

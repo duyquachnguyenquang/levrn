@@ -39,6 +39,7 @@ export default function GroupsPage() {
     addTask,
     updateTaskStatus,
     deleteTask,
+    updateGroupGradeScore,
     refreshGroups,
   } = useGroups();
 
@@ -145,7 +146,7 @@ export default function GroupsPage() {
       {/* 2. 4 Box chỉ số tối giản tinh gọn chuẩn Kế hoạch học tập & Điểm số */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-3.5">
         {/* Box 1: Tổng số nhóm đồ án */}
-        <Card className="rounded-xl border border-border/80 bg-card p-3 sm:p-4 shadow-xs flex items-center justify-between transition-all hover:border-border/90">
+        <Card className="rounded-lg border border-border/80 bg-card p-3 sm:p-4 shadow-xs flex items-center justify-between transition-all hover:border-border/90">
           <div className="flex-1 min-w-0 pr-2 sm:pr-3">
             <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block truncate">
               Nhóm đồ án
@@ -167,7 +168,7 @@ export default function GroupsPage() {
         </Card>
 
         {/* Box 2: Nhiệm vụ nhóm */}
-        <Card className="rounded-xl border border-border/80 bg-card p-3 sm:p-4 shadow-xs flex items-center justify-between transition-all hover:border-border/90">
+        <Card className="rounded-lg border border-border/80 bg-card p-3 sm:p-4 shadow-xs flex items-center justify-between transition-all hover:border-border/90">
           <div className="flex-1 min-w-0 pr-2 sm:pr-3">
             <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block truncate">
               Nhiệm vụ nhóm
@@ -189,7 +190,7 @@ export default function GroupsPage() {
         </Card>
 
         {/* Box 3: Tiến độ chung */}
-        <Card className="rounded-xl border border-border/80 bg-card p-3 sm:p-4 shadow-xs flex items-center justify-between transition-all hover:border-border/90">
+        <Card className="rounded-lg border border-border/80 bg-card p-3 sm:p-4 shadow-xs flex items-center justify-between transition-all hover:border-border/90">
           <div className="flex-1 min-w-0 pr-2 sm:pr-3">
             <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block truncate">
               Tiến độ chung
@@ -211,7 +212,7 @@ export default function GroupsPage() {
         </Card>
 
         {/* Box 4: Hạn nộp trong 7 ngày */}
-        <Card className="rounded-xl border border-border/80 bg-card p-3 sm:p-4 shadow-xs flex items-center justify-between transition-all hover:border-border/90">
+        <Card className="rounded-lg border border-border/80 bg-card p-3 sm:p-4 shadow-xs flex items-center justify-between transition-all hover:border-border/90">
           <div className="flex-1 min-w-0 pr-2 sm:pr-3">
             <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block truncate">
               Hạn trong 7 ngày
@@ -271,7 +272,7 @@ export default function GroupsPage() {
           Đang tải danh sách nhóm đồ án...
         </div>
       ) : filteredGroups.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
           {filteredGroups.map((group) => (
             <GroupProjectCard
               key={group.id}
@@ -279,6 +280,8 @@ export default function GroupsPage() {
               onOpenDetail={handleOpenDetail}
               onEdit={handleOpenEdit}
               onDelete={deleteGroup}
+              onUpdateGradeScore={updateGroupGradeScore}
+              onUpdateGroup={updateGroup}
             />
           ))}
         </div>
@@ -322,6 +325,7 @@ export default function GroupsPage() {
         onAddTask={addTask}
         onUpdateTaskStatus={updateTaskStatus}
         onDeleteTask={deleteTask}
+        onUpdateGradeScore={updateGroupGradeScore}
       />
     </div>
   );

@@ -18,7 +18,7 @@ import {
   StudyPlanClassification,
   STUDY_CLASSIFICATIONS,
 } from "@/lib/types";
-import { Plus, Trash2, Clock, Compass } from "lucide-react";
+import { Plus, Trash2, Clock, Compass, Target, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface StrategyEditDialogProps {
@@ -103,7 +103,7 @@ export function StrategyEditDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg p-5 sm:p-6 rounded-xl">
+      <DialogContent className="max-w-lg p-5 sm:p-6 rounded-lg">
         <DialogHeader className="pb-3 border-b border-border/60">
           <div className="flex items-center gap-2">
             <span
@@ -125,7 +125,10 @@ export function StrategyEditDialog({
           {/* Mục tiêu số giờ tự học mỗi tuần */}
           <div className="space-y-1.5">
             <Label className="text-xs font-bold flex items-center justify-between">
-              <span>Mục tiêu tự học hàng tuần</span>
+              <div className="flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-[#7D39EB]" />
+                <span>Mục tiêu tự học hàng tuần</span>
+              </div>
               <span className="font-extrabold text-[#7D39EB] dark:text-[#A78BFA]">
                 {targetHours} giờ / tuần
               </span>
@@ -147,8 +150,9 @@ export function StrategyEditDialog({
 
           {/* Phương pháp học tập trọng tâm */}
           <div className="space-y-1.5">
-            <Label className="text-xs font-bold">
-              Phương pháp học tập trọng tâm (Chọn nhiều)
+            <Label className="text-xs font-bold flex items-center gap-1.5">
+              <Compass className="w-3.5 h-3.5 text-[#7D39EB]" />
+              <span>Phương pháp học tập trọng tâm</span>
             </Label>
             <div className="grid grid-cols-2 gap-2">
               {(Object.keys(STUDY_CLASSIFICATIONS) as StudyPlanClassification[]).map((key) => {
@@ -186,8 +190,9 @@ export function StrategyEditDialog({
 
           {/* Trọng tâm ôn luyện / Chủ đề quan trọng */}
           <div className="space-y-2">
-            <Label className="text-xs font-bold">
-              Chủ đề trọng tâm cần ôn luyện
+            <Label className="text-xs font-bold flex items-center gap-1.5">
+              <Target className="w-3.5 h-3.5 text-[#7D39EB]" />
+              <span>Chủ đề trọng tâm cần ôn luyện</span>
             </Label>
 
             {focusTopics.length > 0 && (
@@ -201,6 +206,8 @@ export function StrategyEditDialog({
                     <button
                       type="button"
                       onClick={() => handleRemoveTopic(topic)}
+                      title="Xóa chủ đề"
+                      aria-label="Xóa chủ đề"
                       className="text-muted-foreground hover:text-destructive"
                     >
                       <Trash2 className="h-3 w-3" />
@@ -228,7 +235,9 @@ export function StrategyEditDialog({
                 size="sm"
                 variant="outline"
                 onClick={handleAddTopic}
-                className="h-8 text-xs shrink-0"
+                title="Thêm chủ đề"
+                aria-label="Thêm chủ đề"
+                className="h-8 w-8 p-0 text-xs shrink-0"
               >
                 <Plus className="h-3.5 w-3.5" />
               </Button>
@@ -237,7 +246,10 @@ export function StrategyEditDialog({
 
           {/* Ghi chú chiến lược cá nhân */}
           <div className="space-y-1.5">
-            <Label className="text-xs font-bold">Ghi chú chiến lược riêng</Label>
+            <Label className="text-xs font-bold flex items-center gap-1.5">
+              <FileText className="w-3.5 h-3.5 text-[#7D39EB]" />
+              <span>Ghi chú chiến lược riêng</span>
+            </Label>
             <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}

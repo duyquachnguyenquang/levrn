@@ -76,7 +76,8 @@ export default function SubjectsPage() {
             onClick={handleRefresh}
             disabled={isRefreshing}
             className="rounded-md h-8 w-8 sm:h-10 sm:w-10 border-border/70 text-muted-foreground hover:text-foreground transition-all active:scale-95 shrink-0"
-            title="Tải lại dữ liệu từ Supabase"
+            title="Tải lại dữ liệu"
+            aria-label="Tải lại dữ liệu"
           >
             <RefreshCw className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${isRefreshing ? "animate-spin" : ""}`} />
           </Button>
@@ -122,6 +123,7 @@ export default function SubjectsPage() {
         onAddNew={handleAddNew}
         onEdit={handleEdit}
         onDelete={deleteSubject}
+        onUpdateSubject={updateSubject}
       />
 
       {/* 3. Dialog Thêm / Sửa môn học */}

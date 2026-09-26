@@ -179,13 +179,14 @@ export function NotificationCard({
             <div className="flex items-center gap-1 shrink-0">
               {!notification.read && (
                 <Button
-                  size="sm"
+                  size="icon"
                   variant="ghost"
                   onClick={() => onMarkAsRead(notification.id)}
-                  className="h-7 text-[11px] text-muted-foreground hover:text-foreground px-2"
+                  className="h-7 w-7 rounded-md text-muted-foreground hover:text-emerald-500"
+                  title="Đánh dấu đã đọc"
+                  aria-label="Đánh dấu đã đọc"
                 >
-                  <Check className="h-3 w-3 mr-1" />
-                  Đã đọc
+                  <Check className="h-3.5 w-3.5" />
                 </Button>
               )}
 
@@ -193,8 +194,9 @@ export function NotificationCard({
                 size="icon"
                 variant="ghost"
                 onClick={() => onDelete(notification.id)}
-                className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                className="h-7 w-7 rounded-md text-muted-foreground hover:text-destructive"
                 title="Xoá thông báo"
+                aria-label="Xoá thông báo"
               >
                 <Trash2 className="h-3.5 w-3.5" />
               </Button>

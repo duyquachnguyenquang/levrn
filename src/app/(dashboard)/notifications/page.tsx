@@ -85,9 +85,6 @@ export default function NotificationsPage() {
               )}
             </h1>
           </div>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-            Tổng hợp cảnh báo chuyên cần, hạn chót bài tập nhóm, lịch học và cập nhật hệ thống.
-          </p>
         </div>
 
         {/* Nút thao tác nhanh */}
@@ -95,31 +92,33 @@ export default function NotificationsPage() {
           {unreadCount > 0 && (
             <Button
               variant="outline"
-              size="sm"
+              size="icon"
               onClick={markAllAsRead}
-              className="h-9 text-xs rounded-lg border-border/80 text-muted-foreground hover:text-foreground"
+              className="h-9 w-9 rounded-lg border-border/80 text-muted-foreground hover:text-foreground"
+              title="Đánh dấu tất cả đã đọc"
+              aria-label="Đánh dấu tất cả đã đọc"
             >
-              <CheckCheck className="h-3.5 w-3.5 mr-1.5 text-emerald-500" />
-              Đọc tất cả
+              <CheckCheck className="h-4 w-4 text-emerald-500" />
             </Button>
           )}
 
           <Button
             variant="outline"
-            size="sm"
+            size="icon"
             onClick={clearReadNotifications}
-            className="h-9 text-xs rounded-lg border-border/80 text-muted-foreground hover:text-destructive"
+            className="h-9 w-9 rounded-lg border-border/80 text-muted-foreground hover:text-destructive"
+            title="Dọn dẹp các thông báo đã đọc"
+            aria-label="Dọn dẹp các thông báo đã đọc"
           >
-            <Trash2 className="h-3.5 w-3.5 mr-1.5" />
-            Dọn đã đọc
+            <Trash2 className="h-4 w-4" />
           </Button>
 
           <Button
             onClick={() => setCreateModalOpen(true)}
-            className="h-9 text-xs font-bold rounded-lg bg-[#7D39EB] hover:bg-[#6D28D9] text-white shadow-xs"
+            className="h-9 px-3.5 text-xs font-bold rounded-lg bg-[#7D39EB] hover:bg-[#6D28D9] text-white shadow-xs gap-1.5"
           >
-            <Plus className="h-3.5 w-3.5 mr-1.5" />
-            Tạo nhắc nhở
+            <Plus className="h-4 w-4" />
+            <span>Tạo nhắc nhở</span>
           </Button>
         </div>
       </div>

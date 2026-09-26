@@ -10,6 +10,8 @@ import {
   AlertCircle,
   Filter,
   X,
+  Calendar,
+  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -140,6 +142,7 @@ export default function GradesPage() {
             disabled={isRefreshing}
             className="rounded-md h-8 w-8 sm:h-10 sm:w-10 border-border/70 text-muted-foreground hover:text-foreground transition-all active:scale-95 shrink-0"
             title="Tải lại dữ liệu"
+            aria-label="Tải lại dữ liệu"
           >
             <RefreshCw className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${isRefreshing ? "animate-spin" : ""}`} />
           </Button>
@@ -151,6 +154,7 @@ export default function GradesPage() {
             onClick={handleExportCSV}
             className="rounded-md h-8 w-8 sm:h-10 sm:w-10 border-border/70 text-muted-foreground hover:text-foreground transition-all active:scale-95 shrink-0"
             title="Tải dữ liệu xuống (CSV)"
+            aria-label="Tải dữ liệu xuống (CSV)"
           >
             <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           </Button>
@@ -170,7 +174,7 @@ export default function GradesPage() {
 
       {/* Thông báo trạng thái cơ sở dữ liệu nếu có */}
       {errorMessage && (
-        <div className="p-3.5 rounded-xl border border-amber-500/30 bg-amber-500/10 text-xs text-amber-700 dark:text-amber-300 flex items-center justify-between gap-3">
+        <div className="p-3.5 rounded-lg border border-amber-500/30 bg-amber-500/10 text-xs text-amber-700 dark:text-amber-300 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <AlertCircle className="h-4 w-4 shrink-0 text-amber-500" />
             <span>{errorMessage}</span>
@@ -231,7 +235,7 @@ export default function GradesPage() {
           </PopoverTrigger>
           <PopoverContent
             align="end"
-            className="w-72 p-4 rounded-xl border border-border/80 shadow-2xl bg-card text-foreground space-y-3 z-50"
+            className="w-72 p-4 rounded-lg border border-border/80 shadow-2xl bg-card text-foreground space-y-3 z-50"
           >
             <div className="flex items-center justify-between pb-2 border-b border-border/60">
               <div className="flex items-center gap-1.5 text-xs font-bold text-foreground">
@@ -254,8 +258,9 @@ export default function GradesPage() {
 
             {/* Drop-box 1: Học kỳ */}
             <div className="space-y-1">
-              <label className="text-[11px] font-bold text-muted-foreground">
-                Học kỳ
+              <label className="text-[11px] font-bold text-muted-foreground flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-[#7D39EB]" />
+                <span>Học kỳ</span>
               </label>
               <select
                 value={selectedSemester}
@@ -273,8 +278,9 @@ export default function GradesPage() {
 
             {/* Drop-box 2: Cơ chế tính điểm */}
             <div className="space-y-1">
-              <label className="text-[11px] font-bold text-muted-foreground">
-                Cơ chế tính điểm
+              <label className="text-[11px] font-bold text-muted-foreground flex items-center gap-1.5">
+                <Zap className="w-3.5 h-3.5 text-[#7D39EB]" />
+                <span>Cơ chế tính điểm</span>
               </label>
               <select
                 value={methodFilter}

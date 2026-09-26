@@ -15,15 +15,12 @@ export default function GoalsPage() {
       </div>
 
       <div className="max-w-md space-y-2">
-        <h2 className="text-2xl font-extrabold text-foreground tracking-tight">
-          Mục Tiêu Học Tập
+        <h2 className="text-2xl font-extrabold text-foreground tracking-tight flex items-center justify-center gap-2">
+          <span>Mục Tiêu Học Tập</span>
+          <span className="text-xs font-bold px-2 py-0.5 rounded bg-amber-500/10 text-amber-500 border border-amber-500/30">
+            Đang phát triển
+          </span>
         </h2>
-        <p className="text-sm text-muted-foreground font-medium">
-          🚧 Tính năng đang được phát triển
-        </p>
-        <p className="text-xs text-muted-foreground/80">
-          Thiết lập các mốc điểm số GPA và số giờ tự học cho từng môn học.
-        </p>
       </div>
     </div>
   );

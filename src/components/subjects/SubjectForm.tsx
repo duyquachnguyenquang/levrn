@@ -48,7 +48,9 @@ import {
   ChevronDown,
   X,
   MapPin,
+  Image as ImageIcon,
 } from "lucide-react";
+import { IMAGE_PRESETS } from "@/lib/imagePresets";
 
 // Danh sách năm học gợi ý
 const PRESET_ACADEMIC_YEARS = [
@@ -208,7 +210,7 @@ function SmartDatePicker({ id, value, onChange }: SmartDatePickerProps) {
           )}
         </button>
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-64 p-3 rounded-xl border border-border/80 shadow-2xl bg-card text-foreground z-50">
+      <PopoverContent align="start" className="w-64 p-3 rounded-lg border border-border/80 shadow-2xl bg-card text-foreground z-50">
         {/* Thanh điều hướng tháng/năm */}
         <div className="flex items-center justify-between pb-2 border-b border-border/60">
           <button
@@ -311,9 +313,11 @@ export function SubjectForm({
   const [category, setCategory] = useState<SubjectCategory>("Môn chuyên ngành");
   const [categoryColors, setCategoryColors] = useState<Record<SubjectCategory, string>>(DEFAULT_CATEGORY_COLORS);
 
-  // Link Course và Google Drive
+  // Link Course và Google Drive & Ảnh bìa
   const [courseUrl, setCourseUrl] = useState("");
   const [driveUrl, setDriveUrl] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
+  const [previewError, setPreviewError] = useState(false);
   const [driveHelpNotice, setDriveHelpNotice] = useState<string | null>(null);
 
   // Lịch học
@@ -386,6 +390,8 @@ export function SubjectForm({
       setCategory(initialData.category || "Môn chuyên ngành");
       setCourseUrl(initialData.courseUrl || "");
       setDriveUrl(initialData.driveUrl || "");
+      setImageUrl(initialData.imageUrl || "");
+      setPreviewError(false);
       setStartDate(initialData.startDate || "");
       setTotalWeeks(initialData.totalWeeks ? String(initialData.totalWeeks) : "15");
       setScheduleDays(
@@ -409,7 +415,8 @@ export function SubjectForm({
       setCategory("Môn chuyên ngành");
       setCourseUrl("");
       setDriveUrl("");
-      setStartDate("");
+      setImageUrl("");
+      setPreviewError(false);
       setTotalWeeks("15");
       setScheduleDays([]);
       setStartTime("");
@@ -502,6 +509,7 @@ export function SubjectForm({
       color: activeColor,
       courseUrl: courseUrl.trim() || undefined,
       driveUrl: driveUrl.trim() || undefined,
+      imageUrl: imageUrl.trim() || undefined,
       startDate: startDate || undefined,
       totalWeeks: weeksNum > 0 ? weeksNum : undefined,
       endDate: computedEndDate,
@@ -766,6 +774,52 @@ export function SubjectForm({
               <p>{driveHelpNotice}</p>
             </div>
           )}
+
+          {/* HÀNG BỔ SUNG: Ảnh bìa môn học (Permanent Link) */}
+          <div className="space-y-2 p-3 rounded-lg bg-muted/30 border border-border/70">
+            <Label htmlFor="subjectImageUrl" className="text-xs font-bold text-foreground flex items-center gap-1.5">
+              <ImageIcon className="h-3.5 w-3.5 text-[#7D39EB]" />
+              <span>Ảnh bìa môn học (Permanent Link)</span>
+            </Label>
+
+            <div className="space-y-2">
+              <div className="relative">
+                <Input
+                  id="subjectImageUrl"
+                  type="url"
+                  placeholder="https://images.unsplash.com/... (link ảnh vĩnh viễn)"
+                  value={imageUrl}
+                  onChange={(e) => {
+                    setImageUrl(e.target.value);
+                    setPreviewError(false);
+                  }}
+                  className="rounded-md font-mono text-xs pr-8"
+                />
+                {imageUrl && (
+                  <button
+                    type="button"
+                    onClick={() => setImageUrl("")}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground text-xs"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+
+              {/* Xem trước ảnh */}
+              {imageUrl && !previewError && (
+                <div className="relative w-full h-24 rounded-lg overflow-hidden border border-border/70">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={imageUrl}
+                    alt="Preview cover"
+                    className="w-full h-full object-cover"
+                    onError={() => setPreviewError(true)}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
 
           {/* HÀNG 4: Ngày bắt đầu, Số tuần học */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

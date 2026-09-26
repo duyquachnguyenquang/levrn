@@ -34,7 +34,15 @@ import {
   Pencil,
   Trash2,
   GraduationCap,
+  Calendar,
+  Tag,
+  Clock,
+  CheckCircle2,
 } from "lucide-react";
+import { useAttendance } from "@/hooks/useAttendance";
+import { useNotifications } from "@/hooks/useNotifications";
+import { getSubjectCheckinStatus } from "@/lib/checkinUtils";
+import { MarqueeText } from "@/components/ui/marquee-text";
 
 interface SubjectListProps {
   subjects: Subject[];
@@ -42,6 +50,7 @@ interface SubjectListProps {
   onAddNew: () => void;
   onEdit: (subject: Subject) => void;
   onDelete: (id: string) => void;
+  onUpdateSubject?: (id: string, updates: Partial<Subject>) => void;
 }
 
 // Hàm phân tích năm học và kỳ học từ dữ liệu môn học
@@ -72,6 +81,7 @@ export function SubjectList({
   onAddNew,
   onEdit,
   onDelete,
+  onUpdateSubject,
 }: SubjectListProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSemester, setSelectedSemester] = useState<string>("ALL");
@@ -80,6 +90,32 @@ export function SubjectList({
   const [filterOpen, setFilterOpen] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [subjectToDelete, setSubjectToDelete] = useState<Subject | null>(null);
+
+  // Điểm danh & Thông báo
+  const { records: attendanceRecords, checkinSubjectToday } = useAttendance(subjects);
+  const { addNotification } = useNotifications();
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const handleCheckin = async (subject: Subject) => {
+    const res = await checkinSubjectToday(subject);
+    if (res.success) {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+      const dateStr = now.toLocaleDateString("vi-VN");
+      const status = getSubjectCheckinStatus(subject, attendanceRecords);
+
+      await addNotification({
+        title: `Điểm danh thành công: [${subject.code}] ${subject.name}`,
+        message: `Bạn đã điểm danh lúc ${timeStr} ngày ${dateStr} (Buổi ${status.sessionNumber}/${status.totalWeeks}). Dữ liệu đã lưu vào hệ thống.`,
+        type: "success",
+        category: "attendance",
+        link: "/dashboard",
+      });
+
+      setToastMessage(`Đã điểm danh thành công môn [${subject.code}] ${subject.name} lúc ${timeStr}!`);
+      setTimeout(() => setToastMessage(null), 4000);
+    }
+  };
 
   const hasUnassigned = useMemo(() => {
     return subjects.some((s) => !s.semester || s.semester.trim() === "" || s.semester === "Chưa xếp kỳ");
@@ -226,7 +262,7 @@ export function SubjectList({
             </PopoverTrigger>
             <PopoverContent
               align="end"
-              className="w-72 p-4 rounded-xl border border-border/80 shadow-2xl bg-card text-foreground space-y-3 z-50"
+              className="w-72 p-4 rounded-lg border border-border/80 shadow-2xl bg-card text-foreground space-y-3 z-50"
             >
               <div className="flex items-center justify-between pb-2 border-b border-border/60">
                 <div className="flex items-center gap-1.5 text-xs font-bold text-foreground">
@@ -250,8 +286,9 @@ export function SubjectList({
 
               {/* Drop-box 1: Học kỳ */}
               <div className="space-y-1">
-                <label className="text-[11px] font-bold text-muted-foreground">
-                  Học kỳ
+                <label className="text-[11px] font-bold text-muted-foreground flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5 text-[#7D39EB]" />
+                  <span>Học kỳ</span>
                 </label>
                 <select
                   value={selectedSemester}
@@ -269,8 +306,9 @@ export function SubjectList({
 
               {/* Drop-box 2: Phân loại */}
               <div className="space-y-1">
-                <label className="text-[11px] font-bold text-muted-foreground">
-                  Phân loại
+                <label className="text-[11px] font-bold text-muted-foreground flex items-center gap-1.5">
+                  <Tag className="w-3.5 h-3.5 text-[#7D39EB]" />
+                  <span>Phân loại</span>
                 </label>
                 <select
                   value={selectedCategory}
@@ -288,8 +326,9 @@ export function SubjectList({
 
               {/* Drop-box 3: Số tín chỉ */}
               <div className="space-y-1">
-                <label className="text-[11px] font-bold text-muted-foreground">
-                  Số tín chỉ
+                <label className="text-[11px] font-bold text-muted-foreground flex items-center gap-1.5">
+                  <GraduationCap className="w-3.5 h-3.5 text-[#7D39EB]" />
+                  <span>Số tín chỉ</span>
                 </label>
                 <select
                   value={selectedCredits}
@@ -339,17 +378,37 @@ export function SubjectList({
         </div>
       </div>
 
+      {/* Toast phản hồi điểm danh thành công */}
+      {toastMessage && (
+        <div className="p-3 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs font-semibold flex items-center justify-between gap-2 shadow-sm animate-in fade-in-50 duration-200">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+            <span>{toastMessage}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setToastMessage(null)}
+            className="text-muted-foreground hover:text-foreground text-xs"
+          >
+            Đóng
+          </button>
+        </div>
+      )}
+
       {/* Hiển thị danh sách môn học theo chế độ Grid (5 môn/hàng) hoặc List */}
       {filteredSubjects.length > 0 ? (
         viewMode === "grid" ? (
-          /* Khối: mật độ hiển thị 5 môn/hàng trên màn hình lớn */
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3.5">
+          /* Khối: mật độ hiển thị cân đối, thẩm mỹ cao trên màn hình lớn */
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-5 sm:gap-6">
             {filteredSubjects.map((subject) => (
               <SubjectCard
                 key={subject.id}
                 subject={subject}
                 onEdit={onEdit}
                 onDelete={onDelete}
+                onUpdateSubject={onUpdateSubject}
+                attendanceRecords={attendanceRecords}
+                onCheckin={handleCheckin}
               />
             ))}
           </div>
@@ -367,6 +426,7 @@ export function SubjectList({
                   <th className="py-3 px-3 whitespace-nowrap text-center">Số tín chỉ</th>
                   <th className="py-3 px-3 whitespace-nowrap text-center">Course</th>
                   <th className="py-3 px-3 whitespace-nowrap text-center">Google Drive</th>
+                  <th className="py-3 px-3 whitespace-nowrap text-center">Tiến độ & Điểm danh</th>
                   <th className="py-3 px-3.5 whitespace-nowrap text-right">Thao tác</th>
                 </tr>
               </thead>
@@ -394,14 +454,14 @@ export function SubjectList({
                       </td>
 
                       {/* Tên môn */}
-                      <td className="py-3 px-3.5">
+                      <td className="py-3 px-3.5 max-w-[320px]">
                         <button
                           type="button"
                           onClick={() => onEdit(subject)}
-                          className="font-bold text-sm text-foreground hover:text-[#7D39EB] transition-colors text-left line-clamp-1 group-hover:text-[#7D39EB]"
+                          className="font-bold text-sm text-foreground hover:text-[#7D39EB] transition-colors text-left group-hover:text-[#7D39EB] w-full"
                           title={subject.name}
                         >
-                          {subject.name}
+                          <MarqueeText text={subject.name} className="font-bold text-sm" />
                         </button>
                       </td>
 
@@ -488,6 +548,39 @@ export function SubjectList({
                         )}
                       </td>
 
+                      {/* Tiến độ & Điểm danh */}
+                      <td className="py-3 px-3 whitespace-nowrap text-center">
+                        {(() => {
+                          const checkinStatus = getSubjectCheckinStatus(subject, attendanceRecords);
+                          if (checkinStatus.canCheckin) {
+                            return (
+                              <Button
+                                size="sm"
+                                onClick={() => handleCheckin(subject)}
+                                className="h-7 px-2.5 bg-[#C6FF33] hover:bg-[#b5f514] text-black font-extrabold text-[11px] rounded-md shadow-xs transition-all active:scale-95 inline-flex items-center gap-1"
+                                title="Điểm danh buổi học hôm nay"
+                              >
+                                <CheckCircle2 className="h-3 w-3 stroke-[2.5]" />
+                                <span>Điểm danh</span>
+                              </Button>
+                            );
+                          }
+                          if (checkinStatus.isCheckedIn) {
+                            return (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold text-[10px] border border-emerald-500/30">
+                                <CheckCircle2 className="h-3 w-3" />
+                                <span>Đã điểm danh</span>
+                              </span>
+                            );
+                          }
+                          return (
+                            <span className="font-mono text-xs font-semibold text-muted-foreground">
+                              {checkinStatus.attendedCount}/{checkinStatus.totalWeeks} buổi
+                            </span>
+                          );
+                        })()}
+                      </td>
+
                       {/* Thao tác: 2 nút Chỉnh sửa & Xoá */}
                       <td className="py-3 px-3.5 whitespace-nowrap text-right">
                         <div className="flex items-center justify-end gap-2">
@@ -550,7 +643,7 @@ export function SubjectList({
         open={!!subjectToDelete}
         onOpenChange={(open) => !open && setSubjectToDelete(null)}
       >
-        <AlertDialogContent className="rounded-xl max-w-md border border-border/80">
+        <AlertDialogContent className="rounded-lg max-w-md border border-border/80">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-base font-bold text-foreground">
               Xác nhận xoá môn học

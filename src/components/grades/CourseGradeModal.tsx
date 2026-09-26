@@ -215,7 +215,7 @@ export function CourseGradeModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto p-0 border border-border/80 bg-background text-foreground shadow-2xl">
+      <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto p-0 border border-border/80 bg-background text-foreground shadow-2xl rounded-lg">
         {/* Header tinh gọn, không chữ thừa, đồng bộ với các pop-up box khác */}
         <DialogHeader className="p-5 pb-3 border-b border-border/50">
           <DialogTitle className="text-lg sm:text-xl font-black text-foreground flex items-center gap-2.5">
@@ -239,7 +239,7 @@ export function CourseGradeModal({
                 type="button"
                 onClick={() => setGradingMethod("final_only")}
                 className={cn(
-                  "h-10 px-4 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all active:scale-[0.98]",
+                  "h-10 px-4 rounded-lg border text-xs font-bold flex items-center justify-center gap-2 transition-all active:scale-[0.98]",
                   gradingMethod === "final_only"
                     ? "border-[#7D39EB] bg-[#7D39EB]/10 text-foreground ring-1 ring-[#7D39EB]"
                     : "border-border/80 bg-card hover:bg-muted/40 text-muted-foreground hover:text-foreground"
@@ -253,7 +253,7 @@ export function CourseGradeModal({
                 type="button"
                 onClick={() => setGradingMethod("components")}
                 className={cn(
-                  "h-10 px-4 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all active:scale-[0.98]",
+                  "h-10 px-4 rounded-lg border text-xs font-bold flex items-center justify-center gap-2 transition-all active:scale-[0.98]",
                   gradingMethod === "components"
                     ? "border-[#C6FF33] bg-[#C6FF33]/15 text-foreground ring-1 ring-[#C6FF33]"
                     : "border-border/80 bg-card hover:bg-muted/40 text-muted-foreground hover:text-foreground"
@@ -267,7 +267,7 @@ export function CourseGradeModal({
 
           {/* Chọn nhanh từ danh sách môn học nếu có */}
           {existingSubjects.length > 0 && !initialData && (
-            <div className="p-3 bg-muted/20 rounded-xl border border-border/70 flex items-center justify-between gap-3">
+            <div className="p-3 bg-muted/20 rounded-lg border border-border/70 flex items-center justify-between gap-3">
               <div className="flex items-center gap-1.5">
                 <BookOpen className="h-3.5 w-3.5 text-[#7D39EB] shrink-0" />
                 <span className="text-xs font-semibold text-foreground">
@@ -500,7 +500,7 @@ export function CourseGradeModal({
                   type="button"
                   variant="outline"
                   onClick={handleAddComponent}
-                  className="w-full text-xs font-semibold py-1.5 h-8 border-dashed rounded-xl gap-1.5 hover:bg-muted/40"
+                  className="w-full text-xs font-semibold py-1.5 h-8 border-dashed rounded-lg gap-1.5 hover:bg-muted/40"
                 >
                   <Plus className="h-3.5 w-3.5" />
                   <span>Thêm cột điểm thành phần</span>
@@ -521,10 +521,9 @@ export function CourseGradeModal({
                     onClose();
                   }
                 }}
-                className="text-xs font-semibold rounded-lg px-3 h-9 text-destructive border-destructive/30 hover:bg-destructive/10 gap-1.5 active:scale-95"
+                className="text-xs font-semibold rounded-lg px-3 h-9 text-destructive border-destructive/30 hover:bg-destructive/10 active:scale-95"
               >
-                <Trash2 className="h-3.5 w-3.5" />
-                <span>Xóa môn</span>
+                Xóa môn
               </Button>
             ) : <div />}
 

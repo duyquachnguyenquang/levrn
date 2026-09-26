@@ -17,7 +17,7 @@ import {
   NotificationType,
   AppNotificationFormData,
 } from "@/lib/types";
-import { Bell, Tag, Flag } from "lucide-react";
+import { Bell, Tag, Flag, FileText, Link2 } from "lucide-react";
 
 interface CreateNotificationModalProps {
   open: boolean;
@@ -64,16 +64,15 @@ export function CreateNotificationModal({
             <Bell className="h-4 w-4 text-[#7D39EB]" />
             Tạo lời nhắc / Thông báo mới
           </DialogTitle>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Tạo thông báo cá nhân hoá để theo dõi các sự kiện học tập quan trọng.
-          </p>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 py-2">
           {/* Tiêu đề thông báo */}
           <div className="space-y-1.5">
-            <Label htmlFor="notif-title" className="text-xs font-bold text-foreground">
-              Tiêu đề thông báo <span className="text-destructive">*</span>
+            <Label htmlFor="notif-title" className="text-xs font-bold text-foreground flex items-center gap-1.5">
+              <Bell className="h-3.5 w-3.5 text-[#7D39EB]" />
+              <span>Tiêu đề thông báo</span>
+              <span className="text-destructive">*</span>
             </Label>
             <Input
               id="notif-title"
@@ -88,8 +87,9 @@ export function CreateNotificationModal({
           {/* Phân loại & Mức độ */}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label className="text-xs font-bold text-foreground flex items-center gap-1">
-                <Tag className="h-3.5 w-3.5" /> Phân loại
+              <Label className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                <Tag className="h-3.5 w-3.5 text-[#7D39EB]" />
+                <span>Phân loại</span>
               </Label>
               <select
                 value={category}
@@ -105,8 +105,9 @@ export function CreateNotificationModal({
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-bold text-foreground flex items-center gap-1">
-                <Flag className="h-3.5 w-3.5" /> Mức độ
+              <Label className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                <Flag className="h-3.5 w-3.5 text-[#7D39EB]" />
+                <span>Mức độ</span>
               </Label>
               <select
                 value={type}
@@ -123,8 +124,10 @@ export function CreateNotificationModal({
 
           {/* Nội dung chi tiết */}
           <div className="space-y-1.5">
-            <Label htmlFor="notif-msg" className="text-xs font-bold text-foreground">
-              Nội dung thông báo <span className="text-destructive">*</span>
+            <Label htmlFor="notif-msg" className="text-xs font-bold text-foreground flex items-center gap-1.5">
+              <FileText className="h-3.5 w-3.5 text-[#7D39EB]" />
+              <span>Nội dung thông báo</span>
+              <span className="text-destructive">*</span>
             </Label>
             <Textarea
               id="notif-msg"
@@ -139,8 +142,9 @@ export function CreateNotificationModal({
 
           {/* Đường dẫn liên kết tuỳ chọn */}
           <div className="space-y-1.5">
-            <Label htmlFor="notif-link" className="text-xs font-bold text-foreground">
-              Đường dẫn liên kết (tuỳ chọn)
+            <Label htmlFor="notif-link" className="text-xs font-bold text-foreground flex items-center gap-1.5">
+              <Link2 className="h-3.5 w-3.5 text-[#7D39EB]" />
+              <span>Đường dẫn liên kết (tuỳ chọn)</span>
             </Label>
             <Input
               id="notif-link"

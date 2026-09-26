@@ -632,7 +632,7 @@ export function ScheduleCalendar({
                       key={wDay.dateKey}
                       onClick={() => onSelectDate(wDay.dateKey)}
                       className={cn(
-                        "p-3 rounded-xl border flex flex-col justify-between transition-all duration-200 cursor-pointer min-h-[260px] bg-card overflow-hidden",
+                        "p-3 rounded-lg border flex flex-col justify-between transition-all duration-200 cursor-pointer min-h-[260px] bg-card overflow-hidden",
                         wDay.isSelected
                           ? "bg-[#7D39EB]/10 border-[#7D39EB] shadow-xs ring-1 ring-[#7D39EB]"
                           : wDay.isToday

@@ -7,3 +7,77 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
+
+# LEVRN DESIGN LANGUAGE & AI OPERATIONAL RULES
+> Chi tiết tài liệu: Xem thêm tại file `DESIGN_SYSTEM.md` ở thư mục gốc.
+
+Tất cả các tác vụ thiết kế giao diện (UI/UX) và quy trình làm việc của AI trong dự án LEVRN **BẮT BUỘC** phải tuân thủ nghiêm ngặt các quy tắc sau:
+
+---
+
+## 1. QUY CHUẨN GIAO DIỆN (UI/UX DESIGN RULES)
+
+### 1.1. Header tinh gọn - Không có dòng chữ dư thừa bên dưới
+- Bên dưới các thẻ Header (`<h1>`, `<h2>`, `<h3>`, Header của Card, Modal, Sheet, Dialog, Section): **TUYỆT ĐỐI KHÔNG** chèn thêm các đoạn mô tả dài dòng, subtitle phụ, chú thích hay câu chào sáo rỗng (như *"Quản lý và theo dõi thông tin..."*, *"Điền vào biểu mẫu để..."*).
+- Tiêu đề phải đứng độc lập, ngắn gọn, súc tích và đúng trọng tâm.
+
+### 1.2. Thứ tự ưu tiên nút bấm & Hành động (Button Hierarchy)
+Khi tạo hoặc chỉnh sửa các nút thao tác:
+1. **Ưu tiên 1 (Cao nhất) - Chỉ dùng Icon (Icon-only):**
+   - Áp dụng cho hầu hết các hành động thông thường, thao tác trên hàng bảng/danh sách, nút đóng/mở/sửa/xóa, toggle, filter.
+   - **Bắt buộc:** Phải có `title` hoặc `aria-label` cho nút để hiển thị tooltip native và đảm bảo accessibility.
+   - Kích thước: Icon chuẩn `w-4 h-4` (hoặc `w-[18px] h-[18px]`), bọc trong nút gọn `h-8 w-8` hoặc `h-9 w-9`.
+2. **Ưu tiên 2 - Chỉ dùng Chữ (Text-only):**
+   - Áp dụng khi cần hiển thị hành động xác nhận hoặc điều hướng rõ nghĩa (VD: `Lưu`, `Hủy`, `Đóng`, `Xác nhận`).
+3. **Ưu tiên 3 (Hạn chế nhất) - Icon kết hợp Chữ (Icon + Text):**
+   - Chỉ dùng cho Primary Call-to-Action đặc biệt quan trọng của toàn trang (VD: `+ Tạo mới`) hoặc các hành động phức tạp cần tránh nhầm lẫn.
+
+### 1.3. Pop-up / Modal / Dialog / Sheet: Bắt buộc có Icon trước tên trường dữ liệu (Label Icons)
+- Trong tất cả các pop-up box, modal, dialog, sheet: **Trước tên của mỗi trường dữ liệu (`<Label>`) BẮT BUỘC PHẢI CÓ 1 ICON đại diện trực quan**.
+- Căn chỉnh: `flex items-center gap-1.5`, kích thước icon `w-3.5 h-3.5` hoặc `w-4 h-4` với màu sắc `text-muted-foreground`.
+- Ví dụ:
+  - `<BookOpen className="w-3.5 h-3.5 mr-1.5" /> Tên môn học`
+  - `<User className="w-3.5 h-3.5 mr-1.5" /> Giảng viên`
+  - `<Calendar className="w-3.5 h-3.5 mr-1.5" /> Ngày bắt đầu`
+  - `<FileText className="w-3.5 h-3.5 mr-1.5" /> Ghi chú`
+
+### 1.4. Trường dữ liệu đơn giản - Không thêm mục Lựa chọn gợi ý
+- Các trường Input, Select, Textarea phải tối giản, sạch sẽ.
+- **TUYỆT ĐỐI KHÔNG** tự ý thêm các tag gợi ý (quick-pick chips), danh sách lựa chọn gợi ý tự động (auto-suggestions preview), hoặc các nút phụ gợi ý làm rối mắt người dùng.
+- Giữ form trực diện, người dùng nhập hoặc chọn đúng giá trị mong muốn.
+
+### 1.5. Date Picker theo đúng bộ nhận diện thương hiệu LEVRN
+- Date Picker / DateTime Picker / Calendar phải chuẩn hóa theo bảng màu và phong cách LEVRN:
+  - **Ngày được chọn (Selected):** Nền Tím Violet (`#7D39EB`), chữ trắng.
+  - **Ngày hiện tại (Today):** Viền hoặc điểm nhấn Vàng chanh Lime (`#C6FF33`), chữ nổi bật.
+  - **Bo góc & Viền:** Bo góc cứng cáp (`rounded-md` hoặc `rounded-lg`), viền sắc nét `border-border`.
+  - Không sử dụng các thiết kế bo tròn viên thuốc (pill/full).
+
+### 1.6. Thẻ (Cards / Boxes / Containers) chỉ bo tròn 5-10% (Cảm giác cứng cáp)
+- Mọi Thẻ (Card), Khung viền (Container), Bảng (Table), Hộp thoại (Modal/Dialog):
+  - **Chỉ bo tròn từ 5% đến 10%** (tương đương `rounded-md` ~6px đến `rounded-lg` ~8-10px).
+  - **CẤM:** Không dùng bo góc tròn trịa như `rounded-2xl`, `rounded-3xl` hay `rounded-full` cho thẻ/khung chứa.
+  - Tạo phong cách công nghệ sắc nét, hiện đại, vuông vức và kiên cố (Sharp Tech Aesthetic).
+
+### 1.7. Chữ hiển thị trên một dòng chuyển thành Marquee (Vòng lặp ngang thay vì dùng dấu ba chấm ...)
+- Tất cả các dòng chữ đơn dòng (tên môn, tên giảng viên, địa điểm, tiêu đề nhiệm vụ...) khi bị tràn chiều ngang: **TUYỆT ĐỐI KHÔNG** dùng `truncate` hay `line-clamp-1` với dấu `...` làm cụt chữ.
+- Bắt buộc dùng Marquee (`<MarqueeText />`): chữ tự động chạy vòng lặp tuần hoàn mượt mà, pause khi hover.
+
+### 1.8. Thẻ (Cards) phải cân đối, đồng bộ tuyệt đối về nội dung và chiều cao hình ảnh
+- Chiều cao khung ảnh bìa của tất cả thẻ trong cùng grid phải cố định chuẩn (`h-44` ~176px, `object-cover`), không để ảnh tự co giãn theo tỷ lệ file ảnh.
+- Chiều cao các khối nội dung bên dưới phải chuẩn hóa, các thẻ cùng hàng luôn cao bằng nhau tăm tắp.
+
+---
+
+## 2. QUY TẮC TÁC VỤ & PHẢN HỒI CỦA AI (AI OPERATIONAL RULES)
+
+### 2.1. Đọc đúng file, làm nhanh, báo liền - Người dùng tự test
+- **Chỉ đọc đúng file cần làm:** Khi nhận yêu cầu, AI chỉ đọc các file thực sự liên quan trực tiếp đến tác vụ, không quét lan man.
+- **Làm nhanh và báo liền:** Triển khai code chuẩn xác, dứt khoát và báo cáo hoàn thành ngay lập tức.
+- **Không test screenshot:** Tuyệt đối không tự ý dùng browser agent để test chụp ảnh màn hình (screenshot). Người dùng là người tự test trực tiếp trên trình duyệt.
+
+### 2.2. Quy trình thay đổi Database Supabase
+Bất cứ khi nào có thay đổi trong Supabase (tạo/sửa bảng, thêm cột, foreign key, index, trigger, RLS policies):
+1. **Walkthrough:** Hướng dẫn chi tiết từng bước thực hiện trên giao diện Supabase Dashboard.
+2. **Lệnh SQL:** Cung cấp câu lệnh SQL hoàn chỉnh, chuẩn xác, sẵn sàng copy & paste vào SQL Editor của Supabase.
+3. **Đồng bộ mã nguồn:** Cập nhật ngay vào file `supabase_schema.sql` trong dự án.

@@ -233,7 +233,7 @@ export function TaskFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[92vh] overflow-y-auto p-5 sm:p-6 rounded-xl border border-border/80 bg-card shadow-2xl">
+      <DialogContent className="max-w-2xl max-h-[92vh] overflow-y-auto p-5 sm:p-6 rounded-lg border border-border/80 bg-card shadow-2xl">
         <DialogHeader className="pb-3 border-b border-border/60">
           <DialogTitle className="text-base sm:text-lg font-black text-foreground flex items-center gap-2">
             <span className="h-2.5 w-2.5 rounded-full bg-[#C6FF33]" />
@@ -466,11 +466,13 @@ export function TaskFormDialog({
                 <Button
                   type="button"
                   variant="outline"
+                  size="icon"
                   onClick={handleAddMaterial}
-                  className="w-full h-10 rounded-lg text-xs font-bold border-border/80 hover:bg-[#7D39EB]/15 hover:text-[#7D39EB] cursor-pointer gap-1"
+                  className="w-full h-10 rounded-lg text-xs font-bold border-border/80 hover:bg-[#7D39EB]/15 hover:text-[#7D39EB] cursor-pointer"
+                  title="Thêm tài liệu"
+                  aria-label="Thêm tài liệu"
                 >
-                  <Plus className="h-3.5 w-3.5" />
-                  <span>Thêm</span>
+                  <Plus className="h-4 w-4" />
                 </Button>
               </div>
             </div>

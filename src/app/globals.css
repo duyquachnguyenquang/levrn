@@ -104,6 +104,16 @@
   }
 }
 
+/* Marquee infinite horizontal scrolling animation */
+@keyframes levrn-marquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
 /* Custom smooth scrollbar */
 ::-webkit-scrollbar {
   width: 6px;

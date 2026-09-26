@@ -15,7 +15,7 @@ const INITIAL_DEMO_NOTIFICATIONS: AppNotification[] = [
     type: "warning",
     category: "attendance",
     read: false,
-    link: "/attendance",
+    link: "/subjects",
     createdAt: new Date(Date.now() - 35 * 60 * 1000).toISOString(), // 35 phút trước
   },
   {

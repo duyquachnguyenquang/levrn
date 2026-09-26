@@ -148,7 +148,7 @@ export function TaskList({
   return (
     <div className="space-y-4">
       {/* Thanh công cụ gom nhóm và lọc trạng thái */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-card rounded-xl border border-border/70 shadow-xs">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-card rounded-lg border border-border/70 shadow-xs">
         {/* Lọc trạng thái nhanh */}
         <div className="flex items-center gap-1">
           <Button
@@ -244,7 +244,7 @@ export function TaskList({
                     <div
                       key={task.id}
                       className={cn(
-                        "group relative rounded-xl border p-3.5 sm:p-4 transition-all duration-200",
+                        "group relative rounded-lg border p-3.5 sm:p-4 transition-all duration-200",
                         isDone
                           ? "bg-muted/20 border-border/50 opacity-70"
                           : "bg-card border-border/80 hover:border-border/90 hover:shadow-md"
@@ -252,7 +252,7 @@ export function TaskList({
                     >
                       {/* Dải màu môn học */}
                       <div
-                        className="absolute left-0 top-0 bottom-0 w-1.5 rounded-l-xl"
+                        className="absolute left-0 top-0 bottom-0 w-1.5 rounded-l-lg"
                         style={{ backgroundColor: subColor }}
                       />
 
@@ -268,6 +268,7 @@ export function TaskList({
                                 : "border-border/80 bg-background hover:border-[#C6FF33]"
                             )}
                             title={isDone ? "Đánh dấu chưa hoàn thành" : "Đánh dấu đã hoàn thành"}
+                            aria-label={isDone ? "Đánh dấu chưa hoàn thành" : "Đánh dấu đã hoàn thành"}
                           >
                             <CheckCircle2
                               className={cn(
@@ -469,8 +470,8 @@ export function TaskList({
           ))}
         </div>
       ) : (
-        <div className="py-16 flex flex-col items-center justify-center text-center space-y-3 bg-card rounded-xl border border-border/70 p-6">
-          <div className="h-14 w-14 rounded-2xl bg-muted/60 flex items-center justify-center text-muted-foreground">
+        <div className="py-16 flex flex-col items-center justify-center text-center space-y-3 bg-card rounded-lg border border-border/70 p-6">
+          <div className="h-14 w-14 rounded-lg bg-muted/60 flex items-center justify-center text-muted-foreground">
             <Layers className="h-7 w-7" />
           </div>
           <div className="max-w-xs space-y-1">

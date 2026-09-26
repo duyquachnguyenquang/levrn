@@ -53,6 +53,7 @@ export interface Subject {
   color: string;           // Màu đại diện (đồng bộ theo phân loại)
   courseUrl?: string;      // Link dẫn tới trang LMS của trường
   driveUrl?: string;       // Link Google Drive môn học
+  imageUrl?: string;       // Link ảnh bìa vĩnh viễn (permanent URL)
   startDate?: string;      // Ngày bắt đầu (YYYY-MM-DD)
   totalWeeks?: number;     // Số tuần học (mặc định 15)
   endDate?: string;        // Ngày kết thúc (YYYY-MM-DD)
@@ -453,6 +454,7 @@ export interface AttendanceRecord {
   room?: string;
   status: AttendanceStatus;
   notes?: string;
+  checkinTime?: string;       // Thời gian thực tế điểm danh (ISO string hoặc HH:mm:ss)
   createdAt: string;
   updatedAt?: string;
 }
@@ -463,6 +465,7 @@ export interface SubjectAttendanceSummary {
   subjectId: string;
   subjectCode: string;
   subjectName: string;
+  imageUrl?: string;          // Link ảnh bìa môn học
   color: string;
   semester: string;
   totalWeeks: number;
@@ -509,7 +512,11 @@ export interface GroupTask {
   assigneeName?: string;
   status: GroupTaskStatus;
   priority: GroupTaskPriority;
-  dueDate?: string;          // Hạn chót nhiệm vụ (YYYY-MM-DD)
+  dueDate?: string;          // Hạn chót nhiệm vụ (YYYY-MM-DDTHH:mm hoặc YYYY-MM-DD)
+  gradeComponentId?: string; // ID cột điểm liên kết trong Quản lý điểm số
+  gradeComponentName?: string; // Tên cột điểm liên kết
+  gradeWeight?: number;      // Trọng số %
+  gradeScore?: number | null;// Điểm số đạt được
   createdAt: string;
 }
 
@@ -530,6 +537,12 @@ export interface GroupProject {
   repoUrl?: string;          // Repo Github / Figma / Canva
   meetingUrl?: string;       // Link họp nhóm Google Meet / Zoom
   chatUrl?: string;          // Link Zalo / Messenger / Discord nhóm
+  imageUrl?: string;         // Link ảnh bìa đồ án vĩnh viễn (permanent URL)
+  // Gán trọng số điểm từ Quản lý điểm số
+  gradeComponentId?: string; // ID cột điểm trong CourseGrade.components
+  gradeComponentName?: string; // Tên cột điểm: VD "Báo cáo đồ án", "Giữa kỳ"...
+  gradeWeight?: number;      // Trọng số % (VD: 30)
+  gradeScore?: number | null;// Điểm số đạt được (Hệ 10: VD 8.5)
   members: GroupMember[];
   tasks: GroupTask[];
   createdAt: string;

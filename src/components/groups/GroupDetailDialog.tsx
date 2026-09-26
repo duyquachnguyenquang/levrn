@@ -35,7 +35,10 @@ import {
   Shield,
   UserPlus,
   Phone,
+  Award,
+  ExternalLink,
 } from "lucide-react";
+import Link from "next/link";
 import { GroupTaskModal } from "./GroupTaskModal";
 import { cn } from "@/lib/utils";
 
@@ -48,6 +51,7 @@ interface GroupDetailDialogProps {
   onAddTask: (groupId: string, taskData: any) => void;
   onUpdateTaskStatus: (groupId: string, taskId: string, status: GroupTaskStatus) => void;
   onDeleteTask: (groupId: string, taskId: string) => void;
+  onUpdateGradeScore?: (groupId: string, score: number | null) => void;
 }
 
 export function GroupDetailDialog({
@@ -59,9 +63,12 @@ export function GroupDetailDialog({
   onAddTask,
   onUpdateTaskStatus,
   onDeleteTask,
+  onUpdateGradeScore,
 }: GroupDetailDialogProps) {
   const [activeTab, setActiveTab] = useState<"tasks" | "members">("tasks");
   const [taskModalOpen, setTaskModalOpen] = useState(false);
+  const [isEditingScore, setIsEditingScore] = useState(false);
+  const [detailScoreInput, setDetailScoreInput] = useState("");
 
   // Form thêm thành viên mới
   const [newMemberName, setNewMemberName] = useState("");
@@ -189,6 +196,99 @@ export function GroupDetailDialog({
             )}
           </div>
         </DialogHeader>
+
+        {/* Khung Trọng số điểm & Điểm số môn học từ Quản lý điểm số */}
+        <div className="p-3.5 rounded-lg border border-[#7D39EB]/35 bg-gradient-to-r from-[#7D39EB]/10 via-[#7D39EB]/5 to-transparent flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+          <div className="space-y-1 min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <span className="h-6 w-6 rounded-md bg-[#7D39EB]/20 text-[#7D39EB] flex items-center justify-center shrink-0">
+                <Award className="h-3.5 w-3.5" />
+              </span>
+              <span className="text-xs font-black text-foreground">
+                {group.gradeComponentName ? group.gradeComponentName : "Trọng số điểm môn học"}
+              </span>
+              {group.gradeWeight !== undefined && (
+                <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded-md bg-[#7D39EB]/15 text-[#7D39EB] border border-[#7D39EB]/30">
+                  Trọng số: {group.gradeWeight}%
+                </span>
+              )}
+            </div>
+
+            <p className="text-[11px] text-muted-foreground">
+              {group.gradeComponentName ? (
+                <>Đồ án nhóm này được tính vào cột <strong>{group.gradeComponentName}</strong> ({group.gradeWeight || 0}%) của môn <strong>[{group.subjectCode}] {group.subjectName}</strong>.</>
+              ) : (
+                <>Chưa gán cột điểm môn học. Bạn có thể bấm Chỉnh sửa nhóm để liên kết với bảng điểm.</>
+              )}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+            {/* Điểm số hiện tại & Nút sửa điểm */}
+            <div className="flex items-center gap-1.5 bg-background border border-border/80 px-2.5 py-1 rounded-lg">
+              <span className="text-[10px] uppercase font-bold text-muted-foreground">Điểm:</span>
+              {isEditingScore ? (
+                <div className="flex items-center gap-1">
+                  <Input
+                    type="number"
+                    min={0}
+                    max={10}
+                    step={0.1}
+                    value={detailScoreInput}
+                    onChange={(e) => setDetailScoreInput(e.target.value)}
+                    className="h-6 w-14 text-xs font-mono font-bold px-1.5 py-0"
+                    autoFocus
+                  />
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      const parsed = detailScoreInput.trim() !== "" ? parseFloat(detailScoreInput) : null;
+                      const validScore = parsed !== null && !isNaN(parsed) ? Math.min(10, Math.max(0, parsed)) : null;
+                      onUpdateGradeScore?.(group.id, validScore);
+                      setIsEditingScore(false);
+                    }}
+                    className="h-6 px-2 text-[10px] font-bold bg-[#7D39EB] text-white hover:bg-[#6D28D9]"
+                  >
+                    Lưu
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setIsEditingScore(false)}
+                    className="h-6 px-1.5 text-[10px]"
+                  >
+                    Hủy
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5">
+                  <span className="font-mono font-black text-sm text-[#7D39EB]">
+                    {group.gradeScore !== null && group.gradeScore !== undefined ? `${group.gradeScore}/10` : "--"}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDetailScoreInput(group.gradeScore !== null && group.gradeScore !== undefined ? String(group.gradeScore) : "");
+                      setIsEditingScore(true);
+                    }}
+                    className="text-[10px] text-muted-foreground hover:text-foreground underline underline-offset-2 ml-1"
+                  >
+                    {group.gradeScore !== null && group.gradeScore !== undefined ? "Sửa" : "Nhập điểm"}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <Link
+              href="/grades"
+              target="_blank"
+              className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1.5 rounded-lg bg-card border border-border/80 text-foreground hover:border-[#7D39EB]/50 hover:text-[#7D39EB] transition-all"
+            >
+              <span>Quản lý điểm</span>
+              <ExternalLink className="h-3 w-3" />
+            </Link>
+          </div>
+        </div>
 
         {/* Tab switcher: Nhiệm vụ & Thành viên */}
         <div className="flex items-center justify-between gap-2 border-b border-border/60 pb-3 pt-2">

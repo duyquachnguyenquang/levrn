@@ -23,8 +23,9 @@ export function MobileNav() {
         <Button
           variant="ghost"
           size="icon"
-          className="lg:hidden rounded-xl h-9 w-9 text-muted-foreground hover:text-foreground"
+          className="lg:hidden rounded-lg h-9 w-9 text-muted-foreground hover:text-foreground"
           aria-label="Mở menu di động"
+          title="Mở menu di động"
         >
           <Menu className="h-5 w-5" />
         </Button>

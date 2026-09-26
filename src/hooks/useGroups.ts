@@ -28,6 +28,7 @@ const INITIAL_DEMO_GROUPS: GroupProject[] = [
     repoUrl: "https://github.com/example/scm-distribution-analysis",
     meetingUrl: "https://meet.google.com/abc-defg-hij",
     chatUrl: "https://zalo.me/g/example-scm-group",
+    imageUrl: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1000&q=80", // Kho vận & Chuỗi cung ứng
     members: [
       {
         id: "mem-1",
@@ -127,6 +128,7 @@ const INITIAL_DEMO_GROUPS: GroupProject[] = [
     driveUrl: "https://drive.google.com/drive/folders/demo-ai-dataset",
     repoUrl: "https://github.com/example/plant-disease-cnn",
     meetingUrl: "https://meet.google.com/xyz-uvwx-rst",
+    imageUrl: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1000&q=80", // AI & Trí tuệ nhân tạo (giống mẫu reference)
     members: [
       {
         id: "mem-201",
@@ -233,6 +235,11 @@ export function useGroups() {
             repoUrl: row.repo_url,
             meetingUrl: row.meeting_url,
             chatUrl: row.chat_url,
+            imageUrl: row.image_url || row.imageUrl || undefined,
+            gradeComponentId: row.grade_component_id || undefined,
+            gradeComponentName: row.grade_component_name || undefined,
+            gradeWeight: row.grade_weight !== null && row.grade_weight !== undefined ? Number(row.grade_weight) : undefined,
+            gradeScore: row.grade_score !== null && row.grade_score !== undefined ? Number(row.grade_score) : null,
             members: row.members || [],
             tasks: row.tasks || [],
             createdAt: row.created_at,
@@ -272,6 +279,15 @@ export function useGroups() {
 
   useEffect(() => {
     loadData();
+    const handleSync = () => {
+      loadData();
+    };
+    if (typeof window !== "undefined") {
+      window.addEventListener("levrn_groups_updated", handleSync);
+      return () => {
+        window.removeEventListener("levrn_groups_updated", handleSync);
+      };
+    }
   }, [loadData]);
 
   // Lưu dữ liệu vào localStorage và Supabase
@@ -284,7 +300,7 @@ export function useGroups() {
 
       if (supabase && isSupabaseActive) {
         try {
-          const rows = newGroups.map((g) => ({
+          const rowsWithGrades = newGroups.map((g) => ({
             id: g.id,
             name: g.name,
             subject_id: g.subjectId,
@@ -299,11 +315,42 @@ export function useGroups() {
             repo_url: g.repoUrl,
             meeting_url: g.meetingUrl,
             chat_url: g.chatUrl,
+            image_url: g.imageUrl || null,
+            grade_component_id: g.gradeComponentId || null,
+            grade_component_name: g.gradeComponentName || null,
+            grade_weight: g.gradeWeight ?? null,
+            grade_score: g.gradeScore ?? null,
             members: g.members,
             tasks: g.tasks,
             updated_at: new Date().toISOString(),
           }));
-          await supabase.from("group_projects").upsert(rows);
+
+          const { error: upsertErr } = await supabase.from("group_projects").upsert(rowsWithGrades);
+          if (upsertErr) {
+            // Nếu bảng Supabase chưa chạy lệnh migration thêm cột điểm, fallback lưu các cột hiện có
+            console.warn("Supabase upsert with grade columns failed, running fallback:", upsertErr.message);
+            const rowsFallback = newGroups.map((g) => ({
+              id: g.id,
+              name: g.name,
+              subject_id: g.subjectId,
+              subject_code: g.subjectCode,
+              subject_name: g.subjectName,
+              topic: g.topic,
+              description: g.description,
+              semester: g.semester,
+              status: g.status,
+              deadline: g.deadline,
+              drive_url: g.driveUrl,
+              repo_url: g.repoUrl,
+              meeting_url: g.meetingUrl,
+              chat_url: g.chatUrl,
+              image_url: g.imageUrl || null,
+              members: g.members,
+              tasks: g.tasks,
+              updated_at: new Date().toISOString(),
+            }));
+            await supabase.from("group_projects").upsert(rowsFallback);
+          }
         } catch (err) {
           console.error("Supabase upsert group_projects error:", err);
         }
@@ -504,6 +551,66 @@ export function useGroups() {
     addTask,
     updateTaskStatus,
     deleteTask,
+    updateGroupGradeScore: async (groupId: string, score: number | null) => {
+      const target = groups.find((g) => g.id === groupId);
+      if (!target) return;
+      const updated = groups.map((g) =>
+        g.id === groupId ? { ...g, gradeScore: score, updatedAt: new Date().toISOString() } : g
+      );
+      await saveGroups(updated);
+
+      // Đồng bộ sang bảng điểm course_grades
+      if (typeof window !== "undefined") {
+        try {
+          const rawGrades = localStorage.getItem("levrn_course_grades_data");
+          if (rawGrades) {
+            const list = JSON.parse(rawGrades);
+            if (Array.isArray(list)) {
+              let changed = false;
+              const synced = list.map((cg: any) => {
+                const isMatchSub = (target.subjectId && cg.subjectId === target.subjectId) ||
+                  (target.subjectCode && cg.subjectCode === target.subjectCode);
+                if (isMatchSub && Array.isArray(cg.components)) {
+                  const newComps = cg.components.map((comp: any) => {
+                    const isMatchComp = (target.gradeComponentId && comp.id === target.gradeComponentId) ||
+                      (target.gradeComponentName && comp.name === target.gradeComponentName);
+                    if (isMatchComp) {
+                      changed = true;
+                      return { ...comp, score };
+                    }
+                    return comp;
+                  });
+                  if (changed) {
+                    return { ...cg, components: newComps, updatedAt: new Date().toISOString() };
+                  }
+                }
+                return cg;
+              });
+
+              if (changed) {
+                localStorage.setItem("levrn_course_grades_data", JSON.stringify(synced));
+                window.dispatchEvent(new Event("levrn_grades_updated"));
+
+                if (supabase && isSupabaseActive) {
+                  const targetCourse = synced.find((cg: any) =>
+                    (target.subjectId && cg.subjectId === target.subjectId) ||
+                    (target.subjectCode && cg.subjectCode === target.subjectCode)
+                  );
+                  if (targetCourse) {
+                    supabase.from("course_grades").update({
+                      components: targetCourse.components,
+                      updated_at: new Date().toISOString(),
+                    }).eq("id", targetCourse.id).then();
+                  }
+                }
+              }
+            }
+          }
+        } catch (e) {
+          console.error("Lỗi đồng bộ sang course_grades:", e);
+        }
+      }
+    },
     refreshGroups: loadData,
   };
 }

@@ -297,6 +297,15 @@ export function useCourseGrades() {
 
   useEffect(() => {
     fetchGrades();
+    const handleSync = () => {
+      fetchGrades();
+    };
+    if (typeof window !== "undefined") {
+      window.addEventListener("levrn_grades_updated", handleSync);
+      return () => {
+        window.removeEventListener("levrn_grades_updated", handleSync);
+      };
+    }
   }, [fetchGrades]);
 
   // Thêm một môn học vào bảng điểm
@@ -417,7 +426,62 @@ export function useCourseGrades() {
       }
     }
 
+    // Đồng bộ điểm sang nhóm đồ án (Group Projects) nếu môn học có đồ án liên kết
+    if (data.components && typeof window !== "undefined") {
+      try {
+        const rawGroups = localStorage.getItem("levrn_group_projects_data");
+        if (rawGroups) {
+          const groupList = JSON.parse(rawGroups);
+          if (Array.isArray(groupList)) {
+            let hasChanged = false;
+            const updatedGroups = groupList.map((grp: any) => {
+              const isMatch = (grp.subjectId && updatedGrade?.subjectId && grp.subjectId === updatedGrade.subjectId) ||
+                (grp.subjectCode && updatedGrade?.subjectCode && grp.subjectCode === updatedGrade.subjectCode);
+
+              if (isMatch && grp.gradeComponentId) {
+                const comp = data.components?.find((c) => c.id === grp.gradeComponentId);
+                if (comp && comp.score !== undefined && comp.score !== grp.gradeScore) {
+                  hasChanged = true;
+                  return { ...grp, gradeScore: comp.score };
+                }
+              }
+              return grp;
+            });
+
+            if (hasChanged) {
+              localStorage.setItem("levrn_group_projects_data", JSON.stringify(updatedGroups));
+              window.dispatchEvent(new Event("levrn_groups_updated"));
+            }
+          }
+        }
+      } catch (e) {
+        console.error("Lỗi đồng bộ sang group_projects:", e);
+      }
+    }
+
     return updatedGrade;
+  };
+
+  // Cập nhật điểm của một cột điểm thành phần cụ thể từ Quản lý nhóm hoặc Điểm số
+  const updateComponentScore = async (
+    subjectIdOrCode: string,
+    componentId: string,
+    score: number | null
+  ): Promise<boolean> => {
+    const course = grades.find(
+      (g) => g.subjectId === subjectIdOrCode || g.subjectCode === subjectIdOrCode || g.id === subjectIdOrCode
+    );
+    if (!course) return false;
+
+    const newComponents = course.components.map((c) =>
+      c.id === componentId ? { ...c, score } : c
+    );
+
+    await updateCourseGrade(course.id, {
+      components: newComponents,
+    });
+
+    return true;
   };
 
   // Xóa môn khỏi bảng điểm
@@ -535,6 +599,7 @@ export function useCourseGrades() {
     deleteCourseGrade,
     addMultiplePastCourses,
     importFromSubject,
+    updateComponentScore,
     refreshGrades: fetchGrades,
   };
 }
