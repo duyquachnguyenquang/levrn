@@ -133,6 +133,8 @@ export default function SubjectsPage() {
         onSubmit={handleFormSubmit}
         initialData={selectedSubject}
         mode={formMode}
+        onDelete={deleteSubject}
+        onUpdateSubject={updateSubject}
       />
     </div>
   );

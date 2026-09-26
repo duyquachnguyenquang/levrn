@@ -63,9 +63,25 @@ Khi tạo hoặc chỉnh sửa các nút thao tác:
 - Tất cả các dòng chữ đơn dòng (tên môn, tên giảng viên, địa điểm, tiêu đề nhiệm vụ...) khi bị tràn chiều ngang: **TUYỆT ĐỐI KHÔNG** dùng `truncate` hay `line-clamp-1` với dấu `...` làm cụt chữ.
 - Bắt buộc dùng Marquee (`<MarqueeText />`): chữ tự động chạy vòng lặp tuần hoàn mượt mà, pause khi hover.
 
-### 1.8. Thẻ (Cards) phải cân đối, đồng bộ tuyệt đối về nội dung và chiều cao hình ảnh
-- Chiều cao khung ảnh bìa của tất cả thẻ trong cùng grid phải cố định chuẩn (`h-44` ~176px, `object-cover`), không để ảnh tự co giãn theo tỷ lệ file ảnh.
-- Chiều cao các khối nội dung bên dưới phải chuẩn hóa, các thẻ cùng hàng luôn cao bằng nhau tăm tắp.
+### 1.8. Thẻ (Cards): Bảo toàn hiển thị (Zero-Clipping), Bố cục ảnh nhỏ gọn, Header to nổi bật
+- **Bảo toàn hiển thị (Card Containment):** Tuyệt đối **KHÔNG** để bất kỳ icon, thông tin, chữ hay nút bấm nào lọt ra ngoài hoặc bị cắt (clipped) khỏi khung viền thẻ.
+- **Tiêu đề nổi bật:** Phần chữ Header của thẻ phải to hơn hẳn (`text-lg font-black tracking-tight`), nổi bật vượt bậc so với các thông số khác.
+- **Bố cục ảnh bìa nhỏ gọn:** Chiều cao ảnh bìa chuẩn cố định gọn gàng (`h-28` ~112px, `object-cover`), chiếm tỷ lệ vừa phải để dành không gian cho phần thông tin.
+- **Mặt ngoài thẻ tinh giản:** Bỏ nút 3 chấm dọc và nút đổi ảnh ở ngoài thẻ, tất cả tính năng quản lý (đổi ảnh bìa, xoá, tuỳ chọn) được đẩy vào bên trong pop-up thông tin.
+- **Đồng bộ hàng ngang:** Mọi thẻ trên cùng hàng luôn cao bằng nhau tăm tắp (`h-full flex flex-col justify-between`).
+
+### 1.9. Pop-up Box: Các trường dữ liệu đồng cấp & Phân cấp Typography rõ rệt
+- Trong tất cả pop-up box, modal, dialog: **TUYỆT ĐỐI KHÔNG** thêm các ô/box lớn bao quanh ở ngoài ô nhập liệu (không gom nhóm bọc các trường bằng các card nền phụ `p-3 rounded-lg bg-muted/30 border border-border/70`).
+- Tất cả trường dữ liệu là đồng cấp với nhau (flat fields), căn bố cục trực tiếp trên nền Dialog.
+- **Phân cấp Typography rõ rệt:** Tiêu đề trường (`<Label>`) chữ nhỏ gọn (`text-[11px] font-bold uppercase tracking-wider text-muted-foreground`) kèm icon trực quan; Giá trị hiển thị to rõ, đậm nét (`text-sm font-bold text-foreground`), giúp phân biệt tức thì nhãn và dữ liệu.
+
+### 1.10. Pop-up Box: Header cùng hàng đồng kích thước & Mặc định ở dạng Cố định (View Mode)
+- **Header 3 thành phần cùng hàng:** Tiêu đề pop-up, Nút Chỉnh sửa (`<Pencil />`) và Nút Thoát (`<X />`) **BẮT BUỘC CÙNG HÀNG**. Nút Chỉnh sửa phải to bằng nút Thoát (kích thước chuẩn `h-8 w-8 rounded-md`).
+- Tất cả nội dung đã có trong pop-up box khi mở xem chi tiết mặc định hiển thị ở **dạng cố định (Read-only / View mode)** trực quan, thông tin trình bày thông minh, khoa học.
+- Muốn chỉnh sửa thông tin: Click vào nút bấm hình **icon Cây bút (`<Pencil />`)** ở góc phải trên cùng ngang hàng với tiêu đề để chuyển sang Chế độ Chỉnh sửa (Edit mode).
+
+### 1.11. Bố cục lưới thẻ: Chuẩn 5 thẻ mỗi hàng (5 Cards per Row)
+- Đối với tất cả trang hiển thị danh sách dạng thẻ: Số thẻ trên mỗi hàng ở màn hình chuẩn máy tính (Desktop/XL) bắt buộc là **5 thẻ mỗi hàng** (`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4`).
 
 ---
 

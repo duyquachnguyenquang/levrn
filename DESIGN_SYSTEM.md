@@ -98,24 +98,50 @@ Khi bố trí các nút tương tác (Buttons & Actions), phải tuân thủ ngh
 
 ---
 
-### 📐 Quy tắc 8: Thẻ (Cards) phải cân đối, đồng bộ tuyệt đối về nội dung và chiều cao hình ảnh
+### 📐 Quy tắc 8: Thẻ (Cards) phải cân đối, bảo toàn hiển thị và bố cục ảnh tinh gọn
 - **Quy định:** Trong các danh sách dạng lưới (Grid), tất cả các thẻ đặt cạnh nhau **phải đồng bộ tuyệt đối về chiều cao và tỷ lệ bố cục**:
-  - **Khung ảnh bìa (Image Banner):** Bắt buộc phải khóa chiều cao cố định chuẩn (chuẩn `h-44` ~176px), đi kèm `object-cover w-full h-full`. Tuyệt đối không để ảnh tự co giãn theo tỷ lệ tự nhiên của file ảnh gây lệch chiều cao giữa các thẻ.
-  - **Khối nội dung bên dưới:** Các dòng meta, tiêu đề, lịch học, hàng pills và footer phải được chuẩn hóa chiều cao hàng, kết hợp Marquee cho nội dung dài, không để thẻ thì 1 dòng thẻ thì 2 dòng làm vỡ hàng ngang.
+  - **Khung ảnh bìa (Image Banner):** Bắt buộc phải khóa chiều cao cố định nhỏ gọn, tinh tế (chuẩn `h-28` ~112px, thay vì chiếm quá nửa thẻ), đi kèm `object-cover w-full h-full`.
+  - **Bảo toàn hiển thị thẻ (Zero Clipping & Card Containment):** Tuyệt đối **KHÔNG** để bất kỳ icon, chữ, nút bấm hay thông tin nào bị cắt xén (clipped), lọt ra ngoài mép khung viền thẻ hay tràn khung.
+  - **Tiêu đề môn học/thực thể nổi bật:** Phần chữ Header của thẻ phải được thiết kế cỡ chữ to hơn hẳn (`text-lg font-black tracking-tight`), nổi bật vượt bậc so với các thông số phụ xung quanh.
+  - **Mặt ngoài thẻ tối giản:** Không đặt nút 3 chấm dọc hay nút đổi ảnh rườm rà ở ngoài mặt thẻ. Tất cả các tính năng quản lý (đổi ảnh bìa, xoá, tuỳ chọn) được đẩy vào bên trong pop-up chi tiết.
   - **Cân đối tổng thể:** Mọi thẻ trên cùng một hàng luôn cao bằng nhau tăm tắp (`h-full flex flex-col justify-between`), tạo cảm giác ngăn nắp, cứng cáp và chuẩn mực.
+
+---
+
+### 🗂️ Quy tắc 9: Pop-up Box - Các trường dữ liệu đồng cấp, KHÔNG có ô lớn bao quanh
+- **Quy định:** Đối với tất cả các trường thông tin trong phần pop-up box, modal, dialog:
+  - **TUYỆT ĐỐI KHÔNG** thêm các ô/box lớn bao quanh ở ngoài ô nhập liệu (ví dụ: bọc nhóm trường bằng các khối card có viền phụ `p-3 rounded-lg bg-muted/30 border border-border/70`).
+  - **Tất cả trường dữ liệu là đồng cấp với nhau (Flat Field Layout):** Bố trí trực diện, cùng một mặt phẳng trên nền Dialog, sử dụng grid chuẩn (`grid-cols-1 sm:grid-cols-2` hoặc `grid-cols-1 sm:grid-cols-12`) hoặc stack đứng đồng nhất.
+  - **Phân cấp Typography rõ rệt:** Tiêu đề trường (`<Label>`) chữ nhỏ gọn (`text-[11px] font-bold uppercase tracking-wider text-muted-foreground`) kèm icon đại diện; Nội dung giá trị hiển thị to rõ, đậm nét (`text-sm font-bold text-foreground`), giúp phân biệt tức thì nhãn và giá trị.
+
+---
+
+### 👁️ Quy tắc 10: Pop-up Box - Header 3 thành phần cùng hàng & Mặc định ở dạng Cố định (View Mode)
+- **Quy định:** Khi mở pop-up box để xem chi tiết thông tin của một thực thể (môn học, dự án, bài tập...):
+  - **Header cùng hàng đồng kích thước:** Tiêu đề hộp thoại, Nút Chỉnh sửa (`<Pencil />`) và Nút Thoát (`<X />`) **BẮT BUỘC PHẢI CÙNG HÀNG**. Nút Chỉnh sửa và Nút Thoát có kích thước bằng nhau chuẩn `h-8 w-8 rounded-md`.
+  - **Dạng cố định (View / Read-only Mode):** Tất cả nội dung đã nhập trong pop-up box mặc định hiển thị ở dạng cố định trực quan, tinh gọn, không phải là các ô input editable. Người dùng đọc thông tin sạch sẽ, các link và nút thao tác (Đổi ảnh, Xoá) có thể click trực tiếp.
+  - **Nút Cây bút chuyển sang Chế độ Chỉnh sửa:** Muốn chỉnh sửa thông tin, người dùng click vào **nút bấm hình icon Cây bút (`<Pencil />`)** đặt ở góc phải trên cùng ngang hàng với tiêu đề.
+  - Khi click vào nút Cây bút, pop-up chuyển sang Chế độ Chỉnh sửa (Edit Mode) với các input/select đồng cấp cho phép sửa và lưu thay đổi.
+
+---
+
+### 🔲 Quy tắc 11: Bố cục lưới thẻ - Chuẩn 5 thẻ mỗi hàng (5 Cards per Row)
+- **Quy định:** Đối với tất cả các trang hiển thị danh sách dạng thẻ (Môn học, Đồ án nhóm, Thẻ chiến lược, Danh sách thẻ nhiệm vụ...):
+  - Số thẻ hiển thị trên mỗi hàng trên màn hình lớn / desktop chuẩn là **đúng 5 thẻ mỗi hàng**.
+  - Tailwind Grid class bắt buộc: `grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4` (hoặc `gap-4 sm:gap-5`).
 
 ---
 
 ## 3. Quy Tắc Tác Vụ Dành Cho AI (AI Working & Interaction Rules)
 
-### ⚡ Quy tắc 9: Tác phong làm việc của AI (Nhanh, Trúng, Không Screenshot)
+### ⚡ Quy tắc 12: Tác phong làm việc của AI (Nhanh, Trúng, Không Screenshot)
 - **Chỉ đọc đúng file cần làm:** Không quét hay duyệt qua các file không liên quan để tránh lãng phí thời gian và token.
 - **Làm nhanh và báo liền:** Viết code chính xác, dứt khoát, trả lời kết quả ngay lập tức khi hoàn thành.
 - **Người dùng tự test:** AI **không** sử dụng browser agent để test chụp ảnh màn hình (screenshot). Người dùng là người trực tiếp kiểm tra và nghiệm thu giao diện trên môi trường thực tế.
 
 ---
 
-### 🗄️ Quy tắc 10: Thay đổi trong Supabase (Walkthrough + SQL Script)
+### 🗄️ Quy tắc 13: Thay đổi trong Supabase (Walkthrough + SQL Script)
 - **Quy định:** Bất cứ khi nào có thay đổi về CSDL Supabase (thêm bảng, sửa cột, tạo Foreign Key, cấu hình RLS Policy, Function, Trigger, v.v.):
   1. **Walkthrough:** Trình bày rõ ràng từng bước thao tác trực tiếp trên giao diện Supabase Dashboard.
   2. **Mã SQL:** Cung cấp câu lệnh SQL hoàn chỉnh, chuẩn xác, sẵn sàng copy & paste vào SQL Editor của Supabase.
@@ -128,9 +154,11 @@ Khi bố trí các nút tương tác (Buttons & Actions), phải tuân thủ ngh
 | Thành phần | Chuẩn áp dụng | Tailwind Class gợi ý |
 | :--- | :--- | :--- |
 | **Card Radius** | Bo góc 5-10% (cứng cáp) | `rounded-lg` (8px) hoặc `rounded-md` (6px) |
+| **Cards Grid** | 5 thẻ mỗi hàng | `grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5` |
 | **Primary Color** | Brand Violet | `bg-[#7D39EB]`, `text-[#7D39EB]`, `bg-primary` |
 | **Accent / Today** | Brand Lime | `bg-[#C6FF33]`, `text-[#C6FF33]`, `bg-secondary` |
 | **Dark Card Background**| Nền thẻ tối sang trọng | `bg-[#13151B]` / `bg-card` |
 | **Action Button** | Ưu tiên Icon-only | `<button title="..." className="h-8 w-8 rounded-md p-1.5 ..."><Icon className="w-4 h-4" /></button>` |
 | **Form Label** | Có Icon trước chữ | `<Label className="flex items-center gap-1.5 text-xs font-semibold"><Icon className="w-3.5 h-3.5" /> Tên trường</Label>` |
+| **Modal Fields** | Đồng cấp, không bọc ô lớn | Các `div` trường dữ liệu đặt phẳng trực tiếp trong grid/form |
 | **Header Layout** | Không có chữ giải thích bên dưới | `<h1 className="text-xl font-bold tracking-tight">Tiêu đề</h1>` |

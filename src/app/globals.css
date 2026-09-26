@@ -104,12 +104,12 @@
   }
 }
 
-/* Marquee infinite horizontal scrolling animation */
+/* Marquee infinite horizontal scrolling animation with pause at beginning */
 @keyframes levrn-marquee {
-  0% {
+  0%, 25% {
     transform: translateX(0%);
   }
-  100% {
+  85%, 100% {
     transform: translateX(-50%);
   }
 }

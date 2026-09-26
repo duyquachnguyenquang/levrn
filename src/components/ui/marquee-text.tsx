@@ -83,9 +83,8 @@ export function MarqueeText({
         </span>
       </div>
 
-      {/* Hiệu ứng viền mờ 2 mép cho cảm giác hiện đại */}
-      <div className="pointer-events-none absolute inset-y-0 left-0 w-3 bg-gradient-to-r from-card to-transparent" />
-      <div className="pointer-events-none absolute inset-y-0 right-0 w-3 bg-gradient-to-l from-card to-transparent" />
+      {/* Hiệu ứng viền mờ mép phải nhẹ nhàng khi chữ chạy vào */}
+      <div className="pointer-events-none absolute inset-y-0 right-0 w-2.5 bg-gradient-to-l from-card to-transparent" />
     </div>
   );
 }

@@ -38,6 +38,7 @@ import {
   Tag,
   Clock,
   CheckCircle2,
+  Eye,
 } from "lucide-react";
 import { useAttendance } from "@/hooks/useAttendance";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -398,8 +399,8 @@ export function SubjectList({
       {/* Hiển thị danh sách môn học theo chế độ Grid (5 môn/hàng) hoặc List */}
       {filteredSubjects.length > 0 ? (
         viewMode === "grid" ? (
-          /* Khối: mật độ hiển thị cân đối, thẩm mỹ cao trên màn hình lớn */
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-5 sm:gap-6">
+          /* Khối: mật độ hiển thị cân đối, chuẩn 5 thẻ/hàng trên màn hình máy tính */
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-5">
             {filteredSubjects.map((subject) => (
               <SubjectCard
                 key={subject.id}
@@ -581,7 +582,7 @@ export function SubjectList({
                         })()}
                       </td>
 
-                      {/* Thao tác: 2 nút Chỉnh sửa & Xoá */}
+                      {/* Thao tác: 2 nút Xem chi tiết & Xoá */}
                       <td className="py-3 px-3.5 whitespace-nowrap text-right">
                         <div className="flex items-center justify-end gap-2">
                           <Button
@@ -589,10 +590,10 @@ export function SubjectList({
                             size="sm"
                             onClick={() => onEdit(subject)}
                             className="h-8 px-2.5 rounded-md text-xs font-bold gap-1.5 border-border/80 text-foreground hover:border-[#7D39EB]/50 hover:bg-[#7D39EB]/10 hover:text-[#7D39EB] transition-all active:scale-95"
-                            title="Chỉnh sửa môn học"
+                            title="Xem chi tiết môn học"
                           >
-                            <Pencil className="h-3.5 w-3.5 text-[#7D39EB]" />
-                            <span>Chỉnh sửa</span>
+                            <Eye className="h-3.5 w-3.5 text-[#7D39EB]" />
+                            <span>Xem chi tiết</span>
                           </Button>
                           <Button
                             variant="outline"
