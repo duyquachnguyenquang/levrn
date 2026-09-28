@@ -28,6 +28,13 @@ import {
   WEEKDAYS,
 } from "@/lib/types";
 import {
+  STUDY_SHIFTS,
+  CAMPUSES,
+  getShiftByTimes,
+  formatShiftLabel,
+  getCampusByName,
+} from "@/lib/studyShifts";
+import {
   Sparkles,
   ExternalLink,
   Calendar,
@@ -345,6 +352,7 @@ export function SubjectForm({
   const [scheduleDays, setScheduleDays] = useState<number[]>([]);
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
+  const [selectedShift, setSelectedShift] = useState<string>("");
 
   // Địa điểm học
   const [room, setRoom] = useState("");
@@ -424,9 +432,18 @@ export function SubjectForm({
       );
       setStartTime(initialData.startTime || "");
       setEndTime(initialData.endTime || "");
+      const matchedShift = getShiftByTimes(initialData.startTime, initialData.endTime);
+      setSelectedShift(matchedShift ? String(matchedShift.id) : "");
       setRoom(initialData.room || "");
-      setCampus(initialData.campus || "");
-      setMapUrl(initialData.mapUrl || "");
+      const loadedCampus = initialData.campus || "";
+      const matchedCampus = getCampusByName(loadedCampus) || getCampusByName(initialData.mapUrl);
+      if (matchedCampus) {
+        setCampus(matchedCampus.name);
+        setMapUrl(matchedCampus.mapUrl);
+      } else {
+        setCampus(loadedCampus);
+        setMapUrl(initialData.mapUrl || "");
+      }
     } else {
       setCode("");
       setName("");
@@ -442,6 +459,7 @@ export function SubjectForm({
       setScheduleDays([]);
       setStartTime("");
       setEndTime("");
+      setSelectedShift("");
       setRoom("");
       setCampus("");
       setMapUrl("");
@@ -449,6 +467,30 @@ export function SubjectForm({
     setErrorMessage(null);
     setDriveHelpNotice(null);
   }, [initialData, mode, open]);
+
+  // Xử lý khi chọn Ca học cố định
+  const handleShiftChange = (shiftIdStr: string) => {
+    setSelectedShift(shiftIdStr);
+    const shift = STUDY_SHIFTS.find((s) => String(s.id) === shiftIdStr);
+    if (shift) {
+      setStartTime(shift.startTime);
+      setEndTime(shift.endTime);
+    } else {
+      setStartTime("");
+      setEndTime("");
+    }
+  };
+
+  // Xử lý khi chọn Cơ sở: tự động gán link Google Maps chuẩn của cơ sở
+  const handleCampusChange = (campusName: string) => {
+    setCampus(campusName);
+    const matched = CAMPUSES.find((c) => c.name === campusName);
+    if (matched) {
+      setMapUrl(matched.mapUrl);
+    } else {
+      setMapUrl("");
+    }
+  };
 
   // Xử lý khi đổi ngày bắt đầu: tự động chọn thứ tương ứng nếu chưa chọn thứ nào
   const handleStartDateChange = (val: string) => {
@@ -686,10 +728,10 @@ export function SubjectForm({
                   <div className="space-y-1">
                     <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/80 flex items-center gap-1.5">
                       <Clock className="h-3.5 w-3.5 text-[#7D39EB]" />
-                      <span>Khung giờ học</span>
+                      <span>Ca học</span>
                     </Label>
-                    <div className="text-sm font-bold font-mono text-foreground">
-                      {startTime && endTime ? `${startTime} - ${endTime}` : startTime || "Chưa cập nhật"}
+                    <div className="text-sm font-bold text-foreground">
+                      {formatShiftLabel(startTime, endTime)}
                     </div>
                   </div>
                 </div>
@@ -750,18 +792,31 @@ export function SubjectForm({
                     {room ? `Phòng ${room}` : "Chưa cập nhật phòng"}
                     {campus && ` • ${campus}`}
                   </div>
-                  {(mapUrl || campus) && (
-                    <a
-                      href={mapUrl || `https://maps.google.com/?q=${encodeURIComponent(campus)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline pt-0.5"
-                    >
-                      <MapPin className="h-3.5 w-3.5" />
-                      <span>Mở bản đồ vị trí</span>
-                      <ExternalLink className="h-3 w-3" />
-                    </a>
-                  )}
+                  {(() => {
+                    const campusInfo = getCampusByName(campus) || getCampusByName(mapUrl);
+                    const targetMapUrl = campusInfo?.mapUrl || mapUrl || (campus ? `https://maps.google.com/?q=${encodeURIComponent(campus)}` : "");
+                    return (
+                      <div className="space-y-1">
+                        {campusInfo?.address && (
+                          <p className="text-xs text-muted-foreground">
+                            {campusInfo.address}
+                          </p>
+                        )}
+                        {targetMapUrl && (
+                          <a
+                            href={targetMapUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline pt-0.5"
+                          >
+                            <MapPin className="h-3.5 w-3.5" />
+                            <span>Mở Google Maps cơ sở</span>
+                            <ExternalLink className="h-3 w-3" />
+                          </a>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* Cột phải: Tài nguyên học tập (Nút mở nhanh LMS & Drive) */}
@@ -1200,38 +1255,30 @@ export function SubjectForm({
               </div>
             </div>
 
-            {/* HÀNG 7: Giờ học - ĐỒNG CẤP, KHÔNG Ô BAO QUANH */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* HÀNG CUỐI CÙNG: Ca học, Phòng học và Cơ sở trên cùng một hàng */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {/* Cột 1: Ca học (chỉ hiển thị 5 ô chọn: Ca 1, Ca 2, ...) */}
               <div className="space-y-1.5">
-                <Label htmlFor="startTime" className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                <Label htmlFor="studyShift" className="text-xs font-bold text-foreground flex items-center gap-1.5">
                   <Clock className="h-3.5 w-3.5 text-[#7D39EB]" />
-                  <span>Giờ bắt đầu</span>
+                  <span>Ca học</span>
                 </Label>
-                <Input
-                  id="startTime"
-                  type="time"
-                  value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
-                  className="rounded-md font-semibold"
-                />
+                <select
+                  id="studyShift"
+                  value={selectedShift}
+                  onChange={(e) => handleShiftChange(e.target.value)}
+                  className="w-full h-10 text-xs font-semibold rounded-md border border-border/80 bg-background px-3 py-1 text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7D39EB] transition-all"
+                >
+                  <option value="">-- Chọn ca học --</option>
+                  {STUDY_SHIFTS.map((shift) => (
+                    <option key={shift.id} value={String(shift.id)}>
+                      {shift.name}
+                    </option>
+                  ))}
+                </select>
               </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="endTime" className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                  <Clock className="h-3.5 w-3.5 text-[#7D39EB]" />
-                  <span>Giờ kết thúc</span>
-                </Label>
-                <Input
-                  id="endTime"
-                  type="time"
-                  value={endTime}
-                  onChange={(e) => setEndTime(e.target.value)}
-                  className="rounded-md font-semibold"
-                />
-              </div>
-            </div>
 
-            {/* HÀNG 8: Phòng học & Cơ sở - ĐỒNG CẤP, KHÔNG Ô BAO QUANH */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Cột 2: Phòng học */}
               <div className="space-y-1.5">
                 <Label htmlFor="room" className="text-xs font-bold text-foreground flex items-center gap-1.5">
                   <MapPin className="h-3.5 w-3.5 text-[#7D39EB]" />
@@ -1242,52 +1289,30 @@ export function SubjectForm({
                   placeholder="VD: B.304, Lab 02"
                   value={room}
                   onChange={(e) => setRoom(e.target.value)}
-                  className="rounded-md"
+                  className="rounded-md h-10 text-xs"
                 />
               </div>
 
+              {/* Cột 3: Cơ sở (tự động gán link Google Maps theo cơ sở) */}
               <div className="space-y-1.5">
                 <Label htmlFor="campus" className="text-xs font-bold text-foreground flex items-center gap-1.5">
                   <MapPin className="h-3.5 w-3.5 text-[#7D39EB]" />
                   <span>Cơ sở</span>
                 </Label>
-                <Input
+                <select
                   id="campus"
-                  placeholder="VD: Cơ sở 1 - Nguyễn Tri Phương"
                   value={campus}
-                  onChange={(e) => setCampus(e.target.value)}
-                  className="rounded-md"
-                />
+                  onChange={(e) => handleCampusChange(e.target.value)}
+                  className="w-full h-10 text-xs font-semibold rounded-md border border-border/80 bg-background px-3 py-1 text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7D39EB] transition-all"
+                >
+                  <option value="">-- Chọn cơ sở --</option>
+                  {CAMPUSES.map((c) => (
+                    <option key={c.id} value={c.name}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
               </div>
-            </div>
-
-            {/* HÀNG 9: Link Google Maps - ĐỒNG CẤP, KHÔNG Ô BAO QUANH */}
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="mapUrl" className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                  <ExternalLink className="h-3.5 w-3.5 text-[#7D39EB]" />
-                  <span>Link Google Maps</span>
-                </Label>
-                {(mapUrl || campus) && (
-                  <a
-                    href={mapUrl || `https://maps.google.com/?q=${encodeURIComponent(campus)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[11px] font-bold text-[#7D39EB] hover:underline flex items-center gap-1"
-                  >
-                    <span>Mở thử bản đồ</span>
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
-                )}
-              </div>
-              <Input
-                id="mapUrl"
-                type="url"
-                placeholder="https://maps.google.com/?q=... (hoặc để trống sẽ tự tìm theo Cơ sở)"
-                value={mapUrl}
-                onChange={(e) => setMapUrl(e.target.value)}
-                className="rounded-md text-xs"
-              />
             </div>
 
             {/* Hiển thị tính toán ngày kết thúc dự kiến */}

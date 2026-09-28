@@ -14,31 +14,34 @@ import {
 } from "lucide-react";
 import { getSubjectCoverImage } from "@/lib/imagePresets";
 import { MarqueeText } from "@/components/ui/marquee-text";
+import { formatShiftLabel, getCampusByName } from "@/lib/studyShifts";
 
 // Component biểu đồ tròn tiến độ ngày học (Pie Chart)
 function AttendancePieChart({
   attended,
   total,
-  size = 56,
+  size = 48,
+  isCompleted = false,
 }: {
   attended: number;
   total: number;
   size?: number;
+  isCompleted?: boolean;
 }) {
   const safeTotal = total > 0 ? total : 15;
   const safeAttended = Math.max(0, attended);
-  const percent = Math.min(100, Math.round((safeAttended / safeTotal) * 100));
+  const percent = isCompleted ? 100 : Math.min(100, Math.round((safeAttended / safeTotal) * 100));
 
-  const strokeWidth = 5;
+  const strokeWidth = 4;
   const radius = (size - strokeWidth * 2) / 2;
   const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (percent / 100) * circumference;
+  const strokeDashoffset = isCompleted ? 0 : circumference - (percent / 100) * circumference;
 
   return (
     <div
-      className="relative flex items-center justify-center shrink-0"
+      className="relative flex items-center justify-center shrink-0 select-none"
       style={{ width: size, height: size }}
-      title={`Tiến độ ngày học: ${safeAttended}/${safeTotal} ngày (${percent}%)`}
+      title={isCompleted ? "Môn học đã hoàn thành" : `Tiến độ ngày học: ${safeAttended}/${safeTotal} (${percent}%)`}
     >
       <svg
         width={size}
@@ -50,16 +53,16 @@ function AttendancePieChart({
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke="currentColor"
+          stroke={isCompleted ? "#7D39EB" : "currentColor"}
           strokeWidth={strokeWidth}
-          fill="transparent"
-          className="text-muted/30 dark:text-muted/20"
+          fill={isCompleted ? "#7D39EB" : "transparent"}
+          className={isCompleted ? "" : "text-muted/30 dark:text-muted/20"}
         />
         <circle
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke={percent === 100 ? "#C6FF33" : "#7D39EB"}
+          stroke={isCompleted ? "#7D39EB" : (percent === 100 ? "#C6FF33" : "#7D39EB")}
           strokeWidth={strokeWidth}
           fill="transparent"
           strokeDasharray={circumference}
@@ -68,13 +71,16 @@ function AttendancePieChart({
           className="transition-all duration-500 ease-out"
         />
       </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
-        <span className="font-mono font-black text-xs leading-tight text-foreground tracking-tight">
-          {safeAttended}/{safeTotal}
-        </span>
-        <span className="text-[8px] font-bold text-muted-foreground uppercase leading-none tracking-wider">
-          ngày
-        </span>
+      <div className="absolute inset-0 flex items-center justify-center text-center pointer-events-none">
+        {isCompleted ? (
+          <span className="font-black text-xs leading-none text-white tracking-wider">
+            Xong
+          </span>
+        ) : (
+          <span className="font-mono font-black text-xs leading-none text-foreground tracking-tight">
+            {safeAttended}/{safeTotal}
+          </span>
+        )}
       </div>
     </div>
   );
@@ -145,6 +151,16 @@ export function SubjectCard({
   const checkinStatus = getSubjectCheckinStatus(subject, attendanceRecords);
   const coverUrl = !imageError ? getSubjectCoverImage(subject) : getSubjectCoverImage();
 
+  // Xác định môn học đã hoàn thành
+  const isCompleted =
+    (checkinStatus.attendedCount >= (checkinStatus.totalWeeks || 15) && (checkinStatus.totalWeeks || 15) > 0) ||
+    weekProgress?.status === "finished" ||
+    Boolean(
+      subject.endDate &&
+      !isNaN(new Date(subject.endDate).getTime()) &&
+      new Date(subject.endDate).getTime() < new Date().setHours(0, 0, 0, 0)
+    );
+
   // Chuỗi lịch học
   const scheduleDaysText =
     subject.scheduleDays && subject.scheduleDays.length > 0
@@ -192,7 +208,7 @@ export function SubjectCard({
         </div>
 
         {/* 2. Thân nội dung Card (Body Content) - Rộng rãi, chữ to nổi bật, bảo toàn viền */}
-        <div className="px-3.5 pt-3 pb-3 space-y-2.5 flex-1 flex flex-col justify-between bg-card overflow-hidden">
+        <div className="px-3 pt-3 pb-3 space-y-2.5 flex-1 flex flex-col justify-between bg-card overflow-hidden">
           <div className="space-y-2">
             {/* Hàng trên: Tiêu đề môn học to nổi bật bên trái, Pie-chart bên phải ngang hàng */}
             <div className="flex items-center justify-between gap-2.5 pt-0.5">
@@ -207,11 +223,12 @@ export function SubjectCard({
                 />
               </div>
 
-              {/* Pie-chart lớn thể hiện số ngày thực học / số ngày phải học */}
+              {/* Pie-chart thể hiện số ngày thực học / số ngày phải học hoặc trạng thái Xong */}
               <AttendancePieChart
                 attended={checkinStatus.attendedCount}
                 total={checkinStatus.totalWeeks || 15}
                 size={48}
+                isCompleted={isCompleted}
               />
             </div>
 
@@ -253,7 +270,7 @@ export function SubjectCard({
               <div className="mt-1 w-full py-1 px-2 rounded-md bg-amber-500/10 border border-amber-500/20 flex items-center justify-between text-[11px] text-amber-700 dark:text-amber-400 font-medium">
                 <span className="flex items-center gap-1.5 truncate">
                   <Clock className="h-3 w-3 shrink-0" />
-                  <span className="truncate">Lịch: {subject.startTime} - {subject.endTime}</span>
+                  <span className="truncate">Lịch: {formatShiftLabel(subject.startTime, subject.endTime)}</span>
                 </span>
                 <span className="text-[10px] text-muted-foreground shrink-0 ml-1">
                   {checkinStatus.statusText}
@@ -265,61 +282,110 @@ export function SubjectCard({
           {/* Đường kẻ mờ phân tách */}
           <div className="border-t border-border/40 my-0.5" />
 
-          {/* 3. Footer: Nút Xem chi tiết bên trái, Quick Action Links bên phải (bảo toàn không tràn) */}
-          <div className="flex items-center justify-between gap-1.5 pt-0.5 overflow-hidden">
-            {/* Bên trái: Nút Xem chi tiết (icon con mắt) */}
+          {/* 3. Footer: Nút Chi tiết bên trái, 3 nút tính năng bên phải (Google Drive, Course, Location) */}
+          <div className="flex items-center gap-1.5 pt-0.5 overflow-hidden w-full">
+            {/* Bên trái: Nút Chi tiết (icon con mắt + MarqueeText nếu tràn) */}
             <Button
               variant="outline"
               size="sm"
               onClick={() => onEdit(subject)}
-              className="h-7.5 px-2.5 gap-1.5 text-xs font-semibold rounded-md border-border/80 hover:bg-[#7D39EB]/10 hover:text-[#7D39EB] hover:border-[#7D39EB]/40 transition-all flex items-center shadow-2xs shrink-0"
-              title="Xem chi tiết môn học"
-              aria-label="Xem chi tiết môn học"
+              className="h-8 flex-1 min-w-0 px-2 gap-1.5 text-xs font-semibold rounded-md border-border/80 hover:bg-[#7D39EB]/10 hover:text-[#7D39EB] hover:border-[#7D39EB]/40 transition-all flex items-center justify-center shadow-2xs overflow-hidden"
+              title="Chi tiết môn học"
+              aria-label="Chi tiết môn học"
             >
-              <Eye className="h-3.5 w-3.5 text-[#7D39EB]" />
-              <span>Xem chi tiết</span>
+              <Eye className="h-3.5 w-3.5 shrink-0 text-[#7D39EB]" />
+              <MarqueeText
+                text="Chi tiết"
+                className="text-xs font-semibold select-none"
+                containerClassName="min-w-0 flex-1 text-center"
+              />
             </Button>
 
-            {/* Bên phải: Các nút icon liên kết trực tiếp (LMS Course, Drive, Map) */}
+            {/* Bên phải: 3 nút tính năng (Google Drive, Course, Location) đồng chiều cao h-8 */}
             <div className="flex items-center gap-1 shrink-0">
-              {subject.courseUrl && (
-                <a
-                  href={subject.courseUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="h-7 w-7 rounded-md flex items-center justify-center bg-[#7D39EB]/10 hover:bg-[#7D39EB]/20 text-[#7D39EB] border border-[#7D39EB]/25 transition-all shadow-2xs hover:scale-105"
-                  title="Mở LMS Course"
-                  aria-label="Mở LMS Course"
-                >
-                  <BookOpen className="h-3.5 w-3.5" />
-                </a>
-              )}
-
-              {subject.driveUrl && (
+              {/* 1. Nút Google Drive */}
+              {subject.driveUrl ? (
                 <a
                   href={subject.driveUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="h-7 w-7 rounded-md flex items-center justify-center bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/25 transition-all shadow-2xs hover:scale-105"
+                  className="h-8 w-8 rounded-md flex items-center justify-center bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/25 transition-all shadow-2xs hover:scale-105 shrink-0"
                   title="Mở Google Drive"
                   aria-label="Mở Google Drive"
                 >
                   <Folder className="h-3.5 w-3.5" />
                 </a>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => onEdit(subject)}
+                  className="h-8 w-8 rounded-md flex items-center justify-center bg-muted/20 text-muted-foreground/35 hover:text-amber-500 hover:bg-amber-500/10 border border-border/40 hover:border-amber-500/30 transition-all shadow-2xs shrink-0"
+                  title="Chưa có liên kết Google Drive (Nhấp để thêm)"
+                  aria-label="Chưa có Google Drive"
+                >
+                  <Folder className="h-3.5 w-3.5" />
+                </button>
               )}
 
-              {(subject.mapUrl || subject.campus) && (
+              {/* 2. Nút LMS Course */}
+              {subject.courseUrl ? (
                 <a
-                  href={subject.mapUrl || `https://maps.google.com/?q=${encodeURIComponent(subject.campus || "")}`}
+                  href={subject.courseUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="h-7 w-7 rounded-md flex items-center justify-center bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 border border-emerald-500/25 transition-all shadow-2xs hover:scale-105"
-                  title="Mở Google Maps cơ sở"
-                  aria-label="Mở Google Maps cơ sở"
+                  className="h-8 w-8 rounded-md flex items-center justify-center bg-[#7D39EB]/10 hover:bg-[#7D39EB]/20 text-[#7D39EB] border border-[#7D39EB]/25 transition-all shadow-2xs hover:scale-105 shrink-0"
+                  title="Mở LMS Course"
+                  aria-label="Mở LMS Course"
                 >
-                  <MapPin className="h-3.5 w-3.5" />
+                  <BookOpen className="h-3.5 w-3.5" />
                 </a>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => onEdit(subject)}
+                  className="h-8 w-8 rounded-md flex items-center justify-center bg-muted/20 text-muted-foreground/35 hover:text-[#7D39EB] hover:bg-[#7D39EB]/10 border border-border/40 hover:border-[#7D39EB]/30 transition-all shadow-2xs shrink-0"
+                  title="Chưa có liên kết LMS Course (Nhấp để thêm)"
+                  aria-label="Chưa có Course"
+                >
+                  <BookOpen className="h-3.5 w-3.5" />
+                </button>
               )}
+
+              {/* 3. Nút Location (Bản đồ / Phòng học / Cơ sở) */}
+              {(() => {
+                const campusInfo = getCampusByName(subject.campus) || getCampusByName(subject.mapUrl);
+                const mapTargetUrl =
+                  campusInfo?.mapUrl ||
+                  subject.mapUrl ||
+                  (subject.campus
+                    ? `https://maps.google.com/?q=${encodeURIComponent(subject.campus)}`
+                    : subject.room
+                    ? `https://maps.google.com/?q=${encodeURIComponent(subject.room)}`
+                    : null);
+
+                return mapTargetUrl ? (
+                  <a
+                    href={mapTargetUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="h-8 w-8 rounded-md flex items-center justify-center bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 border border-emerald-500/25 transition-all shadow-2xs hover:scale-105 shrink-0"
+                    title={`Mở vị trí (${subject.room ? subject.room + " - " : ""}${subject.campus || "Bản đồ"})`}
+                    aria-label="Mở vị trí"
+                  >
+                    <MapPin className="h-3.5 w-3.5" />
+                  </a>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => onEdit(subject)}
+                    className="h-8 w-8 rounded-md flex items-center justify-center bg-muted/20 text-muted-foreground/35 hover:text-emerald-500 hover:bg-emerald-500/10 border border-border/40 hover:border-emerald-500/30 transition-all shadow-2xs shrink-0"
+                    title="Chưa có thông tin phòng/cơ sở (Nhấp để thêm)"
+                    aria-label="Chưa có vị trí"
+                  >
+                    <MapPin className="h-3.5 w-3.5" />
+                  </button>
+                );
+              })()}
             </div>
           </div>
         </div>

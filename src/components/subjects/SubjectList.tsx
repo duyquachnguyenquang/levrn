@@ -25,6 +25,8 @@ import {
   BookOpen,
   Plus,
   Filter,
+  ArrowUpDown,
+  Check,
   X,
   LayoutGrid,
   List,
@@ -42,6 +44,8 @@ import {
 } from "lucide-react";
 import { useAttendance } from "@/hooks/useAttendance";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useCourseGrades } from "@/hooks/useCourseGrades";
+import { calculateComponentsScore } from "@/lib/gradeUtils";
 import { getSubjectCheckinStatus } from "@/lib/checkinUtils";
 import { MarqueeText } from "@/components/ui/marquee-text";
 
@@ -156,8 +160,63 @@ export function SubjectList({
     (selectedCategory !== "ALL" ? 1 : 0) +
     (selectedCredits !== "ALL" ? 1 : 0);
 
+  type SortOption = "default" | "name_asc" | "name_desc" | "progress" | "score_desc" | "score_asc";
+  const [sortBy, setSortBy] = useState<SortOption>("default");
+  const [sortOpen, setSortOpen] = useState(false);
+  const { grades } = useCourseGrades();
+
+  // Xác định phân loại tiến độ môn học: 1: Đã xong, 2: Đang học, 3: Chưa học
+  const getSubjectProgressCategory = (subject: Subject): number => {
+    const checkinStatus = getSubjectCheckinStatus(subject, attendanceRecords);
+    const totalWeeks = checkinStatus.totalWeeks || 15;
+    const attended = checkinStatus.attendedCount;
+
+    const isCompleted =
+      (attended >= totalWeeks && totalWeeks > 0) ||
+      Boolean(
+        subject.endDate &&
+        !isNaN(new Date(subject.endDate).getTime()) &&
+        new Date(subject.endDate).getTime() < new Date().setHours(0, 0, 0, 0)
+      );
+
+    if (isCompleted) return 1; // Đã xong
+
+    const isStarted =
+      attended > 0 ||
+      Boolean(
+        subject.startDate &&
+        !isNaN(new Date(subject.startDate).getTime()) &&
+        new Date(subject.startDate).getTime() <= Date.now()
+      );
+
+    if (isStarted) return 2; // Đang học
+
+    return 3; // Chưa học
+  };
+
+  // Lấy điểm số của môn học từ bảng điểm
+  const getSubjectScore = (subject: Subject): number => {
+    const grade = grades.find(
+      (g) =>
+        g.subjectId === subject.id ||
+        (g.subjectCode && subject.code && g.subjectCode.toLowerCase() === subject.code.toLowerCase())
+    );
+    if (!grade) return -1;
+    if (grade.finalScore !== null && grade.finalScore !== undefined) {
+      return Number(grade.finalScore);
+    }
+    if (grade.components && grade.components.length > 0) {
+      const compScore = calculateComponentsScore(grade.components).finalScore;
+      if (compScore !== null) return compScore;
+    }
+    if (grade.targetScore !== null && grade.targetScore !== undefined) {
+      return Number(grade.targetScore);
+    }
+    return -1;
+  };
+
   const filteredSubjects = useMemo(() => {
-    return subjects.filter((subject) => {
+    const list = subjects.filter((subject) => {
       const query = searchQuery.toLowerCase().trim();
       const matchSearch =
         !query ||
@@ -181,7 +240,50 @@ export function SubjectList({
 
       return matchSearch && matchSemester && matchCategory && matchCredits;
     });
-  }, [subjects, searchQuery, selectedSemester, selectedCategory, selectedCredits]);
+
+    if (sortBy === "name_asc") {
+      return [...list].sort((a, b) => a.name.localeCompare(b.name, "vi"));
+    }
+    if (sortBy === "name_desc") {
+      return [...list].sort((a, b) => b.name.localeCompare(a.name, "vi"));
+    }
+    if (sortBy === "progress") {
+      // Đã xong (1) -> Đang học (2) -> Chưa học (3)
+      return [...list].sort((a, b) => {
+        const catA = getSubjectProgressCategory(a);
+        const catB = getSubjectProgressCategory(b);
+        if (catA !== catB) return catA - catB;
+        return a.name.localeCompare(b.name, "vi");
+      });
+    }
+    if (sortBy === "score_desc") {
+      return [...list].sort((a, b) => {
+        const scoreA = getSubjectScore(a);
+        const scoreB = getSubjectScore(b);
+        if (scoreA !== scoreB) return scoreB - scoreA;
+        return a.name.localeCompare(b.name, "vi");
+      });
+    }
+    if (sortBy === "score_asc") {
+      return [...list].sort((a, b) => {
+        const scoreA = getSubjectScore(a);
+        const scoreB = getSubjectScore(b);
+        if (scoreA !== scoreB) return scoreA - scoreB;
+        return a.name.localeCompare(b.name, "vi");
+      });
+    }
+
+    return list;
+  }, [
+    subjects,
+    searchQuery,
+    selectedSemester,
+    selectedCategory,
+    selectedCredits,
+    sortBy,
+    grades,
+    attendanceRecords,
+  ]);
 
   if (isLoading) {
     return (
@@ -238,24 +340,165 @@ export function SubjectList({
           )}
         </div>
 
-        {/* Cụm công cụ bên phải: Nút 'Bộ lọc' + Nút chuyển Grid/List */}
+        {/* Cụm công cụ bên phải: Nút Sắp xếp + Nút Bộ lọc + Nút chuyển Grid/List (icon-only toàn bộ) */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          {/* Nút Bộ lọc duy nhất (icon bộ lọc) với Popover chứa 3 drop-box */}
+          {/* 1. Nút Sắp xếp (Icon-only) bên trái Bộ lọc */}
+          <Popover open={sortOpen} onOpenChange={setSortOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={`h-9 w-9 p-0 rounded-md border-border/80 transition-all active:scale-95 shrink-0 relative flex items-center justify-center ${
+                  sortBy !== "default"
+                    ? "border-[#7D39EB] text-[#7D39EB] bg-[#7D39EB]/10"
+                    : "text-muted-foreground hover:text-foreground hover:border-[#7D39EB]/40"
+                }`}
+                title="Sắp xếp môn học"
+                aria-label="Sắp xếp môn học"
+              >
+                <ArrowUpDown className="h-4 w-4" />
+                {sortBy !== "default" && (
+                  <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-[#7D39EB] ring-2 ring-background" />
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent
+              align="end"
+              className="w-64 p-2 rounded-lg border border-border/80 shadow-2xl bg-card text-foreground space-y-1 z-50"
+            >
+              <div className="px-2.5 py-1.5 text-[11px] font-bold text-muted-foreground uppercase tracking-wider border-b border-border/60 flex items-center justify-between">
+                <span>Sắp xếp môn học</span>
+                {sortBy !== "default" && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSortBy("default");
+                      setSortOpen(false);
+                    }}
+                    className="text-[10px] text-muted-foreground hover:text-destructive font-semibold transition-colors"
+                  >
+                    Mặc định
+                  </button>
+                )}
+              </div>
+
+              {/* Tùy chọn 1: Xếp theo tên A-Z */}
+              <button
+                type="button"
+                onClick={() => {
+                  setSortBy("name_asc");
+                  setSortOpen(false);
+                }}
+                className={`w-full flex items-center justify-between px-2.5 py-2 text-xs rounded-md font-semibold transition-all ${
+                  sortBy === "name_asc"
+                    ? "bg-[#7D39EB]/15 text-[#7D39EB] font-bold"
+                    : "hover:bg-muted text-foreground"
+                }`}
+              >
+                <span className="flex items-center gap-2">
+                  <BookOpen className="h-3.5 w-3.5 text-[#7D39EB]" />
+                  <span>Xếp theo tên (A → Z)</span>
+                </span>
+                {sortBy === "name_asc" && <Check className="h-3.5 w-3.5 text-[#7D39EB]" />}
+              </button>
+
+              {/* Tùy chọn 2: Xếp theo tên Z-A */}
+              <button
+                type="button"
+                onClick={() => {
+                  setSortBy("name_desc");
+                  setSortOpen(false);
+                }}
+                className={`w-full flex items-center justify-between px-2.5 py-2 text-xs rounded-md font-semibold transition-all ${
+                  sortBy === "name_desc"
+                    ? "bg-[#7D39EB]/15 text-[#7D39EB] font-bold"
+                    : "hover:bg-muted text-foreground"
+                }`}
+              >
+                <span className="flex items-center gap-2">
+                  <BookOpen className="h-3.5 w-3.5 text-[#7D39EB]" />
+                  <span>Xếp theo tên (Z → A)</span>
+                </span>
+                {sortBy === "name_desc" && <Check className="h-3.5 w-3.5 text-[#7D39EB]" />}
+              </button>
+
+              {/* Tùy chọn 3: Xếp theo tiến độ (Đã xong, Đang học, Chưa học) */}
+              <button
+                type="button"
+                onClick={() => {
+                  setSortBy("progress");
+                  setSortOpen(false);
+                }}
+                className={`w-full flex items-center justify-between px-2.5 py-2 text-xs rounded-md font-semibold transition-all ${
+                  sortBy === "progress"
+                    ? "bg-[#7D39EB]/15 text-[#7D39EB] font-bold"
+                    : "hover:bg-muted text-foreground"
+                }`}
+              >
+                <span className="flex items-center gap-2">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-[#7D39EB]" />
+                  <span>Tiến độ (Đã xong → Đang học → Chưa học)</span>
+                </span>
+                {sortBy === "progress" && <Check className="h-3.5 w-3.5 text-[#7D39EB]" />}
+              </button>
+
+              {/* Tùy chọn 4: Xếp theo điểm số (Cao -> Thấp) */}
+              <button
+                type="button"
+                onClick={() => {
+                  setSortBy("score_desc");
+                  setSortOpen(false);
+                }}
+                className={`w-full flex items-center justify-between px-2.5 py-2 text-xs rounded-md font-semibold transition-all ${
+                  sortBy === "score_desc"
+                    ? "bg-[#7D39EB]/15 text-[#7D39EB] font-bold"
+                    : "hover:bg-muted text-foreground"
+                }`}
+              >
+                <span className="flex items-center gap-2">
+                  <GraduationCap className="h-3.5 w-3.5 text-[#7D39EB]" />
+                  <span>Điểm số (Cao → Thấp)</span>
+                </span>
+                {sortBy === "score_desc" && <Check className="h-3.5 w-3.5 text-[#7D39EB]" />}
+              </button>
+
+              {/* Tùy chọn 5: Xếp theo điểm số (Thấp -> Cao) */}
+              <button
+                type="button"
+                onClick={() => {
+                  setSortBy("score_asc");
+                  setSortOpen(false);
+                }}
+                className={`w-full flex items-center justify-between px-2.5 py-2 text-xs rounded-md font-semibold transition-all ${
+                  sortBy === "score_asc"
+                    ? "bg-[#7D39EB]/15 text-[#7D39EB] font-bold"
+                    : "hover:bg-muted text-foreground"
+                }`}
+              >
+                <span className="flex items-center gap-2">
+                  <GraduationCap className="h-3.5 w-3.5 text-[#7D39EB]" />
+                  <span>Điểm số (Thấp → Cao)</span>
+                </span>
+                {sortBy === "score_asc" && <Check className="h-3.5 w-3.5 text-[#7D39EB]" />}
+              </button>
+            </PopoverContent>
+          </Popover>
+
+          {/* 2. Nút Bộ lọc duy nhất (Icon-only) với Popover chứa 3 drop-box */}
           <Popover open={filterOpen} onOpenChange={setFilterOpen}>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
-                className={`h-9 px-2.5 sm:px-3 rounded-md text-xs font-bold gap-1.5 border-border/80 transition-all active:scale-95 shrink-0 ${
+                className={`h-9 w-9 p-0 rounded-md border-border/80 transition-all active:scale-95 shrink-0 relative flex items-center justify-center ${
                   isFilterActive
                     ? "border-[#7D39EB] text-[#7D39EB] bg-[#7D39EB]/10"
                     : "text-muted-foreground hover:text-foreground hover:border-[#7D39EB]/40"
                 }`}
                 title="Bộ lọc môn học"
+                aria-label="Bộ lọc môn học"
               >
-                <Filter className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Bộ lọc</span>
+                <Filter className="h-4 w-4" />
                 {activeFilterCount > 0 && (
-                  <span className="h-4 w-4 rounded-full bg-[#7D39EB] text-white text-[10px] flex items-center justify-center font-black">
+                  <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-[#7D39EB] text-white text-[9px] flex items-center justify-center font-black ring-2 ring-background">
                     {activeFilterCount}
                   </span>
                 )}
@@ -590,10 +833,10 @@ export function SubjectList({
                             size="sm"
                             onClick={() => onEdit(subject)}
                             className="h-8 px-2.5 rounded-md text-xs font-bold gap-1.5 border-border/80 text-foreground hover:border-[#7D39EB]/50 hover:bg-[#7D39EB]/10 hover:text-[#7D39EB] transition-all active:scale-95"
-                            title="Xem chi tiết môn học"
+                            title="Chi tiết môn học"
                           >
                             <Eye className="h-3.5 w-3.5 text-[#7D39EB]" />
-                            <span>Xem chi tiết</span>
+                            <span>Chi tiết</span>
                           </Button>
                           <Button
                             variant="outline"
