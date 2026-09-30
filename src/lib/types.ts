@@ -69,6 +69,21 @@ export interface Subject {
   instructor?: string;     // Giảng viên phụ trách
   targetHours?: number;    // Số giờ học mục tiêu
   note?: string;           // Ghi chú thêm
+  googleEventId?: string;  // ID sự kiện đồng bộ trên Google Calendar
+  syncToGoogle?: boolean;  // Cho phép đồng bộ môn này lên Google Calendar (mặc định true)
+}
+
+export interface GoogleCalendarIntegration {
+  id: string;
+  userId?: string;
+  email?: string;
+  accessToken: string;
+  refreshToken: string;
+  tokenExpiry?: string;
+  calendarId?: string; // ID của lịch con "LEVRN - Lịch học"
+  isSyncEnabled: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 /**

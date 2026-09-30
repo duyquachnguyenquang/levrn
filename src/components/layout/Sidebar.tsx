@@ -8,9 +8,6 @@ import {
   BookOpen,
   GraduationCap,
   CalendarRange,
-  Timer,
-  Target,
-  BarChart3,
   ArrowUpRight,
   ChevronLeft,
   ChevronRight,
@@ -47,21 +44,6 @@ export const navigationItems = [
     name: "Kế hoạch",
     href: "/plans",
     icon: CalendarRange,
-  },
-  {
-    name: "Phiên học",
-    href: "/sessions",
-    icon: Timer,
-  },
-  {
-    name: "Mục tiêu",
-    href: "/goals",
-    icon: Target,
-  },
-  {
-    name: "Thống kê",
-    href: "/stats",
-    icon: BarChart3,
   },
   {
     name: "Thông báo",

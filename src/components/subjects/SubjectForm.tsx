@@ -58,6 +58,7 @@ import {
   Image as ImageIcon,
   Pencil,
   Trash2,
+  CalendarSync,
 } from "lucide-react";
 import { IMAGE_PRESETS, getSubjectCoverImage } from "@/lib/imagePresets";
 import { ChangeCoverDialog } from "@/components/ui/change-cover-dialog";
@@ -360,6 +361,7 @@ export function SubjectForm({
   const [mapUrl, setMapUrl] = useState("");
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [syncToGoogle, setSyncToGoogle] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isEditing, setIsEditing] = useState(mode === "create");
 
@@ -444,6 +446,7 @@ export function SubjectForm({
         setCampus(loadedCampus);
         setMapUrl(initialData.mapUrl || "");
       }
+      setSyncToGoogle(initialData.syncToGoogle !== false);
     } else {
       setCode("");
       setName("");
@@ -463,6 +466,7 @@ export function SubjectForm({
       setRoom("");
       setCampus("");
       setMapUrl("");
+      setSyncToGoogle(true);
     }
     setErrorMessage(null);
     setDriveHelpNotice(null);
@@ -582,6 +586,7 @@ export function SubjectForm({
       room: room.trim() || undefined,
       campus: campus.trim() || undefined,
       mapUrl: mapUrl.trim() || (campus.trim() ? `https://maps.google.com/?q=${encodeURIComponent(campus.trim())}` : undefined),
+      syncToGoogle,
     };
 
     setIsSubmitting(true);
@@ -856,6 +861,23 @@ export function SubjectForm({
                   </div>
                 </div>
               </div>
+            </div>
+
+            {/* Trạng thái Google Calendar */}
+            <div className="border-t border-border/50 pt-2.5 flex items-center justify-between">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/80 flex items-center gap-1.5">
+                <CalendarSync className="h-3.5 w-3.5 text-[#7D39EB]" />
+                <span>Google Calendar</span>
+              </span>
+              <span
+                className={`text-xs font-bold px-2 py-0.5 rounded-md ${
+                  initialData?.syncToGoogle !== false
+                    ? "bg-emerald-500/10 text-emerald-600 border border-emerald-500/30"
+                    : "bg-muted text-muted-foreground border border-border"
+                }`}
+              >
+                {initialData?.syncToGoogle !== false ? "Đang đồng bộ" : "Bỏ qua (Thủ công)"}
+              </span>
             </div>
 
             {/* KHỐI 4: QUẢN LÝ ẢNH BÌA */}
@@ -1326,6 +1348,35 @@ export function SubjectForm({
                 </span>
               </div>
             )}
+
+            {/* Tùy chọn Đồng bộ Google Calendar */}
+            <div className="pt-2 border-t border-border/60 flex items-center justify-between">
+              <div>
+                <Label htmlFor="syncToGoogle" className="text-xs font-bold text-foreground flex items-center gap-1.5 cursor-pointer">
+                  <CalendarSync className="h-3.5 w-3.5 text-[#7D39EB]" />
+                  <span>Đồng bộ lên Google Calendar</span>
+                </Label>
+                <div className="text-[11px] text-muted-foreground mt-0.5">
+                  {syncToGoogle ? "Tự động tạo sự kiện lên Google Calendar khi có lịch học" : "Bỏ qua (dành cho môn đã lên lịch thủ công)"}
+                </div>
+              </div>
+              <button
+                type="button"
+                id="syncToGoogle"
+                onClick={() => setSyncToGoogle((prev) => !prev)}
+                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                  syncToGoogle ? "bg-[#7D39EB]" : "bg-muted"
+                }`}
+                role="switch"
+                aria-checked={syncToGoogle}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-md transition duration-200 ease-in-out ${
+                    syncToGoogle ? "translate-x-5" : "translate-x-0"
+                  }`}
+                />
+              </button>
+            </div>
 
             <DialogFooter className="pt-2 gap-2">
               <Button

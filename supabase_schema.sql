@@ -388,5 +388,35 @@ CREATE POLICY "Allow public update app_notifications" ON public.app_notification
 DROP POLICY IF EXISTS "Allow public delete app_notifications" ON public.app_notifications;
 CREATE POLICY "Allow public delete app_notifications" ON public.app_notifications FOR DELETE USING (true);
 
+-- ====================================================================
+-- 12. Bảng google_calendar_integrations (Đồng bộ Google Calendar 2 chiều)
+-- ====================================================================
+ALTER TABLE public.subjects ADD COLUMN IF NOT EXISTS google_event_id TEXT;
+ALTER TABLE public.subjects ADD COLUMN IF NOT EXISTS sync_to_google BOOLEAN DEFAULT true;
 
+CREATE TABLE IF NOT EXISTS public.google_calendar_integrations (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    email TEXT,
+    access_token TEXT NOT NULL,
+    refresh_token TEXT NOT NULL,
+    token_expiry TIMESTAMPTZ,
+    calendar_id TEXT, -- ID của Calendar con "LEVRN - Lịch học"
+    is_sync_enabled BOOLEAN DEFAULT true,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
 
+ALTER TABLE public.google_calendar_integrations ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow public read google_calendar_integrations" ON public.google_calendar_integrations;
+CREATE POLICY "Allow public read google_calendar_integrations" ON public.google_calendar_integrations FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Allow public insert google_calendar_integrations" ON public.google_calendar_integrations;
+CREATE POLICY "Allow public insert google_calendar_integrations" ON public.google_calendar_integrations FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow public update google_calendar_integrations" ON public.google_calendar_integrations;
+CREATE POLICY "Allow public update google_calendar_integrations" ON public.google_calendar_integrations FOR UPDATE USING (true);
+
+DROP POLICY IF EXISTS "Allow public delete google_calendar_integrations" ON public.google_calendar_integrations;
+CREATE POLICY "Allow public delete google_calendar_integrations" ON public.google_calendar_integrations FOR DELETE USING (true);

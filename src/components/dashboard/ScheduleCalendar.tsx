@@ -14,6 +14,7 @@ import {
   CalendarDays,
   CalendarRange,
   Plus,
+  CalendarSync,
 } from "lucide-react";
 import { Subject, StudyTask, StudyTaskFormData } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { TaskAssignModal } from "./TaskAssignModal";
+import { GoogleCalendarModal } from "@/components/calendar/GoogleCalendarModal";
 import { useStudyPlans } from "@/hooks/useStudyPlans";
 import { cn } from "@/lib/utils";
 
@@ -128,6 +130,21 @@ export function ScheduleCalendar({
 
   // Trạng thái modal thêm nhiệm vụ / gán hạn chót (+)
   const [isTaskAssignOpen, setIsTaskAssignOpen] = useState(false);
+  // Trạng thái modal đồng bộ Google Calendar
+  const [isGCalModalOpen, setIsGCalModalOpen] = useState(false);
+
+  // Tự động mở modal khi Google OAuth chuyển hướng về với ?gcal=connected
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("gcal") === "connected") {
+        setIsGCalModalOpen(true);
+        // Dọn dẹp param trên URL cho gọn
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, "", newUrl);
+      }
+    }
+  }, []);
 
   // Chế độ xem: Tháng (M) hoặc Tuần (W)
   const [viewMode, setViewMode] = useState<"month" | "week">("month");
@@ -506,6 +523,19 @@ export function ScheduleCalendar({
               >
                 <Plus className="h-4 w-4" />
               </Button>
+
+              {/* 6. Nút Đồng bộ Google Calendar (Icon-only theo chuẩn Button Hierarchy Rule 1.2) */}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsGCalModalOpen(true)}
+                className="h-8 w-8 p-0 rounded-lg border-border/80 hover:border-[#7D39EB] hover:text-[#7D39EB] text-muted-foreground transition-all active:scale-95 cursor-pointer flex items-center justify-center shrink-0 bg-background"
+                title="Đồng bộ Google Calendar"
+                aria-label="Đồng bộ Google Calendar"
+              >
+                <CalendarSync className="h-4 w-4" />
+              </Button>
             </div>
           </div>
 
@@ -800,6 +830,13 @@ export function ScheduleCalendar({
         onAssignDeadline={handleAssignDeadline}
         onCreateTask={handleCreateTask}
         onSelectDate={onSelectDate}
+      />
+
+      {/* Modal Đồng bộ Google Calendar */}
+      <GoogleCalendarModal
+        isOpen={isGCalModalOpen}
+        onClose={() => setIsGCalModalOpen(false)}
+        subjects={subjects}
       />
     </>
   );

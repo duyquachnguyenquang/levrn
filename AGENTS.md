@@ -83,6 +83,10 @@ Khi tạo hoặc chỉnh sửa các nút thao tác:
 ### 1.11. Bố cục lưới thẻ: Chuẩn 5 thẻ mỗi hàng (5 Cards per Row)
 - Đối với tất cả trang hiển thị danh sách dạng thẻ: Số thẻ trên mỗi hàng ở màn hình chuẩn máy tính (Desktop/XL) bắt buộc là **5 thẻ mỗi hàng** (`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4`).
 
+### 1.12. Nút Tắt / Thoát trên Pop-up: Dạng chữ x lồng trong khung vuông bo góc 5-10%
+- Toàn bộ nút Tắt / Thoát trên tất cả pop-up, modal, dialog **BẮT BUỘC** có dạng chữ x (`<X className="w-4 h-4" />`) được lồng trong **khung vuông bo góc 5-10%** (kích thước chuẩn `h-8 w-8 rounded-md`, có viền `border border-border/80`, nền `bg-background` hoặc `hover:bg-muted`), nằm ở góc trên bên phải, **ngang hàng và cân bằng chiều cao tuyệt đối với Header**.
+- **Tránh lỗi đè dấu X kép (Double X):** Khi tùy biến nút đóng trong `DialogHeader`, luôn thêm `[&>button.absolute]:hidden` vào `DialogContent` để ẩn nút đóng mặc định của thư viện, tránh lỗi 2 dấu X đè lệch lên nhau.
+
 ---
 
 ## 2. QUY TẮC TÁC VỤ & PHẢN HỒI CỦA AI (AI OPERATIONAL RULES)

@@ -6,7 +6,6 @@ import {
   Clock,
   MoreVertical,
   Calendar,
-  Play,
   Edit,
   Trash2,
   Folder,
@@ -19,7 +18,6 @@ import {
   ChevronDown,
   ArrowRight,
 } from "lucide-react";
-import Link from "next/link";
 import {
   StudyTask,
   Subject,
@@ -235,19 +233,8 @@ export function TaskListView({
               </span>
             </div>
 
-            {/* Cột phải: Học ngay + Menu 3 chấm */}
+            {/* Cột phải: Menu 3 chấm */}
             <div className="flex items-center gap-1.5 self-end sm:self-center pl-8 sm:pl-0 shrink-0">
-              <Link href="/sessions">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="h-7 text-xs font-bold rounded-md border-border/80 hover:bg-[#7D39EB]/15 hover:text-[#7D39EB] gap-1 px-2.5"
-                >
-                  <Play className="h-3 w-3 fill-current" />
-                  <span>Học ngay</span>
-                </Button>
-              </Link>
-
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button

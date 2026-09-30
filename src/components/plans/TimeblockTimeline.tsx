@@ -7,7 +7,6 @@ import {
   Circle,
   MoreVertical,
   Plus,
-  Play,
   Calendar,
   Sparkles,
   BookOpen,
@@ -15,7 +14,6 @@ import {
   MapPin,
   Flame,
 } from "lucide-react";
-import Link from "next/link";
 import {
   StudyTask,
   Subject,
@@ -338,20 +336,8 @@ export function TimeblockTimeline({
                     )}
                   </div>
 
-                  {/* Cột phải: Nút bắt đầu học ngay + Menu Tuỳ chọn */}
+                  {/* Cột phải: Menu Tuỳ chọn */}
                   <div className="flex items-center gap-2 self-end md:self-center pl-1.5">
-                    <Link href="/sessions">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-8 text-xs font-bold rounded-md border-border/80 hover:bg-[#7D39EB]/15 hover:text-[#7D39EB] hover:border-[#7D39EB]/40 gap-1.5"
-                        title="Bắt đầu bấm giờ học môn này"
-                      >
-                        <Play className="h-3 w-3 fill-current" />
-                        <span className="hidden sm:inline">Học ngay</span>
-                      </Button>
-                    </Link>
-
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button

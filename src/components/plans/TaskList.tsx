@@ -6,7 +6,6 @@ import {
   Clock,
   MoreVertical,
   Plus,
-  Play,
   Calendar,
   Layers,
   Copy,
@@ -17,7 +16,6 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
-import Link from "next/link";
 import {
   StudyTask,
   Subject,
@@ -406,18 +404,6 @@ export function TaskList({
 
                         {/* Cột phải: Các nút hành động */}
                         <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
-                          <Link href="/sessions">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-8 text-xs font-bold rounded-md border-border/80 hover:bg-[#7D39EB]/15 hover:text-[#7D39EB] gap-1"
-                              title="Bắt đầu học ngay môn này"
-                            >
-                              <Play className="h-3 w-3 fill-current" />
-                              <span>Học ngay</span>
-                            </Button>
-                          </Link>
-
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button

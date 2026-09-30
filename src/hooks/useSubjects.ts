@@ -216,6 +216,29 @@ async function syncDeleteGrade(id: string, isSupabaseActive: boolean) {
   }
 }
 
+// Đồng bộ nền tự động với Google Calendar
+async function triggerGoogleCalendarSync(
+  action: "sync-subject" | "delete-subject",
+  payload: { subject?: Subject; googleEventId?: string }
+): Promise<string | undefined> {
+  try {
+    const res = await fetch("/api/calendar/google/sync", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action,
+        subject: payload.subject,
+        googleEventId: payload.googleEventId,
+      }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      return data.googleEventId;
+    }
+  } catch {}
+  return undefined;
+}
+
 /**
  * Custom hook quản lý danh sách môn học đồng bộ trực tiếp với Supabase Database
  * Có cơ chế dự phòng an toàn (fallback) với localStorage khi mạng yếu hoặc chưa tạo bảng
@@ -362,6 +385,14 @@ export function useSubjects() {
           backupToLocalStorage(updatedList);
           // Đồng bộ tự động sang Quản lý điểm số
           await syncAddGrade(newSubject, true);
+          // Đồng bộ tự động thời gian thực sang Google Calendar
+          triggerGoogleCalendarSync("sync-subject", { subject: newSubject }).then((eventId) => {
+            if (eventId) {
+              setSubjects((prev) =>
+                prev.map((s) => (s.id === newSubject.id ? { ...s, googleEventId: eventId } : s))
+              );
+            }
+          });
           return { success: true };
         }
       } catch (err: any) {
@@ -436,6 +467,8 @@ export function useSubjects() {
           backupToLocalStorage(updatedList);
           // Đồng bộ tự động sang Quản lý điểm số
           await syncUpdateGrade(id, formData, true);
+          // Đồng bộ tự động thời gian thực sang Google Calendar
+          triggerGoogleCalendarSync("sync-subject", { subject: updatedSubject });
           return { success: true };
         }
       } catch (err: any) {
@@ -462,6 +495,12 @@ export function useSubjects() {
    * Xoá môn học khỏi Supabase và cập nhật danh sách, đồng thời xoá khỏi Bảng điểm (course_grades)
    */
   const deleteSubject = async (id: string) => {
+    const target = subjects.find((sub) => sub.id === id);
+    if (target?.googleEventId) {
+      // Đồng bộ xóa khỏi Google Calendar
+      triggerGoogleCalendarSync("delete-subject", { googleEventId: target.googleEventId });
+    }
+
     if (supabase && isSupabaseActive) {
       try {
         const { error } = await supabase.from("subjects").delete().eq("id", id);

@@ -29,6 +29,8 @@ export function mapRowToSubject(row: any): Subject {
     scheduleDays = row.scheduleDays;
   }
 
+  let syncToGoogle: boolean = row.sync_to_google !== undefined ? Boolean(row.sync_to_google) : true;
+
   // Đọc metadata mở rộng từ note nếu có
   if (typeof row.note === "string") {
     if (row.note.includes("levrn_meta:")) {
@@ -43,6 +45,7 @@ export function mapRowToSubject(row: any): Subject {
           if (meta.campus) campus = meta.campus;
           if (meta.mapUrl) mapUrl = meta.mapUrl;
           if (meta.imageUrl) imageUrl = meta.imageUrl;
+          if (meta.syncToGoogle !== undefined) syncToGoogle = Boolean(meta.syncToGoogle);
         }
       } catch {}
     } else if (row.note.includes("levrn_schedule:")) {
@@ -84,6 +87,8 @@ export function mapRowToSubject(row: any): Subject {
     instructor: row.instructor ?? undefined,
     targetHours: row.target_hours ?? row.targetHours ?? undefined,
     note: cleanNote,
+    googleEventId: row.google_event_id || row.googleEventId || undefined,
+    syncToGoogle,
     createdAt: row.created_at || row.createdAt || new Date().toISOString(),
   };
 }
@@ -91,7 +96,7 @@ export function mapRowToSubject(row: any): Subject {
 /**
  * Chuyển đổi dữ liệu SubjectFormData sang định dạng lưu trữ cơ sở dữ liệu Supabase
  */
-export function mapSubjectToRow(data: Partial<SubjectFormData>) {
+export function mapSubjectToRow(data: Partial<SubjectFormData & { googleEventId?: string }>) {
   const row: Record<string, any> = {};
 
   if (data.code !== undefined) row.code = data.code;
@@ -108,6 +113,14 @@ export function mapSubjectToRow(data: Partial<SubjectFormData>) {
   if (data.startDate !== undefined) row.start_date = data.startDate || null;
   if (data.endDate !== undefined) row.end_date = data.endDate || null;
   if (data.totalWeeks !== undefined) row.total_weeks = data.totalWeeks ?? null;
+  if (data.scheduleDays !== undefined) row.schedule_days = data.scheduleDays;
+  if (data.startTime !== undefined) row.start_time = data.startTime || null;
+  if (data.endTime !== undefined) row.end_time = data.endTime || null;
+  if (data.room !== undefined) row.room = data.room || null;
+  if (data.campus !== undefined) row.campus = data.campus || null;
+  if (data.mapUrl !== undefined) row.map_url = data.mapUrl || null;
+  if (data.googleEventId !== undefined) row.google_event_id = data.googleEventId || null;
+  if (data.syncToGoogle !== undefined) row.sync_to_google = data.syncToGoogle;
   if (data.instructor !== undefined) row.instructor = data.instructor;
   if (data.targetHours !== undefined) row.target_hours = data.targetHours;
   
@@ -120,6 +133,7 @@ export function mapSubjectToRow(data: Partial<SubjectFormData>) {
   if (data.campus) meta.campus = data.campus;
   if (data.mapUrl) meta.mapUrl = data.mapUrl;
   if (data.imageUrl) meta.imageUrl = data.imageUrl;
+  if (data.syncToGoogle !== undefined) meta.syncToGoogle = data.syncToGoogle;
 
   if (Object.keys(meta).length > 0) {
     const tag = `levrn_meta:${JSON.stringify(meta)}`;

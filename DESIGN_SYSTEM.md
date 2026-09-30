@@ -130,18 +130,22 @@ Khi bố trí các nút tương tác (Buttons & Actions), phải tuân thủ ngh
   - Số thẻ hiển thị trên mỗi hàng trên màn hình lớn / desktop chuẩn là **đúng 5 thẻ mỗi hàng**.
   - Tailwind Grid class bắt buộc: `grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4` (hoặc `gap-4 sm:gap-5`).
 
+### ❌ Quy tắc 12: Nút Tắt / Thoát trên Pop-up lồng khung vuông bo góc 5-10%
+- **Quy định:** Toàn bộ nút Tắt / Thoát trên tất cả pop-up, modal, dialog **BẮT BUỘC** có dạng chữ x (`<X className="w-4 h-4" />`) được lồng trong **khung vuông bo góc 5-10%** (kích thước chuẩn `h-8 w-8 rounded-md`, có viền `border border-border/80`, nền `bg-background` hoặc `hover:bg-muted`), nằm ở góc trên bên phải, **ngang hàng và cân bằng chiều cao tuyệt đối với Header**.
+- **Tránh lỗi đè dấu X kép (Double X):** Khi tùy biến nút đóng trong `DialogHeader`, luôn thêm `[&>button.absolute]:hidden` vào `DialogContent` để ẩn nút đóng mặc định của thư viện, tránh tình trạng nút đóng mặc định của thư viện đè lên nút trong Header.
+
 ---
 
 ## 3. Quy Tắc Tác Vụ Dành Cho AI (AI Working & Interaction Rules)
 
-### ⚡ Quy tắc 12: Tác phong làm việc của AI (Nhanh, Trúng, Không Screenshot)
+### ⚡ Quy tắc 13: Tác phong làm việc của AI (Nhanh, Trúng, Không Screenshot)
 - **Chỉ đọc đúng file cần làm:** Không quét hay duyệt qua các file không liên quan để tránh lãng phí thời gian và token.
 - **Làm nhanh và báo liền:** Viết code chính xác, dứt khoát, trả lời kết quả ngay lập tức khi hoàn thành.
 - **Người dùng tự test:** AI **không** sử dụng browser agent để test chụp ảnh màn hình (screenshot). Người dùng là người trực tiếp kiểm tra và nghiệm thu giao diện trên môi trường thực tế.
 
 ---
 
-### 🗄️ Quy tắc 13: Thay đổi trong Supabase (Walkthrough + SQL Script)
+### 🗄️ Quy tắc 14: Thay đổi trong Supabase (Walkthrough + SQL Script)
 - **Quy định:** Bất cứ khi nào có thay đổi về CSDL Supabase (thêm bảng, sửa cột, tạo Foreign Key, cấu hình RLS Policy, Function, Trigger, v.v.):
   1. **Walkthrough:** Trình bày rõ ràng từng bước thao tác trực tiếp trên giao diện Supabase Dashboard.
   2. **Mã SQL:** Cung cấp câu lệnh SQL hoàn chỉnh, chuẩn xác, sẵn sàng copy & paste vào SQL Editor của Supabase.
@@ -154,6 +158,7 @@ Khi bố trí các nút tương tác (Buttons & Actions), phải tuân thủ ngh
 | Thành phần | Chuẩn áp dụng | Tailwind Class gợi ý |
 | :--- | :--- | :--- |
 | **Card Radius** | Bo góc 5-10% (cứng cáp) | `rounded-lg` (8px) hoặc `rounded-md` (6px) |
+| **Close Button Pop-up** | Khung vuông bo 5-10% ngang Header | `<button className="h-8 w-8 rounded-md border border-border/80 bg-background flex items-center justify-center ..."><X className="w-4 h-4" /></button>` |
 | **Cards Grid** | 5 thẻ mỗi hàng | `grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5` |
 | **Primary Color** | Brand Violet | `bg-[#7D39EB]`, `text-[#7D39EB]`, `bg-primary` |
 | **Accent / Today** | Brand Lime | `bg-[#C6FF33]`, `text-[#C6FF33]`, `bg-secondary` |

@@ -7,7 +7,6 @@ import {
   Clock,
   MoreVertical,
   Calendar,
-  Play,
   Edit,
   Trash2,
   Folder,
@@ -17,7 +16,6 @@ import {
   ChevronDown,
   ArrowRight,
 } from "lucide-react";
-import Link from "next/link";
 import {
   StudyTask,
   Subject,
@@ -308,17 +306,6 @@ export function TaskGrid({
                   {isDone ? "Đã xong" : "Chưa xong"}
                 </span>
               </button>
-
-              <Link href="/sessions" className="shrink-0 ml-auto">
-                <button
-                  type="button"
-                  className="w-[90px] h-7 rounded-md text-[11px] font-bold inline-flex items-center justify-center gap-1 shrink-0 bg-background hover:bg-[#7D39EB]/15 hover:text-[#7D39EB] border border-border/80 text-foreground transition-all shadow-xs active:scale-95 cursor-pointer"
-                  title="Bắt đầu phiên học ngay"
-                >
-                  <Play className="h-3 w-3 fill-current shrink-0" />
-                  <span className="truncate">Học ngay</span>
-                </button>
-              </Link>
             </div>
           </div>
         );
