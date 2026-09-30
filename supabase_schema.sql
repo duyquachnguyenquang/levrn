@@ -41,6 +41,7 @@ ALTER TABLE public.subjects ADD COLUMN IF NOT EXISTS end_time VARCHAR(20);
 ALTER TABLE public.subjects ADD COLUMN IF NOT EXISTS room VARCHAR(50);
 ALTER TABLE public.subjects ADD COLUMN IF NOT EXISTS campus TEXT;
 ALTER TABLE public.subjects ADD COLUMN IF NOT EXISTS map_url TEXT;
+ALTER TABLE public.subjects ADD COLUMN IF NOT EXISTS is_completed BOOLEAN DEFAULT false;
 ALTER TABLE public.subjects ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES auth.users(id) DEFAULT auth.uid();
 
 -- 2. Thiết lập Row Level Security (RLS) để bảo vệ và cấp quyền truy cập cá nhân hóa

@@ -89,6 +89,7 @@ export function mapRowToSubject(row: any): Subject {
     note: cleanNote,
     googleEventId: row.google_event_id || row.googleEventId || undefined,
     syncToGoogle,
+    isCompleted: row.is_completed ?? row.isCompleted ?? false,
     createdAt: row.created_at || row.createdAt || new Date().toISOString(),
   };
 }
@@ -96,7 +97,7 @@ export function mapRowToSubject(row: any): Subject {
 /**
  * Chuyển đổi dữ liệu SubjectFormData sang định dạng lưu trữ cơ sở dữ liệu Supabase
  */
-export function mapSubjectToRow(data: Partial<SubjectFormData & { googleEventId?: string }>) {
+export function mapSubjectToRow(data: Partial<SubjectFormData & { googleEventId?: string; isCompleted?: boolean }>) {
   const row: Record<string, any> = {};
 
   if (data.code !== undefined) row.code = data.code;
@@ -121,6 +122,7 @@ export function mapSubjectToRow(data: Partial<SubjectFormData & { googleEventId?
   if (data.mapUrl !== undefined) row.map_url = data.mapUrl || null;
   if (data.googleEventId !== undefined) row.google_event_id = data.googleEventId || null;
   if (data.syncToGoogle !== undefined) row.sync_to_google = data.syncToGoogle;
+  if (data.isCompleted !== undefined) row.is_completed = data.isCompleted;
   if (data.instructor !== undefined) row.instructor = data.instructor;
   if (data.targetHours !== undefined) row.target_hours = data.targetHours;
   

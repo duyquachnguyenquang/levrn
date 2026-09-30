@@ -133,3 +133,112 @@ export function getSubjectCheckinStatus(
     progressPercent,
   };
 }
+
+/**
+ * Kiểm tra xem một môn học là Môn cũ (đã hoàn thành hoặc đã kết thúc thời gian học)
+ * hay Môn mới (đang trong thời gian học)
+ */
+export function isSubjectEnded(subject: Subject, records: AttendanceRecord[] = []): boolean {
+  // 1. Kiểm tra cờ đánh dấu hoàn thành thủ công
+  if (subject.isCompleted) {
+    return true;
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todayStr = getLocalDateKey(today);
+
+  // 2. Kiểm tra ngày kết thúc endDate
+  if (subject.endDate) {
+    if (subject.endDate < todayStr) {
+      return true;
+    }
+  }
+
+  // 3. Kiểm tra tiến độ theo startDate và totalWeeks
+  const totalWeeks = subject.totalWeeks || 15;
+  if (subject.startDate && totalWeeks > 0) {
+    const start = new Date(subject.startDate);
+    if (!isNaN(start.getTime())) {
+      const diffDays = Math.floor((today.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+      if (diffDays >= totalWeeks * 7) {
+        return true;
+      }
+    }
+  }
+
+  // 4. Kiểm tra số buổi đã điểm danh (nếu đã đủ 100% số buổi)
+  const subjectRecords = records.filter((r) => r.subjectId === subject.id);
+  const attendedCount = subjectRecords.filter(
+    (r) => r.status === "present" || r.status === "late"
+  ).length;
+  if (attendedCount >= totalWeeks && totalWeeks > 0) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Định dạng ngày giờ điểm danh trực quan và thân thiện (VD: "07:45 - 01/10/2026")
+ */
+export function formatCheckinDateTime(checkinTimeStr?: string, fallbackDate?: string): string {
+  if (!checkinTimeStr && !fallbackDate) return "Chưa điểm danh";
+
+  if (checkinTimeStr) {
+    // Nếu là ISO string hoặc date string hợp lệ
+    const d = new Date(checkinTimeStr);
+    if (!isNaN(d.getTime())) {
+      const hours = String(d.getHours()).padStart(2, "0");
+      const minutes = String(d.getMinutes()).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const year = d.getFullYear();
+      return `${hours}:${minutes} - ${day}/${month}/${year}`;
+    }
+
+    // Nếu là định dạng "HH:mm" hoặc "HH:mm:ss"
+    if (/^\d{1,2}:\d{2}/.test(checkinTimeStr) && fallbackDate) {
+      const parts = fallbackDate.split("-");
+      if (parts.length === 3) {
+        return `${checkinTimeStr.slice(0, 5)} - ${parts[2]}/${parts[1]}/${parts[0]}`;
+      }
+      return `${checkinTimeStr.slice(0, 5)} - ${fallbackDate}`;
+    }
+  }
+
+  if (fallbackDate) {
+    const parts = fallbackDate.split("-");
+    if (parts.length === 3) {
+      return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+    return fallbackDate;
+  }
+
+  return "Chưa điểm danh";
+}
+
+/**
+ * Lấy bản ghi điểm danh gần nhất của môn học
+ */
+export function getSubjectLastCheckin(subjectId: string, records: AttendanceRecord[]) {
+  const subjectRecords = records
+    .filter((r) => r.subjectId === subjectId && (r.status === "present" || r.status === "late"))
+    .sort((a, b) => {
+      const timeA = a.checkinTime ? new Date(a.checkinTime).getTime() : new Date(a.date).getTime();
+      const timeB = b.checkinTime ? new Date(b.checkinTime).getTime() : new Date(b.date).getTime();
+      return timeB - timeA;
+    });
+
+  if (subjectRecords.length === 0) return null;
+  const latest = subjectRecords[0];
+  return {
+    record: latest,
+    date: latest.date,
+    checkinTime: latest.checkinTime,
+    formatted: formatCheckinDateTime(latest.checkinTime, latest.date),
+    sessionNumber: latest.sessionNumber,
+    status: latest.status,
+  };
+}
+

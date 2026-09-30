@@ -299,6 +299,100 @@ export function useAttendance(subjects: Subject[] = []) {
     [records, saveRecords]
   );
 
+  // Chỉnh sửa hoặc thêm mới bản ghi điểm danh (hỗ trợ sửa thời gian điểm danh đối với ngày quên điểm danh)
+  const editOrAddAttendanceRecord = useCallback(
+    async (params: {
+      subject: Subject;
+      date: string; // YYYY-MM-DD
+      time?: string; // HH:mm
+      status: AttendanceStatus;
+      notes?: string;
+      recordId?: string;
+    }): Promise<{ success: boolean; message: string; record?: AttendanceRecord }> => {
+      const { subject, date, time, status, notes, recordId } = params;
+
+      let checkinTimeIso: string | undefined = undefined;
+      if (time) {
+        const [h, m] = time.split(":").map(Number);
+        const [year, month, day] = date.split("-").map(Number);
+        const d = new Date(year, month - 1, day, h || 0, m || 0);
+        checkinTimeIso = !isNaN(d.getTime()) ? d.toISOString() : new Date().toISOString();
+      } else {
+        checkinTimeIso = new Date().toISOString();
+      }
+
+      const nowIso = new Date().toISOString();
+      let updatedList = [...records];
+      let targetRecord: AttendanceRecord;
+
+      // Tìm theo recordId hoặc tìm theo subjectId và date
+      const idxById = recordId ? updatedList.findIndex((r) => r.id === recordId) : -1;
+      const idxByDate =
+        idxById >= 0
+          ? idxById
+          : updatedList.findIndex((r) => r.subjectId === subject.id && r.date === date);
+
+      if (idxByDate >= 0) {
+        const existing = updatedList[idxByDate];
+        targetRecord = {
+          ...existing,
+          date,
+          status,
+          checkinTime: checkinTimeIso,
+          notes: notes !== undefined ? notes : existing.notes,
+          updatedAt: nowIso,
+        };
+        updatedList[idxByDate] = targetRecord;
+      } else {
+        const totalWeeks = subject.totalWeeks || 15;
+        const subjectRecords = updatedList.filter((r) => r.subjectId === subject.id);
+        const sessionNumber = Math.min(totalWeeks, subjectRecords.length + 1);
+
+        targetRecord = {
+          id: `att-${subject.id}-${Date.now()}`,
+          subjectId: subject.id,
+          subjectCode: subject.code,
+          subjectName: subject.name,
+          sessionNumber,
+          date,
+          startTime: subject.startTime || "08:00",
+          endTime: subject.endTime || "10:30",
+          room: subject.room || "P.101",
+          status,
+          checkinTime: checkinTimeIso,
+          notes,
+          createdAt: nowIso,
+          updatedAt: nowIso,
+        };
+        updatedList.unshift(targetRecord);
+      }
+
+      await saveRecords(updatedList);
+      return {
+        success: true,
+        message: `Đã cập nhật thời gian điểm danh môn [${subject.code}] ${subject.name}`,
+        record: targetRecord,
+      };
+    },
+    [records, saveRecords]
+  );
+
+  // Xóa một bản ghi điểm danh
+  const deleteAttendanceRecord = useCallback(
+    async (recordId: string) => {
+      const updated = records.filter((r) => r.id !== recordId);
+      await saveRecords(updated);
+      if (supabase && isSupabaseActive) {
+        try {
+          await supabase.from("attendance_records").delete().eq("id", recordId);
+        } catch (err) {
+          console.error("Supabase delete attendance error:", err);
+        }
+      }
+    },
+    [records, saveRecords, isSupabaseActive]
+  );
+
   // Thêm buổi học phát sinh (buổi học bù, phụ đạo)
   const addExtraSession = useCallback(
     async (subjectId: string, sessionData: Partial<AttendanceRecord>) => {
@@ -427,6 +521,8 @@ export function useAttendance(subjects: Subject[] = []) {
     updateSessionStatus,
     quickMarkSession,
     checkinSubjectToday,
+    editOrAddAttendanceRecord,
+    deleteAttendanceRecord,
     markTodayPresent,
     regenerateForSubject,
     addExtraSession,

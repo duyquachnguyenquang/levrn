@@ -71,6 +71,7 @@ export interface Subject {
   note?: string;           // Ghi chú thêm
   googleEventId?: string;  // ID sự kiện đồng bộ trên Google Calendar
   syncToGoogle?: boolean;  // Cho phép đồng bộ môn này lên Google Calendar (mặc định true)
+  isCompleted?: boolean;   // Đã hoàn thành hoặc kết thúc thời gian học (Môn cũ)
 }
 
 export interface GoogleCalendarIntegration {
