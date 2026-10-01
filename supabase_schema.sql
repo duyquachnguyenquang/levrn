@@ -421,3 +421,37 @@ CREATE POLICY "Allow public update google_calendar_integrations" ON public.googl
 
 DROP POLICY IF EXISTS "Allow public delete google_calendar_integrations" ON public.google_calendar_integrations;
 CREATE POLICY "Allow public delete google_calendar_integrations" ON public.google_calendar_integrations FOR DELETE USING (true);
+
+-- ====================================================================
+-- 13. Bảng user_profiles (Thông tin cá nhân & Hồ sơ học tập sinh viên)
+-- ====================================================================
+CREATE TABLE IF NOT EXISTS public.user_profiles (
+    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    full_name TEXT NOT NULL DEFAULT '',
+    student_id TEXT,
+    email TEXT,
+    phone TEXT,
+    university TEXT,
+    major TEXT,
+    academic_year TEXT,
+    bio TEXT,
+    avatar_color VARCHAR(30) DEFAULT '#7D39EB',
+    avatar_url TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+ALTER TABLE public.user_profiles ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow users to read own profile" ON public.user_profiles;
+CREATE POLICY "Allow users to read own profile" ON public.user_profiles 
+    FOR SELECT USING (auth.uid() = id OR id IS NULL);
+
+DROP POLICY IF EXISTS "Allow users to insert own profile" ON public.user_profiles;
+CREATE POLICY "Allow users to insert own profile" ON public.user_profiles 
+    FOR INSERT WITH CHECK (auth.uid() = id OR id IS NULL);
+
+DROP POLICY IF EXISTS "Allow users to update own profile" ON public.user_profiles;
+CREATE POLICY "Allow users to update own profile" ON public.user_profiles 
+    FOR UPDATE USING (auth.uid() = id OR id IS NULL);
+

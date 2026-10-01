@@ -320,6 +320,7 @@ export default function GroupsPage() {
         open={detailOpen}
         onOpenChange={setDetailOpen}
         group={currentDetailGroup}
+        onEdit={handleOpenEdit}
         onAddMember={addMember}
         onRemoveMember={removeMember}
         onAddTask={addTask}

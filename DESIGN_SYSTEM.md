@@ -136,16 +136,27 @@ Khi bố trí các nút tương tác (Buttons & Actions), phải tuân thủ ngh
 
 ---
 
-## 3. Quy Tắc Tác Vụ Dành Cho AI (AI Working & Interaction Rules)
+### 🖐️ Quy tắc 13: Kéo thả thẻ (Drag & Drop) trong bảng Kanban & danh sách phân loại
+- **Quy định:** Đối với tất cả các giao diện bảng Kanban nhiều cột (như Cần làm, Đang làm, Chờ duyệt, Hoàn thành) hoặc danh sách công việc/thẻ có trạng thái:
+  - **Bắt buộc hỗ trợ kéo thả trực tiếp (Drag & Drop):** Cho phép người dùng nắm thẻ di chuyển giữa các cột để thay đổi trạng thái công việc nhanh chóng, tự nhiên.
+  - **Con trỏ cầm nắm (Grip Cursor):** Thẻ có thể kéo phải có trạng thái con trỏ `cursor-grab active:cursor-grabbing`.
+  - **Phản hồi thị giác rõ rệt (Visual Drag Feedback):**
+    - Thẻ đang được nhấc lên kéo: giảm độ mờ (`opacity-40 scale-[0.98] border-dashed border-[#7D39EB]`).
+    - Cột đích khi có thẻ rê vào (`dragOver`): kích hoạt viền sáng thương hiệu và nền highlight nhẹ (`border-[#7D39EB] bg-[#7D39EB]/5 ring-1 ring-[#7D39EB]/30`).
+  - **Dung sai trên thiết bị cảm ứng:** Vẫn duy trì nút/dropdown chuyển trạng thái nhỏ gọn dự phòng bên trong thẻ để người dùng trên thiết bị di động/cảm ứng vẫn thao tác thuận tiện.
 
-### ⚡ Quy tắc 13: Tác phong làm việc của AI (Nhanh, Trúng, Không Screenshot)
+---
+
+## 3. Quy Tắc Tác Vụ Dành Cho AI (AI Working & Interaction Rules)
+ 
+### ⚡ Quy tắc 14: Tác phong làm việc của AI (Nhanh, Trúng, Không Screenshot)
 - **Chỉ đọc đúng file cần làm:** Không quét hay duyệt qua các file không liên quan để tránh lãng phí thời gian và token.
 - **Làm nhanh và báo liền:** Viết code chính xác, dứt khoát, trả lời kết quả ngay lập tức khi hoàn thành.
 - **Người dùng tự test:** AI **không** sử dụng browser agent để test chụp ảnh màn hình (screenshot). Người dùng là người trực tiếp kiểm tra và nghiệm thu giao diện trên môi trường thực tế.
 
 ---
 
-### 🗄️ Quy tắc 14: Thay đổi trong Supabase (Walkthrough + SQL Script)
+### 🗄️ Quy tắc 15: Thay đổi trong Supabase (Walkthrough + SQL Script)
 - **Quy định:** Bất cứ khi nào có thay đổi về CSDL Supabase (thêm bảng, sửa cột, tạo Foreign Key, cấu hình RLS Policy, Function, Trigger, v.v.):
   1. **Walkthrough:** Trình bày rõ ràng từng bước thao tác trực tiếp trên giao diện Supabase Dashboard.
   2. **Mã SQL:** Cung cấp câu lệnh SQL hoàn chỉnh, chuẩn xác, sẵn sàng copy & paste vào SQL Editor của Supabase.

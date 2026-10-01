@@ -37,6 +37,8 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { MobileNav } from "./MobileNav";
 import { BrandLogo } from "@/components/ui/brand-logo";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useUserProfile } from "@/hooks/useUserProfile";
+import { ProfileModal } from "@/components/profile/ProfileModal";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
@@ -57,18 +59,22 @@ export function Topbar() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, signOut } = useAuth();
+  const { profile } = useUserProfile();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const displayName = user?.user_metadata?.full_name || (user?.email ? user.email.split("@")[0] : "Sinh viên");
-  const displayEmail = user?.email || "Chưa đăng nhập";
+  const displayName = profile.fullName || user?.user_metadata?.full_name || (user?.email ? user.email.split("@")[0] : "Sinh viên");
+  const displayEmail = profile.email || user?.email || "Chưa đăng nhập";
+  const avatarColor = profile.avatarColor || "#7D39EB";
   const avatarInitials = displayName
     .split(" ")
+    .filter(Boolean)
     .map((w: string) => w[0])
     .join("")
     .slice(0, 2)
@@ -224,7 +230,13 @@ export function Topbar() {
               aria-label="Menu tài khoản cá nhân"
             >
               <Avatar className="h-9 w-9 rounded-lg">
-                <AvatarFallback className="bg-gradient-to-tr from-[#7D39EB] to-[#9A5CF8] text-white font-bold text-xs rounded-lg shadow-xs">
+                <AvatarFallback
+                  className="font-bold text-xs rounded-lg shadow-xs transition-colors"
+                  style={{
+                    backgroundColor: avatarColor,
+                    color: avatarColor === "#C6FF33" ? "#000000" : "#FFFFFF",
+                  }}
+                >
                   {avatarInitials}
                 </AvatarFallback>
               </Avatar>
@@ -241,6 +253,14 @@ export function Topbar() {
                 </p>
               </div>
             </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => setProfileModalOpen(true)}
+              className="gap-2 cursor-pointer text-xs rounded-md transition-colors hover:bg-muted/80 font-semibold"
+            >
+              <User className="h-4 w-4 text-[#7D39EB]" />
+              <span>Thông tin cá nhân</span>
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             {user ? (
               <DropdownMenuItem
@@ -261,6 +281,12 @@ export function Topbar() {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      {/* Modal điều chỉnh thông tin cá nhân */}
+      <ProfileModal
+        open={profileModalOpen}
+        onOpenChange={setProfileModalOpen}
+      />
     </header>
   );
 }
