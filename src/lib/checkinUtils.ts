@@ -1,4 +1,5 @@
 import { Subject, AttendanceRecord } from "@/lib/types";
+import { isSubjectCompleted } from "./semesterUtils";
 
 export interface SubjectCheckinStatus {
   isTodayClass: boolean;       // Hôm nay có phải là ngày học của môn không?
@@ -63,6 +64,32 @@ export function getSubjectCheckinStatus(
   const attendedCount = subjectRecords.filter(
     (r) => r.status === "present" || r.status === "late"
   ).length;
+
+  // 2.1. Nếu môn học đã hoàn thành / thuộc các học kỳ trước HK1 2026-2027 -> Trả về "Học xong"
+  if (
+    isSubjectCompleted({
+      isCompleted: subject.isCompleted,
+      semester: subject.semester,
+      academicYear: subject.academicYear,
+      endDate: subject.endDate,
+      attendedCount,
+      totalWeeks,
+    })
+  ) {
+    return {
+      isTodayClass: false,
+      isInTimeWindow: false,
+      isCheckedIn: false,
+      checkinTime: undefined,
+      canCheckin: false,
+      statusText: "Học xong",
+      sessionNumber: totalWeeks,
+      totalWeeks,
+      attendedCount,
+      progressPercent: 100,
+    };
+  }
+
   const progressPercent = Math.min(
     100,
     Math.round((attendedCount / totalWeeks) * 100)
@@ -139,8 +166,15 @@ export function getSubjectCheckinStatus(
  * hay Môn mới (đang trong thời gian học)
  */
 export function isSubjectEnded(subject: Subject, records: AttendanceRecord[] = []): boolean {
-  // 1. Kiểm tra cờ đánh dấu hoàn thành thủ công
-  if (subject.isCompleted) {
+  // 1. Kiểm tra môn đã hoàn thành hoặc thuộc các học kỳ trước HK1 2026-2027
+  if (
+    isSubjectCompleted({
+      isCompleted: subject.isCompleted,
+      semester: subject.semester,
+      academicYear: subject.academicYear,
+      endDate: subject.endDate,
+    })
+  ) {
     return true;
   }
 

@@ -10,11 +10,12 @@ import {
   BookOpen,
   MapPin,
   CheckCircle2,
-  Eye,
+  Globe,
 } from "lucide-react";
 import { getSubjectCoverImage } from "@/lib/imagePresets";
 import { MarqueeText } from "@/components/ui/marquee-text";
 import { formatShiftLabel, getCampusByName } from "@/lib/studyShifts";
+import { isSubjectCompleted } from "@/lib/semesterUtils";
 
 // Component biểu đồ tròn tiến độ ngày học (Pie Chart)
 function AttendancePieChart({
@@ -151,15 +152,16 @@ export function SubjectCard({
   const checkinStatus = getSubjectCheckinStatus(subject, attendanceRecords);
   const coverUrl = !imageError ? getSubjectCoverImage(subject) : getSubjectCoverImage();
 
-  // Xác định môn học đã hoàn thành
+  // Xác định môn học đã hoàn thành (Học xong)
   const isCompleted =
-    (checkinStatus.attendedCount >= (checkinStatus.totalWeeks || 15) && (checkinStatus.totalWeeks || 15) > 0) ||
-    weekProgress?.status === "finished" ||
-    Boolean(
-      subject.endDate &&
-      !isNaN(new Date(subject.endDate).getTime()) &&
-      new Date(subject.endDate).getTime() < new Date().setHours(0, 0, 0, 0)
-    );
+    isSubjectCompleted({
+      isCompleted: subject.isCompleted,
+      semester: subject.semester,
+      academicYear: subject.academicYear,
+      endDate: subject.endDate,
+      attendedCount: checkinStatus.attendedCount,
+      totalWeeks: checkinStatus.totalWeeks,
+    }) || weekProgress?.status === "finished";
 
   // Chuỗi lịch học và thời gian
   const scheduleDaysText =
@@ -179,7 +181,10 @@ export function SubjectCard({
       ? `${scheduleDaysText} • ${timeText}`
       : scheduleDaysText || timeText || "Chưa có lịch";
 
-  // Chuỗi địa điểm (Phòng học / Cơ sở)
+  // Chuỗi địa điểm (Phòng học / Cơ sở) và liên kết Google Maps
+  const campusInfo = getCampusByName(subject.campus) || getCampusByName(subject.mapUrl);
+  const targetMapUrl = campusInfo?.mapUrl || subject.mapUrl || (subject.campus ? `https://maps.google.com/?q=${encodeURIComponent(subject.campus)}` : "");
+
   const locationText =
     subject.room && subject.campus
       ? `P.${subject.room} • ${subject.campus}`
@@ -193,8 +198,15 @@ export function SubjectCard({
         onClick={() => onEdit(subject)}
         className="group relative rounded-lg border border-border/75 dark:border-border/60 bg-card overflow-hidden shadow-xs hover:shadow-lg transition-all duration-200 hover:-translate-y-1 flex flex-col justify-between h-full cursor-pointer"
       >
-        {/* 1. Ảnh bìa môn học (Visual Banner) - Chiều cao co giãn h-20 trên mobile, h-28 trên desktop */}
-        <div className="relative h-20 sm:h-28 w-full overflow-hidden bg-muted/40 shrink-0 select-none">
+        {/* 1. Ảnh bìa môn học (Visual Banner) - Bấm vào ảnh bìa mở chi tiết môn học */}
+        <div 
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit(subject);
+          }}
+          className="relative h-20 sm:h-28 w-full overflow-hidden bg-muted/40 shrink-0 select-none cursor-pointer"
+          title={`Xem chi tiết môn học [${subject.code}] ${subject.name}`}
+        >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={coverUrl}
@@ -226,11 +238,15 @@ export function SubjectCard({
         {/* 2. Thân nội dung Card (Body Content) - Tầng 1: Tên, Thời gian, Địa điểm */}
         <div className="p-2.5 sm:p-3 space-y-2 flex-1 flex flex-col justify-between bg-card overflow-hidden">
           <div className="space-y-1.5">
-            {/* Hàng trên: Tiêu đề môn học to nổi bật bên trái, Pie-chart tiến độ bên phải */}
+            {/* Hàng trên: Tiêu đề môn học to nổi bật bên trái (click mở chi tiết), Pie-chart tiến độ bên phải */}
             <div className="flex items-center justify-between gap-2 pt-0.5">
               <div
-                className="min-w-0 flex-1"
-                title={subject.name}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit(subject);
+                }}
+                className="min-w-0 flex-1 cursor-pointer"
+                title={`Xem chi tiết môn học [${subject.code}] ${subject.name}`}
               >
                 <MarqueeText
                   text={subject.name}
@@ -271,8 +287,8 @@ export function SubjectCard({
               <span className="truncate font-medium">{locationText}</span>
             </div>
 
-            {/* Điểm danh hôm nay nếu đúng ca học */}
-            {checkinStatus.canCheckin && (
+            {/* Điểm danh hôm nay nếu đúng ca học và chưa học xong */}
+            {checkinStatus.canCheckin && !isCompleted && (
               <Button
                 type="button"
                 size="sm"
@@ -306,25 +322,94 @@ export function SubjectCard({
             )}
           </div>
 
-          {/* Đường kẻ mờ phân tách */}
-          <div className="border-t border-border/40 my-0.5" />
+          {/* 3. Footer: Nút tính năng điều hướng Course, Google Drive và Maps căn về góc dưới bên phải */}
+          <div className="w-full pt-2 flex items-center justify-between gap-1.5 border-t border-border/40 mt-auto">
+            {/* Góc dưới bên trái: Thông tin tín chỉ hoặc giảng viên */}
+            <div className="flex items-center gap-1 text-[11px] font-semibold text-muted-foreground/80 truncate min-w-0">
+              {subject.credits ? (
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-muted/60 text-[10px] font-bold text-foreground/80 border border-border/40 shrink-0">
+                  {subject.credits} TC
+                </span>
+              ) : subject.instructor ? (
+                <span className="truncate text-[10.5px] font-medium text-muted-foreground" title={`GV: ${subject.instructor}`}>
+                  {subject.instructor}
+                </span>
+              ) : (
+                <span className="text-[10px] text-muted-foreground/40 font-mono">LEVRN</span>
+              )}
+            </div>
 
-          {/* 3. Footer: Nút điều hướng mở Pop-up chi tiết (Tầng 1 -> Tầng 2) */}
-          <div className="w-full pt-0.5">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit(subject);
-              }}
-              className="w-full h-8 px-2 gap-1.5 text-xs font-bold rounded-md border-border/80 hover:bg-[#7D39EB]/10 hover:text-[#7D39EB] hover:border-[#7D39EB]/40 transition-all flex items-center justify-center shadow-2xs"
-              title="Xem thông tin chi tiết môn học"
-              aria-label="Xem thông tin chi tiết môn học"
-            >
-              <Eye className="h-3.5 w-3.5 shrink-0 text-[#7D39EB]" />
-              <span>Chi tiết</span>
-            </Button>
+            {/* Góc dưới bên phải: Cụm 3 nút icon điều hướng Course, Google Drive và Maps */}
+            <div className="flex items-center gap-1 shrink-0 ml-auto">
+              {/* 1. Nút Course / LMS */}
+              {subject.courseUrl ? (
+                <a
+                  href={subject.courseUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="h-7 w-7 sm:h-7.5 sm:w-7.5 rounded-md flex items-center justify-center text-[#7D39EB] bg-[#7D39EB]/10 hover:bg-[#7D39EB]/20 border border-[#7D39EB]/30 transition-all hover:scale-105 active:scale-95 shadow-2xs"
+                  title={`Mở Course / LMS: ${subject.courseUrl}`}
+                  aria-label="Mở Course môn học"
+                >
+                  <Globe className="h-3.5 w-3.5" />
+                </a>
+              ) : (
+                <span
+                  className="h-7 w-7 sm:h-7.5 sm:w-7.5 rounded-md flex items-center justify-center text-muted-foreground/35 bg-muted/20 border border-border/30 cursor-not-allowed select-none"
+                  title="Chưa cập nhật liên kết Course / LMS"
+                  aria-label="Chưa cập nhật Course"
+                >
+                  <Globe className="h-3.5 w-3.5" />
+                </span>
+              )}
+
+              {/* 2. Nút Google Drive */}
+              {subject.driveUrl ? (
+                <a
+                  href={subject.driveUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="h-7 w-7 sm:h-7.5 sm:w-7.5 rounded-md flex items-center justify-center text-amber-600 dark:text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-all hover:scale-105 active:scale-95 shadow-2xs"
+                  title={`Mở Google Drive: ${subject.driveUrl}`}
+                  aria-label="Mở Google Drive môn học"
+                >
+                  <Folder className="h-3.5 w-3.5" />
+                </a>
+              ) : (
+                <span
+                  className="h-7 w-7 sm:h-7.5 sm:w-7.5 rounded-md flex items-center justify-center text-muted-foreground/35 bg-muted/20 border border-border/30 cursor-not-allowed select-none"
+                  title="Chưa cập nhật liên kết Google Drive"
+                  aria-label="Chưa cập nhật Google Drive"
+                >
+                  <Folder className="h-3.5 w-3.5" />
+                </span>
+              )}
+
+              {/* 3. Nút Google Maps */}
+              {targetMapUrl ? (
+                <a
+                  href={targetMapUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="h-7 w-7 sm:h-7.5 sm:w-7.5 rounded-md flex items-center justify-center text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 transition-all hover:scale-105 active:scale-95 shadow-2xs"
+                  title={`Mở Google Maps: ${campusInfo?.name || subject.campus || "Cơ sở học"}`}
+                  aria-label="Mở Google Maps cơ sở học"
+                >
+                  <MapPin className="h-3.5 w-3.5" />
+                </a>
+              ) : (
+                <span
+                  className="h-7 w-7 sm:h-7.5 sm:w-7.5 rounded-md flex items-center justify-center text-muted-foreground/35 bg-muted/20 border border-border/30 cursor-not-allowed select-none"
+                  title="Chưa cập nhật địa điểm / cơ sở học"
+                  aria-label="Chưa cập nhật Google Maps"
+                >
+                  <MapPin className="h-3.5 w-3.5" />
+                </span>
+              )}
+            </div>
           </div>
         </div>
       </div>

@@ -21,7 +21,7 @@ const INITIAL_DEMO_GROUPS: GroupProject[] = [
     subjectName: "Quản trị chuỗi cung ứng",
     topic: "Tối ưu hoá mạng lưới kho bãi và trung tâm phân phối miền Nam",
     description: "Đồ án kết thúc học phần phân tích chuỗi cung ứng thực tế tại Shopee Xpress.",
-    semester: "HK1 2024-2025",
+    semester: "HK1 2026-2027",
     status: "in_progress",
     deadline: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toISOString(), // 6 ngày nữa
     driveUrl: "https://drive.google.com/drive/folders/demo-scm-project",
@@ -122,7 +122,7 @@ const INITIAL_DEMO_GROUPS: GroupProject[] = [
     subjectName: "Ứng dụng trí tuệ nhân tạo",
     topic: "Nhận diện bệnh cây trồng qua ảnh lá với Convolutional Neural Network (CNN)",
     description: "Huấn luyện mô hình ResNet-50 trên tập dữ liệu PlantVillage đạt độ chính xác > 92%.",
-    semester: "HK1 2024-2025",
+    semester: "HK1 2026-2027",
     status: "in_progress",
     deadline: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
     driveUrl: "https://drive.google.com/drive/folders/demo-ai-dataset",

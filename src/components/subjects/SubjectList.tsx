@@ -48,6 +48,7 @@ import { useNotifications } from "@/hooks/useNotifications";
 import { useCourseGrades } from "@/hooks/useCourseGrades";
 import { calculateComponentsScore } from "@/lib/gradeUtils";
 import { getSubjectCheckinStatus } from "@/lib/checkinUtils";
+import { isSubjectCompleted, isPastSemester, CURRENT_SEMESTER } from "@/lib/semesterUtils";
 import { MarqueeText } from "@/components/ui/marquee-text";
 
 interface SubjectListProps {
@@ -166,24 +167,22 @@ export function SubjectList({
   const [sortOpen, setSortOpen] = useState(false);
   const { grades } = useCourseGrades();
 
-  // Xác định phân loại tiến độ môn học: 1: Đã xong, 2: Đang học, 3: Chưa học
+  // Xác định phân loại tiến độ môn học: 1: Học xong, 2: Đang học, 3: Chưa học
   const getSubjectProgressCategory = (subject: Subject): number => {
     const checkinStatus = getSubjectCheckinStatus(subject, attendanceRecords);
-    const totalWeeks = checkinStatus.totalWeeks || 15;
-    const attended = checkinStatus.attendedCount;
+    const isCompleted = isSubjectCompleted({
+      isCompleted: subject.isCompleted,
+      semester: subject.semester,
+      academicYear: subject.academicYear,
+      endDate: subject.endDate,
+      attendedCount: checkinStatus.attendedCount,
+      totalWeeks: checkinStatus.totalWeeks,
+    });
 
-    const isCompleted =
-      (attended >= totalWeeks && totalWeeks > 0) ||
-      Boolean(
-        subject.endDate &&
-        !isNaN(new Date(subject.endDate).getTime()) &&
-        new Date(subject.endDate).getTime() < new Date().setHours(0, 0, 0, 0)
-      );
-
-    if (isCompleted) return 1; // Đã xong
+    if (isCompleted) return 1; // Học xong
 
     const isStarted =
-      attended > 0 ||
+      checkinStatus.attendedCount > 0 ||
       Boolean(
         subject.startDate &&
         !isNaN(new Date(subject.startDate).getTime()) &&
@@ -437,7 +436,7 @@ export function SubjectList({
               >
                 <span className="flex items-center gap-2">
                   <CheckCircle2 className="h-3.5 w-3.5 text-[#7D39EB]" />
-                  <span>Tiến độ (Đã xong → Đang học → Chưa học)</span>
+                  <span>Tiến độ (Học xong → Đang học → Chưa học)</span>
                 </span>
                 {sortBy === "progress" && <Check className="h-3.5 w-3.5 text-[#7D39EB]" />}
               </button>
@@ -541,11 +540,16 @@ export function SubjectList({
                   className="w-full h-9 text-xs font-semibold rounded-md border border-border/80 bg-background px-2.5 py-1 text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7D39EB] transition-all"
                 >
                   <option value="ALL">Tất cả học kỳ</option>
-                  {semesterOptions.map((sem) => (
-                    <option key={sem} value={sem}>
-                      {sem}
-                    </option>
-                  ))}
+                  {semesterOptions.map((sem) => {
+                    const isCurrent = sem === CURRENT_SEMESTER || sem.includes("2026-2027");
+                    const isPast = isPastSemester(sem);
+                    const labelSuffix = isCurrent ? " (Hiện tại)" : isPast ? " (Học xong)" : "";
+                    return (
+                      <option key={sem} value={sem}>
+                        {sem}{labelSuffix}
+                      </option>
+                    );
+                  })}
                 </select>
               </div>
 
@@ -724,20 +728,33 @@ export function SubjectList({
                       </div>
                     </div>
 
-                    {/* Nút điều hướng mở Pop-up chi tiết (Tầng 1 -> Tầng 2) */}
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onEdit(subject);
-                      }}
-                      className="min-h-[40px] min-w-[40px] h-10 w-10 rounded-md border-border/80 text-muted-foreground hover:text-foreground hover:bg-[#7D39EB]/10 hover:border-[#7D39EB]/40 shrink-0"
-                      title="Xem chi tiết môn học"
-                      aria-label="Xem chi tiết môn học"
-                    >
-                      <Eye className="h-4 w-4 text-[#7D39EB]" />
-                    </Button>
+                    {/* Cụm nút liên kết nhanh (nếu có) trên mobile list view */}
+                    <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                      {subject.courseUrl && (
+                        <a
+                          href={subject.courseUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="min-h-[36px] min-w-[36px] h-9 w-9 rounded-md flex items-center justify-center text-[#7D39EB] bg-[#7D39EB]/10 hover:bg-[#7D39EB]/20 border border-[#7D39EB]/30 transition-all shadow-2xs"
+                          title="Mở Course môn học"
+                          aria-label="Mở Course môn học"
+                        >
+                          <Globe className="h-4 w-4" />
+                        </a>
+                      )}
+                      {subject.driveUrl && (
+                        <a
+                          href={subject.driveUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="min-h-[36px] min-w-[36px] h-9 w-9 rounded-md flex items-center justify-center text-amber-600 dark:text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-all shadow-2xs"
+                          title="Mở Google Drive môn học"
+                          aria-label="Mở Google Drive môn học"
+                        >
+                          <Folder className="h-4 w-4" />
+                        </a>
+                      )}
+                    </div>
                   </div>
                 );
               })}
@@ -771,16 +788,19 @@ export function SubjectList({
                     >
                       {/* Mã môn */}
                       <td className="py-3 px-3.5 whitespace-nowrap">
-                        <span
-                          className="font-mono font-black text-xs px-2 py-0.5 rounded-md inline-block shadow-2xs"
+                        <button
+                          type="button"
+                          onClick={() => onEdit(subject)}
+                          className="font-mono font-black text-xs px-2 py-0.5 rounded-md inline-block shadow-2xs hover:scale-105 active:scale-95 transition-all cursor-pointer text-left"
                           style={{
                             backgroundColor: `${cardColor}20`,
                             color: cardColor,
                             border: `1px solid ${cardColor}40`,
                           }}
+                          title={`Xem chi tiết môn học [${subject.code}] ${subject.name}`}
                         >
                           {subject.code}
-                        </span>
+                        </button>
                       </td>
 
                       {/* Tên môn */}
@@ -911,28 +931,18 @@ export function SubjectList({
                         })()}
                       </td>
 
-                      {/* Thao tác: 2 nút Xem chi tiết & Xoá */}
+                      {/* Thao tác: Nút Xoá môn học (Chuẩn Icon-only theo Design System) */}
                       <td className="py-3 px-3.5 whitespace-nowrap text-right">
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-end">
                           <Button
                             variant="outline"
-                            size="sm"
-                            onClick={() => onEdit(subject)}
-                            className="h-8 px-2.5 rounded-md text-xs font-bold gap-1.5 border-border/80 text-foreground hover:border-[#7D39EB]/50 hover:bg-[#7D39EB]/10 hover:text-[#7D39EB] transition-all active:scale-95"
-                            title="Chi tiết môn học"
-                          >
-                            <Eye className="h-3.5 w-3.5 text-[#7D39EB]" />
-                            <span>Chi tiết</span>
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
+                            size="icon"
                             onClick={() => setSubjectToDelete(subject)}
-                            className="h-8 px-2.5 rounded-md text-xs font-bold gap-1.5 border-border/80 text-destructive hover:border-destructive/40 hover:bg-destructive/10 transition-all active:scale-95"
-                            title="Xoá môn học"
+                            className="h-8 w-8 rounded-md border-border/80 text-muted-foreground hover:text-destructive hover:border-destructive/40 hover:bg-destructive/10 transition-all active:scale-95"
+                            title={`Xoá môn học [${subject.code}] ${subject.name}`}
+                            aria-label={`Xoá môn học [${subject.code}] ${subject.name}`}
                           >
                             <Trash2 className="h-3.5 w-3.5" />
-                            <span>Xoá</span>
                           </Button>
                         </div>
                       </td>

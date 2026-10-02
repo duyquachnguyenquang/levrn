@@ -21,6 +21,7 @@ import {
   STUDY_CLASSIFICATIONS,
 } from "@/lib/types";
 import { DateTimePicker } from "./DateTimePicker";
+import { CURRENT_SEMESTER } from "@/lib/semesterUtils";
 import {
   FileText,
   Layers,
@@ -83,7 +84,7 @@ export function TaskFormDialog({
   // Danh sách các học kỳ duy nhất lấy từ danh sách Môn học của tôi
   const availableSemesters = useMemo(() => {
     const list = Array.from(new Set(subjects.map((s) => s.semester))).filter(Boolean);
-    return list.length > 0 ? list : ["HK1 2024-2025"];
+    return list.length > 0 ? list : [CURRENT_SEMESTER];
   }, [subjects]);
 
   // Khởi tạo form khi mở dialog

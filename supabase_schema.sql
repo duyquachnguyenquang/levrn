@@ -455,3 +455,20 @@ DROP POLICY IF EXISTS "Allow users to update own profile" ON public.user_profile
 CREATE POLICY "Allow users to update own profile" ON public.user_profiles 
     FOR UPDATE USING (auth.uid() = id OR id IS NULL);
 
+-- ====================================================================
+-- 14. CẬP NHẬT MỐC HỌC KỲ: HK1 NĂM HỌC 2026-2027
+-- Tự động đánh dấu is_completed = true ("Học xong") cho toàn bộ môn học
+-- thuộc các học kỳ hoặc năm học trước đó (trước năm 2026)
+-- ====================================================================
+UPDATE public.subjects
+SET is_completed = true
+WHERE
+    (academic_year IS NOT NULL AND substring(academic_year from '\d{4}')::integer < 2026)
+    OR (
+        semester IS NOT NULL 
+        AND semester <> 'Chưa xếp kỳ' 
+        AND substring(semester from '20\d{2}') IS NOT NULL
+        AND substring(semester from '20\d{2}')::integer < 2026
+    );
+
+

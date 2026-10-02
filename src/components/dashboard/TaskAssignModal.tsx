@@ -53,6 +53,7 @@ import {
   STUDY_PRIORITIES,
 } from "@/lib/types";
 import { DateTimePicker } from "@/components/plans/DateTimePicker";
+import { CURRENT_SEMESTER } from "@/lib/semesterUtils";
 import { cn } from "@/lib/utils";
 
 interface TaskAssignModalProps {
@@ -333,7 +334,7 @@ export function TaskAssignModal({
   // --- FORM TẠO NHIỆM VỤ MỚI (CHUẨN FORM NHIỆM VỤ CỦA KẾ HOẠCH HỌC TẬP) ---
   const availableSemesters = useMemo(() => {
     const list = Array.from(new Set(subjects.map((s) => s.semester))).filter(Boolean);
-    return list.length > 0 ? list : ["HK1 2024-2025"];
+    return list.length > 0 ? list : [CURRENT_SEMESTER];
   }, [subjects]);
 
   const [createTitle, setCreateTitle] = useState("");

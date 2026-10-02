@@ -18,6 +18,7 @@ import {
   GroupTask,
   Subject,
 } from "@/lib/types";
+import { CURRENT_SEMESTER } from "@/lib/semesterUtils";
 import {
   Users,
   Calendar,
@@ -71,7 +72,7 @@ export function GroupProjectModal({
     const list = Array.from(
       new Set(subjects.map((s) => s.semester).filter(Boolean))
     ) as string[];
-    if (list.length === 0) return ["HK1 2024-2025", "HK2 2024-2025", "HK3 2024-2025"];
+    if (list.length === 0) return [CURRENT_SEMESTER, "HK2 2026-2027", "HK hè 2026-2027"];
     return list;
   }, [subjects]);
 
@@ -182,7 +183,7 @@ export function GroupProjectModal({
     } else {
       setName("");
 
-      const initialSem = subjects[0]?.semester || semesters[0] || "HK1 2024-2025";
+      const initialSem = subjects[0]?.semester || semesters[0] || CURRENT_SEMESTER;
       setSelectedSemester(initialSem);
 
       const initialSubs = subjects.filter((s) => s.semester === initialSem);

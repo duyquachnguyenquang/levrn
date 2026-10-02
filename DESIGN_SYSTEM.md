@@ -98,11 +98,13 @@ Khi bố trí các nút tương tác (Buttons & Actions), phải tuân thủ ngh
 
 ---
 
-### 📐 Quy tắc 8: Thẻ (Cards) phải cân đối, bảo toàn hiển thị và bố cục ảnh tinh gọn
+### 📐 Quy tắc 8: Thẻ (Cards) phải cân đối, bảo toàn hiển thị, bố cục ảnh tinh gọn & Bỏ nút Chi tiết
 - **Quy định:** Trong các danh sách dạng lưới (Grid), tất cả các thẻ đặt cạnh nhau **phải đồng bộ tuyệt đối về chiều cao và tỷ lệ bố cục**:
   - **Khung ảnh bìa (Image Banner):** Bắt buộc phải khóa chiều cao cố định nhỏ gọn, tinh tế (chuẩn `h-28` ~112px, thay vì chiếm quá nửa thẻ), đi kèm `object-cover w-full h-full`.
   - **Bảo toàn hiển thị thẻ (Zero Clipping & Card Containment):** Tuyệt đối **KHÔNG** để bất kỳ icon, chữ, nút bấm hay thông tin nào bị cắt xén (clipped), lọt ra ngoài mép khung viền thẻ hay tràn khung.
   - **Tiêu đề môn học/thực thể nổi bật:** Phần chữ Header của thẻ phải được thiết kế cỡ chữ to hơn hẳn (`text-lg font-black tracking-tight`), nổi bật vượt bậc so với các thông số phụ xung quanh.
+  - **Bỏ hoàn toàn nút 'Chi tiết' (cả Mobile & PC):** Tuyệt đối **KHÔNG** đặt nút bấm riêng tên là "Chi tiết" hay icon "Chi tiết" ở mặt ngoài thẻ/dòng danh sách. Chuyển thành thao tác **bấm trực tiếp vào hình minh hoạ (banner ảnh bìa) hoặc tên môn học** để mở Pop-up Chi tiết (Tầng 2).
+  - **Nút điều hướng Course, Google Drive, Maps căn góc dưới bên phải:** Các nút icon điều hướng nhanh (Course/LMS, Google Drive, Google Maps) bắt buộc căn về **góc dưới bên phải của thẻ** (`ml-auto flex items-center gap-1`), sắc nét, cân đối.
   - **Mặt ngoài thẻ tối giản:** Không đặt nút 3 chấm dọc hay nút đổi ảnh rườm rà ở ngoài mặt thẻ. Tất cả các tính năng quản lý (đổi ảnh bìa, xoá, tuỳ chọn) được đẩy vào bên trong pop-up chi tiết.
   - **Cân đối tổng thể:** Mọi thẻ trên cùng một hàng luôn cao bằng nhau tăm tắp (`h-full flex flex-col justify-between`), tạo cảm giác ngăn nắp, cứng cáp và chuẩn mực.
 
@@ -172,8 +174,8 @@ Khi bố trí các nút tương tác (Buttons & Actions), phải tuân thủ ngh
 
 ### 🪜 Quy tắc 16: Mô hình phân cấp thông tin 3 tầng (3-Tier Progressive Disclosure - Cả Mobile & PC)
 - **Quy định:** Mức độ hiển thị thông tin trên toàn hệ thống LEVRN tuân thủ nghiêm ngặt 3 tầng:
-  1. **Tầng 1 - Mặt ngoài thẻ / Dòng danh sách:** Chỉ hiển thị nội dung cơ bản, bao gồm: **Tên**, **Thời gian**, **Địa điểm** và các nút điều hướng (hoặc click trực tiếp vào thẻ/hàng để mở chi tiết). Không hiển thị tràn lan các nút chức năng quản trị hay mô tả phụ.
-  2. **Tầng 2 - Pop-up Thông tin chi tiết (Detail / View Mode):** Khi người dùng click vào thẻ/dòng, hệ thống mở Pop-up chi tiết hiển thị toàn diện các trường dữ liệu dưới dạng cố định (Read-only). Header pop-up gồm: **Tiêu đề**, **Nút Chỉnh sửa (`<Pencil />`)**, và **Nút Thoát (`<X />`)** cùng hàng, đồng kích thước (`h-8 w-8`).
+  1. **Tầng 1 - Mặt ngoài thẻ / Dòng danh sách:** Chỉ hiển thị nội dung cơ bản: **Tên**, **Thời gian**, **Địa điểm** và các nút điều hướng (Course/LMS, Google Drive, Google Maps) căn về góc dưới bên phải thẻ. **BỎ HOÀN TOÀN CƠ CHẾ NÚT 'CHI TIẾT'** (cả Mobile & PC), chuyển thành thao tác bấm trực tiếp vào hình minh hoạ (banner ảnh bìa) hoặc tên môn học để mở Pop-up Chi tiết (Tầng 2). Không hiển thị tràn lan các nút chức năng quản trị hay mô tả phụ ở mặt ngoài.
+  2. **Tầng 2 - Pop-up Thông tin chi tiết (Detail / View Mode):** Khi người dùng click vào ảnh bìa hoặc tên thẻ/dòng, hệ thống mở Pop-up chi tiết hiển thị toàn diện các trường dữ liệu dưới dạng cố định (Read-only). Header pop-up gồm: **Tiêu đề**, **Nút Chỉnh sửa (`<Pencil />`)**, và **Nút Thoát (`<X />`)** cùng hàng, đồng kích thước (`h-8 w-8`).
   3. **Tầng 3 - Pop-up Chỉnh sửa (Edit Mode):** Chỉ khi người dùng bấm vào nút Cây bút (`<Pencil />`) trong Pop-up chi tiết thì mới chuyển sang chế độ biểu mẫu cho phép chỉnh sửa dữ liệu.
 
 ---

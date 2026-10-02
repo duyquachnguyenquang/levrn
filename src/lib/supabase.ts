@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { Subject, SubjectFormData, CourseGrade, CourseGradeFormData } from "./types";
+import { isPastSemester } from "./semesterUtils";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
@@ -62,12 +63,17 @@ export function mapRowToSubject(row: any): Subject {
     ? row.note.replace(/\s*levrn_meta:(\{.*?\})/g, "").replace(/\s*levrn_schedule:(\[[0-9,]*\])/g, "").trim() || undefined
     : (row.note ?? undefined);
 
+  const academicYear = row.academic_year || row.academicYear || undefined;
+  const semester = row.semester;
+  const isPast = isPastSemester(semester, academicYear);
+  const isCompleted = isPast ? true : Boolean(row.is_completed ?? row.isCompleted ?? false);
+
   return {
     id: row.id,
     code: row.code,
     name: row.name,
     semester: row.semester,
-    academicYear: row.academic_year || row.academicYear || undefined,
+    academicYear,
     term: row.term || undefined,
     credits: row.credits ?? undefined,
     category: row.category || undefined,
@@ -89,7 +95,7 @@ export function mapRowToSubject(row: any): Subject {
     note: cleanNote,
     googleEventId: row.google_event_id || row.googleEventId || undefined,
     syncToGoogle,
-    isCompleted: row.is_completed ?? row.isCompleted ?? false,
+    isCompleted,
     createdAt: row.created_at || row.createdAt || new Date().toISOString(),
   };
 }
@@ -122,7 +128,11 @@ export function mapSubjectToRow(data: Partial<SubjectFormData & { googleEventId?
   if (data.mapUrl !== undefined) row.map_url = data.mapUrl || null;
   if (data.googleEventId !== undefined) row.google_event_id = data.googleEventId || null;
   if (data.syncToGoogle !== undefined) row.sync_to_google = data.syncToGoogle;
-  if (data.isCompleted !== undefined) row.is_completed = data.isCompleted;
+  if (data.isCompleted !== undefined) {
+    row.is_completed = data.isCompleted;
+  } else if (isPastSemester(data.semester, data.academicYear)) {
+    row.is_completed = true;
+  }
   if (data.instructor !== undefined) row.instructor = data.instructor;
   if (data.targetHours !== undefined) row.target_hours = data.targetHours;
   

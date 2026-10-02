@@ -63,10 +63,12 @@ Khi tạo hoặc chỉnh sửa các nút thao tác:
 - Tất cả các dòng chữ đơn dòng (tên môn, tên giảng viên, địa điểm, tiêu đề nhiệm vụ...) khi bị tràn chiều ngang: **TUYỆT ĐỐI KHÔNG** dùng `truncate` hay `line-clamp-1` với dấu `...` làm cụt chữ.
 - Bắt buộc dùng Marquee (`<MarqueeText />`): chữ tự động chạy vòng lặp tuần hoàn mượt mà, pause khi hover.
 
-### 1.8. Thẻ (Cards): Bảo toàn hiển thị (Zero-Clipping), Bố cục ảnh nhỏ gọn, Header to nổi bật
+### 1.8. Thẻ (Cards): Bảo toàn hiển thị (Zero-Clipping), Bố cục ảnh nhỏ gọn, Header to nổi bật, Bỏ nút Chi tiết
 - **Bảo toàn hiển thị (Card Containment):** Tuyệt đối **KHÔNG** để bất kỳ icon, thông tin, chữ hay nút bấm nào lọt ra ngoài hoặc bị cắt (clipped) khỏi khung viền thẻ.
 - **Tiêu đề nổi bật:** Phần chữ Header của thẻ phải to hơn hẳn (`text-lg font-black tracking-tight`), nổi bật vượt bậc so với các thông số khác.
 - **Bố cục ảnh bìa nhỏ gọn:** Chiều cao ảnh bìa chuẩn cố định gọn gàng (`h-28` ~112px, `object-cover`), chiếm tỷ lệ vừa phải để dành không gian cho phần thông tin.
+- **Bỏ hoàn toàn cơ chế nút 'Chi tiết' (cả Mobile & PC):** Tuyệt đối **KHÔNG** đặt nút bấm riêng tên là "Chi tiết" hay icon "Chi tiết" ở mặt ngoài thẻ/dòng danh sách. Chuyển thành thao tác **bấm trực tiếp vào hình minh hoạ (banner ảnh bìa) hoặc tên môn học** để mở Pop-up Chi tiết.
+- **Nút điều hướng Course, Google Drive, Maps căn về góc dưới bên phải:** Các nút icon điều hướng nhanh (Course/LMS, Google Drive, Google Maps) bắt buộc căn về **góc dưới bên phải của thẻ** (`ml-auto flex items-center gap-1`), gọn gàng, sắc nét.
 - **Mặt ngoài thẻ tinh giản:** Bỏ nút 3 chấm dọc và nút đổi ảnh ở ngoài thẻ, tất cả tính năng quản lý (đổi ảnh bìa, xoá, tuỳ chọn) được đẩy vào bên trong pop-up thông tin.
 - **Đồng bộ hàng ngang:** Mọi thẻ trên cùng hàng luôn cao bằng nhau tăm tắp (`h-full flex flex-col justify-between`).
 
@@ -109,8 +111,8 @@ Khi tạo hoặc chỉnh sửa các nút thao tác:
   - Tự động co giãn hoặc ẩn các trường phụ không cần thiết trên mobile, giữ trọn vẹn thông tin cốt lõi trong một màn hình hiển thị.
 
 ### 1.15. Mô hình phân cấp thông tin 3 tầng (3-Tier Progressive Disclosure - Cả Mobile & PC)
-- **Tầng 1 (Mặt ngoài thẻ / dòng danh sách):** Chỉ hiển thị nội dung cơ bản: **Tên**, **Thời gian**, **Địa điểm** và các nút điều hướng (hoặc click vào thẻ để điều hướng). Không để các nút quản trị rườm rà ở mặt ngoài.
-- **Tầng 2 (Pop-up Thông tin chi tiết - View mode):** Khi click vào, mở Pop-up chi tiết hiển thị đầy đủ thông tin dạng cố định (Read-only). Header có Tiêu đề + Nút Chỉnh sửa (`<Pencil />`) + Nút Thoát (`<X />`) cùng hàng đồng kích thước.
+- **Tầng 1 (Mặt ngoài thẻ / dòng danh sách):** Chỉ hiển thị nội dung cơ bản: **Tên**, **Thời gian**, **Địa điểm** và các nút điều hướng (Course, Google Drive, Maps) căn về góc dưới bên phải. **Bỏ hoàn toàn cơ chế nút 'Chi tiết'**, người dùng bấm trực tiếp vào hình minh hoạ hoặc tên môn học để mở Pop-up Chi tiết (Tầng 2). Không để các nút quản trị rườm rà ở mặt ngoài.
+- **Tầng 2 (Pop-up Thông tin chi tiết - View mode):** Khi click vào ảnh hoặc tên thẻ, mở Pop-up chi tiết hiển thị đầy đủ thông tin dạng cố định (Read-only). Header có Tiêu đề + Nút Chỉnh sửa (`<Pencil />`) + Nút Thoát (`<X />`) cùng hàng đồng kích thước.
 - **Tầng 3 (Pop-up Chỉnh sửa - Edit mode):** Chỉ khi người dùng bấm nút Cây bút (`<Pencil />`) trong Pop-up chi tiết mới chuyển sang biểu mẫu chỉnh sửa thông tin.
 
 ### 1.16. Pop-up & Drop-down: Bảo toàn không gian, không lấn sang, không tràn mép ngoài ô

@@ -4,9 +4,10 @@ import React, { useState } from "react";
 import { useSubjects } from "@/hooks/useSubjects";
 import { SubjectList } from "@/components/subjects/SubjectList";
 import { SubjectForm } from "@/components/subjects/SubjectForm";
+import { SubjectBatchEditDialog } from "@/components/subjects/SubjectBatchEditDialog";
 import { Button } from "@/components/ui/button";
 import { Subject, SubjectFormData } from "@/lib/types";
-import { Plus, BookOpen, Database, RefreshCw, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Plus, BookOpen, Database, RefreshCw, AlertCircle, CheckCircle2, Layers } from "lucide-react";
 
 /**
  * Trang Quản lý Môn học (/subjects) kết nối trực tiếp với Supabase Database
@@ -19,13 +20,16 @@ export default function SubjectsPage() {
     errorMessage,
     addSubject,
     updateSubject,
+    batchUpdateSubjects,
     deleteSubject,
+    availableSemesters,
     refreshSubjects,
   } = useSubjects();
 
   const [formOpen, setFormOpen] = useState(false);
   const [formMode, setFormMode] = useState<"create" | "edit">("create");
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
+  const [batchDialogOpen, setBatchDialogOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const handleAddNew = () => {
@@ -68,8 +72,19 @@ export default function SubjectsPage() {
           </h2>
         </div>
 
-        {/* Nút thao tác: Làm mới + Thêm môn học (+) */}
-        <div className="flex items-center gap-2 shrink-0">
+        {/* Nút thao tác: Chỉnh sửa hàng loạt (icon) + Làm mới (icon) + Thêm môn học (+) */}
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setBatchDialogOpen(true)}
+            className="rounded-md min-h-[40px] min-w-[40px] h-10 w-10 sm:h-9 sm:w-9 border-border/70 text-muted-foreground hover:text-[#7D39EB] hover:border-[#7D39EB]/50 hover:bg-[#7D39EB]/10 transition-all active:scale-95 shrink-0"
+            title="Chỉnh sửa hàng loạt môn học"
+            aria-label="Chỉnh sửa hàng loạt môn học"
+          >
+            <Layers className="h-4 w-4" />
+          </Button>
+
           <Button
             variant="outline"
             size="icon"
@@ -135,6 +150,15 @@ export default function SubjectsPage() {
         mode={formMode}
         onDelete={deleteSubject}
         onUpdateSubject={updateSubject}
+      />
+
+      {/* 4. Dialog Chỉnh sửa hàng loạt môn học */}
+      <SubjectBatchEditDialog
+        open={batchDialogOpen}
+        onOpenChange={setBatchDialogOpen}
+        subjects={subjects}
+        availableSemesters={availableSemesters}
+        onBatchUpdate={batchUpdateSubjects}
       />
     </div>
   );

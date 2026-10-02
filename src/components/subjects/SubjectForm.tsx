@@ -34,6 +34,7 @@ import {
   formatShiftLabel,
   getCampusByName,
 } from "@/lib/studyShifts";
+import { CURRENT_ACADEMIC_YEAR, CURRENT_TERM } from "@/lib/semesterUtils";
 import {
   Sparkles,
   ExternalLink,
@@ -332,8 +333,8 @@ export function SubjectForm({
   const [showCoverDialog, setShowCoverDialog] = useState(false);
   const [code, setCode] = useState("");
   const [name, setName] = useState("");
-  const [academicYear, setAcademicYear] = useState("2024-2025");
-  const [term, setTerm] = useState<AcademicTerm>("HK1");
+  const [academicYear, setAcademicYear] = useState(CURRENT_ACADEMIC_YEAR);
+  const [term, setTerm] = useState<AcademicTerm>(CURRENT_TERM);
   const [credits, setCredits] = useState<string>("");
   
   // Phân loại và màu theo phân loại
@@ -413,8 +414,8 @@ export function SubjectForm({
           setAcademicYear(initialData.semester);
         }
       } else {
-        setAcademicYear("2024-2025");
-        setTerm("HK1");
+        setAcademicYear(CURRENT_ACADEMIC_YEAR);
+        setTerm(CURRENT_TERM);
       }
 
       setCredits(initialData.credits ? String(initialData.credits) : "");
@@ -450,8 +451,8 @@ export function SubjectForm({
     } else {
       setCode("");
       setName("");
-      setAcademicYear("2024-2025");
-      setTerm("HK1");
+      setAcademicYear(CURRENT_ACADEMIC_YEAR);
+      setTerm(CURRENT_TERM);
       setCredits("");
       setCategory("Môn chuyên ngành");
       setCourseUrl("");

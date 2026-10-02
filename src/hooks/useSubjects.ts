@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Subject, SubjectFormData } from "@/lib/types";
 import { supabase, mapRowToSubject, mapSubjectToRow } from "@/lib/supabase";
+import { isPastSemester } from "@/lib/semesterUtils";
 
 const LOCAL_STORAGE_KEY = "levrn_subjects_data";
 
@@ -301,7 +302,14 @@ export function useSubjects() {
     try {
       const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (stored) {
-        setSubjects(JSON.parse(stored));
+        const parsed = JSON.parse(stored);
+        const mapped = Array.isArray(parsed)
+          ? parsed.map((item: any) => ({
+              ...item,
+              isCompleted: isPastSemester(item.semester, item.academicYear) ? true : Boolean(item.isCompleted),
+            }))
+          : INITIAL_DEMO_SUBJECTS;
+        setSubjects(mapped);
       } else {
         setSubjects(INITIAL_DEMO_SUBJECTS);
         backupToLocalStorage(INITIAL_DEMO_SUBJECTS);
@@ -492,6 +500,67 @@ export function useSubjects() {
   };
 
   /**
+   * Cập nhật hàng loạt nhiều môn học theo bộ thông tin đã nạp
+   */
+  const batchUpdateSubjects = async (
+    ids: string[],
+    formData: Partial<SubjectFormData>
+  ): Promise<{ success: boolean; count: number; error?: string }> => {
+    if (!ids || ids.length === 0) {
+      return { success: false, count: 0, error: "Chưa chọn môn học nào để cập nhật." };
+    }
+
+    let successCount = 0;
+    const updatedMap = new Map<string, Subject>();
+
+    if (supabase && isSupabaseActive) {
+      try {
+        const row = mapSubjectToRow(formData);
+        const { data, error } = await supabase
+          .from("subjects")
+          .update(row)
+          .in("id", ids)
+          .select();
+
+        if (error) {
+          console.error("Lỗi khi batch update trên Supabase:", error);
+        } else if (data && data.length > 0) {
+          data.forEach((r) => {
+            const sub = mapRowToSubject(r);
+            updatedMap.set(sub.id, sub);
+            successCount++;
+            // Đồng bộ sang bảng điểm
+            syncUpdateGrade(sub.id, formData, true);
+            // Đồng bộ sang Google Calendar
+            triggerGoogleCalendarSync("sync-subject", { subject: sub });
+          });
+        }
+      } catch (err: any) {
+        console.error("Lỗi mạng Supabase khi batch update:", err);
+      }
+    }
+
+    // Cập nhật State và Fallback local storage
+    const updatedList = subjects.map((sub) => {
+      if (ids.includes(sub.id)) {
+        if (updatedMap.has(sub.id)) {
+          return updatedMap.get(sub.id)!;
+        }
+        successCount++;
+        // Fallback sync local grade
+        syncUpdateGrade(sub.id, formData, false);
+        return { ...sub, ...formData };
+      }
+      return sub;
+    });
+
+    setSubjects(updatedList);
+    backupToLocalStorage(updatedList);
+
+    return { success: true, count: successCount || ids.length };
+  };
+
+  /**
    * Xoá môn học khỏi Supabase và cập nhật danh sách, đồng thời xoá khỏi Bảng điểm (course_grades)
    */
   const deleteSubject = async (id: string) => {
@@ -531,6 +600,7 @@ export function useSubjects() {
     errorMessage,
     addSubject,
     updateSubject,
+    batchUpdateSubjects,
     deleteSubject,
     checkCodeExists,
     availableSemesters,
