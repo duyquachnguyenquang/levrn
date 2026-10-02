@@ -25,7 +25,7 @@ import {
   StudyShift,
   getCampusByName,
 } from "@/lib/studyShifts";
-import { CURRENT_SEMESTER } from "@/lib/semesterUtils";
+import { CURRENT_SEMESTER, DEFAULT_SEMESTER_OPTIONS } from "@/lib/semesterUtils";
 import {
   Layers,
   X,
@@ -113,16 +113,7 @@ export function SubjectBatchEditDialog({
 
   // Danh sách học kỳ gợi ý
   const allSemesterOptions = useMemo(() => {
-    const defaultList = [
-      "HK1 2026-2027",
-      "HK2 2026-2027",
-      "HK hè 2026-2027",
-      "HK1 2025-2026",
-      "HK2 2025-2026",
-      "HK1 2024-2025",
-      "HK2 2024-2025",
-    ];
-    return Array.from(new Set([...defaultList, ...availableSemesters])).filter(Boolean);
+    return Array.from(new Set([...DEFAULT_SEMESTER_OPTIONS, ...availableSemesters])).filter(Boolean);
   }, [availableSemesters]);
 
   // Lọc môn học theo tìm kiếm và học kỳ
@@ -599,28 +590,18 @@ export function SubjectBatchEditDialog({
 
           {/* PHẦN 2: CHỌN MÔN HỌC */}
           <div className="space-y-2 pt-1">
-            <Label className="text-xs font-bold text-foreground flex items-center gap-1.5">
-              <CheckSquare className="w-3.5 h-3.5 text-[#7D39EB]" />
-              <span>
-                Chọn môn học (
-                <strong className="text-[#7D39EB] font-black">
-                  {selectedSubjectIds.length}
-                </strong>
-                /{filteredSubjects.length})
-              </span>
-            </Label>
-
-            {/* Thanh tìm kiếm môn học + 2 nút 'Tất cả' và 'Chưa có' ngang hàng bên phải */}
-            <div className="flex items-center gap-2 w-full">
-              <div className="relative flex-1 min-w-0">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                <Input
-                  placeholder="Tìm môn theo tên hoặc mã môn..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="h-8.5 pl-8 text-xs rounded-md w-full"
-                />
-              </div>
+            {/* Header: Tiêu đề + 2 nút thao tác 'Tất cả' & 'Chưa có' ngang hàng căn phải chuẩn Rule 1.13 */}
+            <div className="flex items-center justify-between gap-2">
+              <Label className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                <CheckSquare className="w-3.5 h-3.5 text-[#7D39EB]" />
+                <span>
+                  Chọn môn học (
+                  <strong className="text-[#7D39EB] font-black">
+                    {selectedSubjectIds.length}
+                  </strong>
+                  /{filteredSubjects.length})
+                </span>
+              </Label>
 
               <div className="flex items-center gap-1.5 shrink-0">
                 <Button
@@ -628,7 +609,7 @@ export function SubjectBatchEditDialog({
                   variant="outline"
                   size="sm"
                   onClick={handleSelectAll}
-                  className="h-8.5 px-3 text-xs font-bold rounded-md border-border/80 hover:bg-muted"
+                  className="h-7 px-2.5 text-xs font-bold rounded-md border-border/80 hover:bg-muted transition-all active:scale-95"
                   title="Chọn hoặc bỏ chọn tất cả các môn đang hiển thị"
                 >
                   Tất cả
@@ -639,12 +620,34 @@ export function SubjectBatchEditDialog({
                   variant="outline"
                   size="sm"
                   onClick={handleSelectMissing}
-                  className="h-8.5 px-3 text-xs font-bold rounded-md border-border/80 hover:border-[#7D39EB]/50 hover:bg-[#7D39EB]/10 hover:text-[#7D39EB]"
+                  className="h-7 px-2.5 text-xs font-bold rounded-md border-border/80 hover:border-[#7D39EB]/50 hover:bg-[#7D39EB]/10 hover:text-[#7D39EB] transition-all active:scale-95"
                   title="Tự động chọn những môn chưa có thông tin ở hạng mục này"
                 >
                   Chưa có
                 </Button>
               </div>
+            </div>
+
+            {/* Thanh tìm kiếm môn học độc lập: Trải đều 100% chiều ngang, không bị lấn chiếm khung */}
+            <div className="relative w-full">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+              <Input
+                placeholder="Tìm môn theo tên hoặc mã môn..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="h-9 pl-8 pr-8 text-xs rounded-md w-full border-border/80 bg-background focus-visible:ring-1 focus-visible:ring-[#7D39EB]"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground cursor-pointer h-5 w-5 flex items-center justify-center rounded-sm hover:bg-muted"
+                  title="Xóa tìm kiếm"
+                  aria-label="Xóa tìm kiếm"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
             </div>
 
             {/* DANH SÁCH MÔN HỌC (Click chọn trực tiếp) */}

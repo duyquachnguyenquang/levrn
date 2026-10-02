@@ -7,6 +7,18 @@ export const CURRENT_ACADEMIC_YEAR = "2026-2027";
 export const CURRENT_TERM = "HK1";
 export const CURRENT_SEMESTER = "HK1 2026-2027";
 
+export const DEFAULT_SEMESTER_OPTIONS = [
+  "HK1 2026-2027",
+  "HK2 2026-2027",
+  "HK hè 2026-2027",
+  "HK1 2025-2026",
+  "HK2 2025-2026",
+  "HK hè 2025-2026",
+  "HK1 2024-2025",
+  "HK2 2024-2025",
+  "HK hè 2024-2025",
+];
+
 /**
  * Kiểm tra xem một môn học có thuộc học kỳ/năm học trước HK1 2026-2027 hay không.
  * Các môn học thuộc các năm học trước (2024-2025, 2025-2026...) sẽ được xếp thành "Học xong".
