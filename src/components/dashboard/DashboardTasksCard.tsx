@@ -262,132 +262,90 @@ export function DashboardTasksCard({
 
   return (
     <Card className="rounded-lg border border-border/80 bg-card p-5 shadow-xs flex flex-col justify-between transition-all duration-300 hover:border-border/90 hover:shadow-md h-full min-h-[380px]">
-      {/* 1. Header Tinh gọn - Tiêu đề 'Nhiệm vụ', công cụ Tìm kiếm, Bộ lọc và Sắp xếp (Rule 1.1) */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-3 border-b border-border/60">
+      {/* 1. Header Tinh gọn - Ngang hàng trên cả PC & Mobile, căn phải cụm nút: 1. Bộ lọc (icon Đầu lọc), 2. Sắp xếp, 3. Tìm kiếm (Rule 1.1, Rule 1.13) */}
+      <div className="flex flex-row items-center justify-between gap-3 pb-3 border-b border-border/60">
         {/* Tiêu đề card */}
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2.5 min-w-0">
           <div className="h-8 w-8 rounded-md bg-[#7D39EB]/15 text-[#7D39EB] flex items-center justify-center shrink-0">
             <CheckSquare className="h-4 w-4" />
           </div>
-          <h3 className="font-extrabold text-base text-foreground leading-tight">
+          <h3 className="font-extrabold text-base text-foreground leading-tight truncate">
             Nhiệm vụ
           </h3>
-          <span className="text-[11px] font-mono font-bold text-muted-foreground">
-            trong tuần ({counts.all})
+          <span className="text-[11px] font-mono font-bold text-muted-foreground shrink-0">
+            ({counts.all})
           </span>
         </div>
 
-        {/* Cụm công cụ bên phải: Tabs Lọc nhanh + Kính lúp (Tìm kiếm) + Sắp xếp (cùng một hàng, không rớt dòng, căn trái) */}
-        <div className="flex flex-row items-center justify-start gap-1.5 overflow-x-auto no-scrollbar flex-nowrap w-full sm:w-auto shrink-0">
-          {/* Tabs nhanh: Tất cả / Lịch học / Cá nhân / Nhóm */}
-          <div className="flex items-center p-0.5 rounded-md bg-muted/60 border border-border/70 min-h-[40px] h-10 sm:min-h-0 sm:h-8 shrink-0">
-            <button
-              type="button"
-              onClick={() => setFilterType("all")}
-              className={cn(
-                "px-2.5 py-1.5 sm:py-1 text-[11px] font-bold rounded-md transition-all cursor-pointer shrink-0",
-                filterType === "all"
-                  ? "bg-[#7D39EB] text-white shadow-xs"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              Tất cả
-            </button>
-            <button
-              type="button"
-              onClick={() => setFilterType("schedule")}
-              className={cn(
-                "px-2.5 py-1.5 sm:py-1 text-[11px] font-bold rounded-md transition-all cursor-pointer flex items-center gap-1 shrink-0",
-                filterType === "schedule"
-                  ? "bg-[#7D39EB] text-white shadow-xs"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-              title="Lịch học trong tuần"
-              aria-label="Lịch học trong tuần"
-            >
-              <Calendar className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Lịch học</span>
-              <span className="text-[9.5px] font-mono opacity-80">({counts.schedule})</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setFilterType("personal")}
-              className={cn(
-                "px-2.5 py-1.5 sm:py-1 text-[11px] font-bold rounded-md transition-all cursor-pointer flex items-center gap-1 shrink-0",
-                filterType === "personal"
-                  ? "bg-[#7D39EB] text-white shadow-xs"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-              title="Nhiệm vụ cá nhân"
-              aria-label="Nhiệm vụ cá nhân"
-            >
-              <User className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Cá nhân</span>
-              <span className="text-[9.5px] font-mono opacity-80">({counts.personal})</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setFilterType("group")}
-              className={cn(
-                "px-2.5 py-1.5 sm:py-1 text-[11px] font-bold rounded-md transition-all cursor-pointer flex items-center gap-1 shrink-0",
-                filterType === "group"
-                  ? "bg-[#7D39EB] text-white shadow-xs"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-              title="Nhiệm vụ nhóm"
-              aria-label="Nhiệm vụ nhóm"
-            >
-              <Users className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Nhóm</span>
-              <span className="text-[9.5px] font-mono opacity-80">({counts.group})</span>
-            </button>
-          </div>
-
-          {/* Nút Tìm kiếm (Icon Kính lúp) */}
-          <Popover open={isSearchOpen} onOpenChange={setIsSearchOpen}>
+        {/* Cụm công cụ bên phải: 1. Bộ lọc (icon Đầu lọc), 2. Sắp xếp, 3. Tìm kiếm */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          {/* 1. Nút Bộ lọc (Icon Đầu lọc) */}
+          <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
                 size="icon"
                 className={cn(
                   "min-h-[40px] min-w-[40px] h-10 w-10 sm:h-8 sm:w-8 rounded-md border border-border/80 transition-all active:scale-95 shrink-0",
-                  searchQuery
+                  filterType !== "all"
                     ? "border-[#7D39EB] text-[#7D39EB] bg-[#7D39EB]/10"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted"
                 )}
-                title="Tìm kiếm nhiệm vụ"
-                aria-label="Tìm kiếm nhiệm vụ"
+                title="Bộ lọc nhiệm vụ"
+                aria-label="Bộ lọc nhiệm vụ"
               >
-                <Search className="h-4 w-4" />
+                <Filter className="h-4 w-4" />
               </Button>
             </PopoverTrigger>
             <PopoverContent
               align="end"
-              className="w-64 p-2 rounded-md border border-border/80 bg-card shadow-lg"
+              className="w-56 p-2 rounded-md border border-border/80 bg-card shadow-lg space-y-1"
             >
-              <div className="relative">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                <Input
-                  placeholder="Tìm nhiệm vụ, môn học, nhóm..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-8 h-8 text-xs rounded-md border-border/70 focus-visible:ring-[#7D39EB]"
-                  autoFocus
-                />
-                {searchQuery && (
-                  <button
-                    type="button"
-                    onClick={() => setSearchQuery("")}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                )}
+              <div className="px-2 py-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                Phân loại nhiệm vụ
               </div>
+              {[
+                { key: "all", label: "Tất cả", count: counts.all, icon: CheckSquare },
+                { key: "schedule", label: "Lịch học", count: counts.schedule, icon: Calendar },
+                { key: "personal", label: "Cá nhân", count: counts.personal, icon: User },
+                { key: "group", label: "Nhóm", count: counts.group, icon: Users },
+              ].map((item) => {
+                const IconComponent = item.icon;
+                const isSelected = filterType === item.key;
+                return (
+                  <button
+                    key={item.key}
+                    type="button"
+                    onClick={() => {
+                      setFilterType(item.key as TaskFilterType);
+                      setIsFilterOpen(false);
+                    }}
+                    className={cn(
+                      "w-full px-2.5 py-2 rounded-md text-xs font-semibold flex items-center justify-between cursor-pointer transition-all",
+                      isSelected
+                        ? "bg-[#7D39EB]/15 text-[#7D39EB] font-bold"
+                        : "hover:bg-muted text-foreground/80"
+                    )}
+                  >
+                    <div className="flex items-center gap-2">
+                      <IconComponent className="h-3.5 w-3.5" />
+                      <span>{item.label}</span>
+                    </div>
+                    <span
+                      className={cn(
+                        "px-1.5 py-0.2 rounded text-[10px] font-mono",
+                        isSelected ? "bg-[#7D39EB] text-white" : "bg-muted text-muted-foreground"
+                      )}
+                    >
+                      {item.count}
+                    </span>
+                  </button>
+                );
+              })}
             </PopoverContent>
           </Popover>
 
-          {/* Nút Sắp xếp (Icon Sắp xếp) */}
+          {/* 2. Nút Sắp xếp (Icon Sắp xếp) */}
           <Popover open={isSortOpen} onOpenChange={setIsSortOpen}>
             <PopoverTrigger asChild>
               <Button
@@ -448,6 +406,50 @@ export function DashboardTasksCard({
                   <option value="asc">Tăng dần (Gần nhất / A-Z)</option>
                   <option value="desc">Giảm dần (Xa nhất / Z-A)</option>
                 </select>
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          {/* 3. Nút Tìm kiếm (Icon Kính lúp) */}
+          <Popover open={isSearchOpen} onOpenChange={setIsSearchOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                className={cn(
+                  "min-h-[40px] min-w-[40px] h-10 w-10 sm:h-8 sm:w-8 rounded-md border border-border/80 transition-all active:scale-95 shrink-0",
+                  searchQuery
+                    ? "border-[#7D39EB] text-[#7D39EB] bg-[#7D39EB]/10"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                )}
+                title="Tìm kiếm nhiệm vụ"
+                aria-label="Tìm kiếm nhiệm vụ"
+              >
+                <Search className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent
+              align="end"
+              className="w-64 p-2 rounded-md border border-border/80 bg-card shadow-lg"
+            >
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                <Input
+                  placeholder="Tìm nhiệm vụ, môn học, nhóm..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-8 h-8 text-xs rounded-md border-border/70 focus-visible:ring-[#7D39EB]"
+                  autoFocus
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                )}
               </div>
             </PopoverContent>
           </Popover>

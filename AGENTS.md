@@ -91,14 +91,17 @@ Khi tạo hoặc chỉnh sửa các nút thao tác:
 - **Tránh lỗi đè dấu X kép (Double X):** Khi tùy biến nút đóng trong `DialogHeader`, luôn thêm `[&>button.absolute]:hidden` vào `DialogContent` để ẩn nút đóng mặc định của thư viện, tránh lỗi 2 dấu X đè lệch lên nhau.
 
 ### 1.13. Chuẩn hóa Giao diện Mobile (Mobile UX/UI Standards)
+- **Nút tính năng ngang hàng và căn phải với Header trên cả Mobile & PC:**
+  - Mọi nút tính năng/công cụ nằm ngang hàng với Header ở chế độ PC (như Chọn tháng, Đồng bộ, Thêm nhiệm vụ, Bộ lọc, Sắp xếp, Tìm kiếm) thì trên Mobile **BẮT BUỘC cũng phải nằm trên cùng một hàng và căn phải với Header** (`flex flex-row items-center justify-between`).
+  - **Chuyển đổi tất cả thành nút bấm dạng icon (Icon-only), tuyệt đối không dùng chữ**, đi kèm `title` và `aria-label`. Tuyệt đối không để rớt xuống dòng thứ hai làm tốn diện tích cuộn dọc màn hình mobile.
 - **Hạn chế tối đa kênh chữ, ưu tiên chuyển đổi sang icon:** Trên mobile, triệt để tối giản hóa chữ trên nút tương tác và thanh công cụ. Chuyển thành Icon-only (kèm `title` & `aria-label`) hoặc dùng kỹ thuật ẩn nhãn chữ trên mobile (`<span className="hidden sm:inline">...</span>`), chỉ giữ icon trực quan, giải phóng diện tích hiển thị.
 - **Các nút bấm giao diện phải thân thiện với người dùng có ngón tay to:**
   - Vùng cảm ứng (Touch Target): Kích thước mọi nút bấm trên Mobile bắt buộc đạt tối thiểu **`min-h-[40px] min-w-[40px]`** (chuẩn `h-10 w-10` hoặc `h-10 px-3.5`).
   - **Tuyệt đối KHÔNG** dùng nút bé (`h-7`, `h-8` tức 28px - 32px) trên mobile gây bấm trượt, bấm hụt. Khoảng cách an toàn giữa các nút bấm tối thiểu từ `gap-1.5` đến `gap-2.5`.
-- **Duy trì hàng ngang, không xuống dòng, căn hết về bên trái:**
+- **Duy trì hàng ngang, không xuống dòng, căn đều ra toàn trang (No-Wrap & Full-Width Distribution):**
   - Các nút bấm nằm cùng hàng ở chế độ PC thì trên Mobile **BẮT BUỘC vẫn nằm trên cùng một hàng** (`flex-nowrap`, `shrink-0`), **tuyệt đối KHÔNG xuống dòng hay nhảy cột** (không dùng `flex-col` hay `flex-wrap` cho các cụm nút bấm).
-  - Tất cả các nút bấm được **căn hết về bên trái (`justify-start`)**.
-  - Nếu số lượng nút vượt quá chiều rộng màn hình mobile: Áp dụng cuộn ngang mượt mà (`overflow-x-auto no-scrollbar justify-start`), người dùng lướt nhẹ tay để chọn mà giao diện không bao giờ bị vỡ hàng.
+  - **Căn đều ra toàn trang:** Bắt buộc áp dụng `w-full flex-row justify-between sm:justify-start gap-1.5 sm:gap-2`. Các nút hoặc cụm nút phân bố đều đặn trải dài toàn bộ chiều rộng của thẻ/trang, **tuyệt đối KHÔNG dồn cục về bên trái** rồi để trống khoảng trắng lớn bên phải gây mất cân đối giao diện.
+  - Nếu số lượng nút vượt quá chiều rộng màn hình mobile: Áp dụng cuộn ngang mượt mà (`overflow-x-auto no-scrollbar`), các cụm điều khiển chính vẫn căn đều 2 biên.
 
 ### 1.14. Giao diện List trên Mobile: Vừa vặn chiều ngang, Tuyệt đối không kéo ngang
 - Đối với tất cả giao diện danh sách (List view, bảng nhiệm vụ, môn học...):
@@ -109,6 +112,11 @@ Khi tạo hoặc chỉnh sửa các nút thao tác:
 - **Tầng 1 (Mặt ngoài thẻ / dòng danh sách):** Chỉ hiển thị nội dung cơ bản: **Tên**, **Thời gian**, **Địa điểm** và các nút điều hướng (hoặc click vào thẻ để điều hướng). Không để các nút quản trị rườm rà ở mặt ngoài.
 - **Tầng 2 (Pop-up Thông tin chi tiết - View mode):** Khi click vào, mở Pop-up chi tiết hiển thị đầy đủ thông tin dạng cố định (Read-only). Header có Tiêu đề + Nút Chỉnh sửa (`<Pencil />`) + Nút Thoát (`<X />`) cùng hàng đồng kích thước.
 - **Tầng 3 (Pop-up Chỉnh sửa - Edit mode):** Chỉ khi người dùng bấm nút Cây bút (`<Pencil />`) trong Pop-up chi tiết mới chuyển sang biểu mẫu chỉnh sửa thông tin.
+
+### 1.16. Pop-up & Drop-down: Bảo toàn không gian, không lấn sang, không tràn mép ngoài ô
+- Trong tất cả pop-up box, drop-down menu, popover, modal, dialog, sheet:
+  - **TUYỆT ĐỐI KHÔNG** để bất kỳ tính năng, nút bấm, biểu tượng, nhãn hay danh sách lựa chọn bên trong bị lấn sang, tràn mép (overflow), đè lên nhau, hay vượt ra ngoài khung viền bao quanh của ô gây lỗi hiển thị.
+  - Phải bố trí khoảng đệm an toàn (`p-2.5` đến `p-3.5`), độ rộng ô tương thích và tỷ lệ cân xứng, đảm bảo trải nghiệm nhìn và bấm chính xác, sạch sẽ.
 
 ---
 

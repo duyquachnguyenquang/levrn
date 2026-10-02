@@ -205,26 +205,12 @@ export function ScheduleCalendar({
   const viewMonth = viewDate.getMonth();
 
   // Điều hướng
-  const handlePrev = () => {
-    if (viewMode === "month") {
-      setViewDate((prev) => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
-    } else {
-      setViewDate((prev) => new Date(prev.getFullYear(), prev.getMonth(), prev.getDate() - 7));
-    }
-  };
-
-  const handleNext = () => {
-    if (viewMode === "month") {
-      setViewDate((prev) => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
-    } else {
-      setViewDate((prev) => new Date(prev.getFullYear(), prev.getMonth(), prev.getDate() + 7));
-    }
-  };
-
   const handleGoToday = () => {
     const now = new Date();
     setViewDate(now);
+    setPickerYear(now.getFullYear());
     onSelectDate(toDateKey(now));
+    setMonthPickerOpen(false);
   };
 
   const handleSelectMonth = (mIndex: number) => {
@@ -371,90 +357,112 @@ export function ScheduleCalendar({
     <>
       <Card className="rounded-xl border border-border/80 bg-card shadow-xs overflow-hidden transition-all duration-300 hover:shadow-md">
         <CardContent className="p-4 sm:p-6 space-y-5">
-          {/* Header Widget Lịch học: Bên trái CHỈ CÓ Header, Bên phải gồm Toàn bộ các công cụ điều khiển */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border/60">
-            {/* Bên trái: CHỈ THỂ HIỆN HEADER */}
-            <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-lg bg-[#7D39EB]/15 flex items-center justify-center text-[#7D39EB] shrink-0">
-                <CalendarIcon className="h-4.5 w-4.5" />
+          {/* Header Widget Lịch học: Ngang hàng trên cả PC & Mobile, căn phải cụm nút tính năng */}
+          <div className="flex flex-row items-center justify-between gap-3 pb-3 border-b border-border/60">
+            {/* Bên trái: Header */}
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="h-8 w-8 rounded-md bg-[#7D39EB]/15 flex items-center justify-center text-[#7D39EB] shrink-0">
+                <CalendarIcon className="h-4 w-4" />
               </div>
-              <h3 className="font-extrabold text-lg sm:text-xl text-foreground tracking-tight">
+              <h3 className="font-extrabold text-base sm:text-lg text-foreground tracking-tight truncate">
                 Lịch học
               </h3>
             </div>
 
-            {/* Bên phải: Nút chuyển Tháng/Tuần (M/W) + Bộ chọn Tháng, Năm + Hôm nay + Phím điều hướng (< >) + Nút thêm nhiệm vụ (+) */}
-            <div className="flex flex-row items-center justify-start gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar flex-nowrap w-full sm:w-auto shrink-0">
-              {/* 1. Nút chuyển đổi xem Tháng (M) / Tuần (W) */}
-              <div className="flex items-center rounded-lg bg-muted/60 p-0.5 border border-border/60 min-h-[40px] h-10 sm:min-h-0 sm:h-8 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setViewMode("month")}
-                  className={cn(
-                    "flex items-center gap-1.5 min-h-[34px] px-2.5 sm:min-h-0 sm:py-1 rounded-md text-xs font-bold transition-all cursor-pointer",
-                    viewMode === "month"
-                      ? "bg-[#7D39EB] text-white shadow-xs"
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                  title="Chế độ xem Tháng (Month)"
-                  aria-label="Chế độ xem Tháng (Month)"
-                >
-                  <CalendarDays className="h-4 w-4" />
-                  <span>M</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setViewMode("week")}
-                  className={cn(
-                    "flex items-center gap-1.5 min-h-[34px] px-2.5 sm:min-h-0 sm:py-1 rounded-md text-xs font-bold transition-all cursor-pointer",
-                    viewMode === "week"
-                      ? "bg-[#7D39EB] text-white shadow-xs"
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                  title="Chế độ xem Tuần (Week)"
-                  aria-label="Chế độ xem Tuần (Week)"
-                >
-                  <CalendarRange className="h-4 w-4" />
-                  <span>W</span>
-                </button>
-              </div>
-
-              {/* 2. Tính năng Chọn tháng, năm (Month & Year Picker Popover chuẩn Eduplex) */}
-              <Popover open={monthPickerOpen} onOpenChange={setMonthPickerOpen}>
+            {/* Bên phải: 1. Chọn tháng (icon Lịch), 2. Đồng bộ GCal, 3. Thêm nhiệm vụ (+) */}
+            <div className="flex items-center gap-1.5 shrink-0">
+              {/* 1. Chọn tháng & Chế độ xem (Nút dạng icon Lịch) */}
+              <Popover
+                open={monthPickerOpen}
+                onOpenChange={(open) => {
+                  setMonthPickerOpen(open);
+                  if (open) {
+                    setPickerYear(viewDate.getFullYear());
+                  }
+                }}
+              >
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
-                    size="sm"
-                    className="min-h-[40px] h-10 sm:min-h-0 sm:h-8 gap-1.5 px-3 text-xs font-bold rounded-lg border-border/80 hover:border-[#7D39EB] hover:text-[#7D39EB] transition-all bg-background shrink-0"
+                    size="icon"
+                    className="min-h-[40px] min-w-[40px] h-10 w-10 sm:h-8 sm:w-8 rounded-lg border-border/80 hover:border-[#7D39EB] hover:text-[#7D39EB] transition-all bg-background shrink-0 flex items-center justify-center cursor-pointer active:scale-95"
+                    title={`Chọn tháng & Chế độ xem (${monthNames[viewMonth]} ${viewYear})`}
+                    aria-label="Chọn tháng và chế độ xem"
                   >
-                    <span>{monthNames[viewMonth]} {viewYear}</span>
-                    <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+                    <CalendarIcon className="h-4 w-4" />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent
                   align="end"
-                  className="w-64 p-3 rounded-xl border-border/80 shadow-2xl bg-card text-foreground z-50 animate-in fade-in-50 zoom-in-95 duration-150"
+                  className="w-72 p-3 rounded-lg border-border/80 shadow-2xl bg-card text-foreground z-50 animate-in fade-in-50 zoom-in-95 duration-150"
                 >
-                  {/* Điều hướng Năm */}
-                  <div className="flex items-center justify-between pb-2 border-b border-border/60 mb-2">
+                  {/* Tính năng Xem lịch theo tháng / Xem lịch theo tuần */}
+                  <div className="flex items-center rounded-md bg-muted/60 p-0.5 border border-border/70 mb-2.5">
                     <button
                       type="button"
-                      onClick={() => setPickerYear((y) => y - 1)}
-                      className="p-1 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                      aria-label="Năm trước"
+                      onClick={() => setViewMode("month")}
+                      className={cn(
+                        "flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer",
+                        viewMode === "month"
+                          ? "bg-[#7D39EB] text-white shadow-xs"
+                          : "text-muted-foreground hover:text-foreground"
+                      )}
+                      title="Xem lịch theo tháng"
                     >
-                      <ChevronLeft className="h-4 w-4" />
+                      <CalendarDays className="h-3.5 w-3.5" />
+                      <span>Xem theo tháng</span>
                     </button>
-                    <span className="font-extrabold text-xs text-foreground tracking-wide font-mono">
-                      Năm {pickerYear}
-                    </span>
                     <button
                       type="button"
-                      onClick={() => setPickerYear((y) => y + 1)}
-                      className="p-1 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                      aria-label="Năm sau"
+                      onClick={() => setViewMode("week")}
+                      className={cn(
+                        "flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer",
+                        viewMode === "week"
+                          ? "bg-[#7D39EB] text-white shadow-xs"
+                          : "text-muted-foreground hover:text-foreground"
+                      )}
+                      title="Xem lịch theo tuần"
                     >
-                      <ChevronRight className="h-4 w-4" />
+                      <CalendarRange className="h-3.5 w-3.5" />
+                      <span>Xem theo tuần</span>
+                    </button>
+                  </div>
+
+                  {/* Header: Điều hướng Năm & Nút Hôm nay ngang hàng */}
+                  <div className="flex items-center justify-between pb-2 border-b border-border/60 mb-2">
+                    <div className="flex items-center gap-0.5">
+                      <button
+                        type="button"
+                        onClick={() => setPickerYear((y) => y - 1)}
+                        className="h-7 w-7 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer flex items-center justify-center shrink-0"
+                        title="Năm trước"
+                        aria-label="Năm trước"
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </button>
+                      <span className="font-extrabold text-xs text-foreground tracking-wide font-mono px-1 select-none">
+                        Năm {pickerYear}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setPickerYear((y) => y + 1)}
+                        className="h-7 w-7 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer flex items-center justify-center shrink-0"
+                        title="Năm sau"
+                        aria-label="Năm sau"
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </button>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleGoToday}
+                      className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#7D39EB]/15 text-[#7D39EB] hover:bg-[#7D39EB]/25 text-xs font-bold transition-all cursor-pointer border border-[#7D39EB]/30 active:scale-95 shrink-0"
+                      title="Về ngày hôm nay"
+                      aria-label="Hôm nay"
+                    >
+                      <CalendarIcon className="h-3.5 w-3.5 shrink-0 text-[#7D39EB]" />
+                      <span>Hôm nay</span>
                     </button>
                   </div>
 
@@ -478,7 +486,7 @@ export function ScheduleCalendar({
                               : "hover:bg-muted text-foreground/90"
                           )}
                         >
-                          {mName.replace("Tháng ", "T")}
+                          {mName}
                         </button>
                       );
                     })}
@@ -486,60 +494,29 @@ export function ScheduleCalendar({
                 </PopoverContent>
               </Popover>
 
-              {/* 3. Nút nhảy nhanh về Hôm nay (Ưu tiên icon trên mobile) */}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleGoToday}
-                className="min-h-[40px] h-10 sm:min-h-0 sm:h-8 px-2.5 sm:px-3 text-xs font-bold rounded-lg border-border/80 hover:border-[#7D39EB] hover:text-[#7D39EB] active:scale-95 transition-all bg-background shrink-0 flex items-center gap-1.5"
-                title="Về ngày hôm nay"
-                aria-label="Về ngày hôm nay"
-              >
-                <CalendarIcon className="h-4 w-4 text-[#7D39EB]" />
-                <span className="hidden sm:inline">Hôm nay</span>
-              </Button>
-
-              {/* 4. Cụm mũi tên Trước / Sau (< >) */}
-              <div className="flex items-center gap-0.5 border border-border/80 rounded-lg p-0.5 bg-background min-h-[40px] h-10 sm:min-h-0 sm:h-8 shrink-0">
-                <button
-                  onClick={handlePrev}
-                  aria-label="Trước"
-                  className="min-h-[34px] min-w-[34px] sm:min-h-0 sm:min-w-0 sm:h-7 sm:w-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors active:scale-90 cursor-pointer"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={handleNext}
-                  aria-label="Sau"
-                  className="min-h-[34px] min-w-[34px] sm:min-h-0 sm:min-w-0 sm:h-7 sm:w-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors active:scale-90 cursor-pointer"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </button>
-              </div>
-
-              {/* 5. Nút Thêm nhiệm vụ (+) */}
-              <Button
-                type="button"
-                size="sm"
-                onClick={() => setIsTaskAssignOpen(true)}
-                className="min-h-[40px] min-w-[40px] h-10 w-10 sm:h-8 sm:w-8 p-0 rounded-lg bg-[#7D39EB] hover:bg-[#6826d4] text-white shadow-xs hover:shadow transition-all active:scale-95 cursor-pointer flex items-center justify-center shrink-0"
-                title="Thêm nhiệm vụ &amp; Gán hạn chót từ Kế hoạch"
-                aria-label="Thêm nhiệm vụ"
-              >
-                <Plus className="h-4.5 w-4.5" />
-              </Button>
-
-              {/* 6. Nút Đồng bộ Google Calendar */}
+              {/* 2. Đồng bộ Google Calendar */}
               <Button
                 type="button"
                 variant="outline"
-                size="sm"
+                size="icon"
                 onClick={() => setIsGCalModalOpen(true)}
-                className="min-h-[40px] min-w-[40px] h-10 w-10 sm:h-8 sm:w-8 p-0 rounded-lg border-border/80 hover:border-[#7D39EB] hover:text-[#7D39EB] text-muted-foreground transition-all active:scale-95 cursor-pointer flex items-center justify-center shrink-0 bg-background"
+                className="min-h-[40px] min-w-[40px] h-10 w-10 sm:h-8 sm:w-8 rounded-lg border-border/80 hover:border-[#7D39EB] hover:text-[#7D39EB] text-muted-foreground transition-all active:scale-95 cursor-pointer flex items-center justify-center shrink-0 bg-background"
                 title="Đồng bộ Google Calendar"
                 aria-label="Đồng bộ Google Calendar"
               >
-                <CalendarSync className="h-4.5 w-4.5" />
+                <CalendarSync className="h-4 w-4" />
+              </Button>
+
+              {/* 3. Thêm nhiệm vụ (+) */}
+              <Button
+                type="button"
+                size="icon"
+                onClick={() => setIsTaskAssignOpen(true)}
+                className="min-h-[40px] min-w-[40px] h-10 w-10 sm:h-8 sm:w-8 rounded-lg bg-[#7D39EB] hover:bg-[#6826d4] text-white shadow-xs hover:shadow transition-all active:scale-95 cursor-pointer flex items-center justify-center shrink-0"
+                title="Thêm nhiệm vụ & Gán hạn chót từ Kế hoạch"
+                aria-label="Thêm nhiệm vụ"
+              >
+                <Plus className="h-4 w-4" />
               </Button>
             </div>
           </div>

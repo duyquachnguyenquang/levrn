@@ -1,16 +1,12 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import Link from "next/link";
 import {
-  ArrowRight,
-  GraduationCap,
   CheckCircle2,
 } from "lucide-react";
 import { useSubjects } from "@/hooks/useSubjects";
 import { useStudyPlans } from "@/hooks/useStudyPlans";
 import { useGroups } from "@/hooks/useGroups";
-import { useCourseGrades } from "@/hooks/useCourseGrades";
 import { useAttendance } from "@/hooks/useAttendance";
 import { useNotifications } from "@/hooks/useNotifications";
 import { getSubjectCheckinStatus } from "@/lib/checkinUtils";
@@ -46,7 +42,6 @@ export default function DashboardPage() {
     refreshTasks: refreshPlanTasks,
   } = useStudyPlans();
   const { groups, updateTaskStatus: updateGroupTaskStatus } = useGroups();
-  const { cumulativeGPA } = useCourseGrades();
   const [greeting, setGreeting] = useState<string>("Chào buổi sáng");
 
   // Điểm danh & Thông báo
@@ -151,32 +146,12 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* 1. Lời chào theo thời gian & Badge GPA tích lũy nhanh */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      {/* 1. Lời chào theo thời gian */}
+      <div className="flex items-center justify-between">
         <h2 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight flex items-center gap-2">
           <span>{greeting}, Taylor</span>
           <span className="text-2xl">👋</span>
         </h2>
-
-        {cumulativeGPA.cumulativeGPA4 > 0 && (
-          <Link
-            href="/grades"
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg border border-border/80 bg-card hover:border-[#7D39EB]/50 hover:bg-muted/30 transition-all text-xs font-semibold shadow-xs group w-fit"
-            title="Xem chi tiết bảng điểm và GPA"
-          >
-            <div className="h-6 w-6 rounded-lg bg-[#7D39EB]/15 text-[#7D39EB] flex items-center justify-center">
-              <GraduationCap className="h-3.5 w-3.5" />
-            </div>
-            <span>
-              GPA Tích lũy:{" "}
-              <strong className="font-mono text-sm font-black text-[#7D39EB]">
-                {cumulativeGPA.cumulativeGPA4.toFixed(2)}
-              </strong>
-              /4.0 ({cumulativeGPA.academicStanding})
-            </span>
-            <ArrowRight className="h-3.5 w-3.5 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
-          </Link>
-        )}
       </div>
 
       {/* 2. LỊCH HỌC ĐƯA LÊN TRÊN (Toàn chiều rộng) */}

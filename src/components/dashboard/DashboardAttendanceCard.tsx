@@ -20,6 +20,7 @@ import {
   Eye,
   CheckCheck,
   Search,
+  Filter,
   ArrowUpDown,
   BookOpen,
   Archive,
@@ -61,6 +62,7 @@ export function DashboardAttendanceCard({
 }: DashboardAttendanceCardProps) {
   // 1. Tab phân loại: "active" (Đang học) | "ended" (Đã học)
   const [activeTab, setActiveTab] = useState<"active" | "ended">("active");
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [viewingSubject, setViewingSubject] = useState<Subject | null>(null);
   const [isCheckingInId, setIsCheckingInId] = useState<string | null>(null);
 
@@ -153,115 +155,103 @@ export function DashboardAttendanceCard({
   return (
     <>
       {/* Container Thẻ chỉ bo tròn 5-10% (rounded-lg) theo Rule 1.6 */}
-      <Card className="rounded-lg border border-border/80 bg-card p-5 shadow-xs flex flex-col justify-between transition-all duration-300 hover:border-border/90 hover:shadow-md h-full min-h-[380px]">
-        {/* 1. Header Tinh gọn - Đổi thành 'Điểm danh', có 'Đang học/Đã học', Tìm kiếm và Sắp xếp ngang hàng (Rule 1.1) */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-3 border-b border-border/60">
+      <Card id="attendance-card" className="rounded-lg border border-border/80 bg-card p-5 shadow-xs flex flex-col justify-between transition-all duration-300 hover:border-border/90 hover:shadow-md h-full min-h-[380px] scroll-mt-6">
+        {/* 1. Header Tinh gọn - Ngang hàng trên cả PC & Mobile, căn phải cụm nút: Bộ lọc, Sắp xếp, Tìm kiếm */}
+        <div className="flex flex-row items-center justify-between gap-3 pb-3 border-b border-border/60">
           {/* Tiêu đề card */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2.5 min-w-0">
             <div className="h-8 w-8 rounded-md bg-[#7D39EB]/15 text-[#7D39EB] flex items-center justify-center shrink-0">
               <CheckCircle2 className="h-4 w-4" />
             </div>
-            <h3 className="font-extrabold text-base text-foreground leading-tight">
+            <h3 className="font-extrabold text-base text-foreground leading-tight truncate">
               Điểm danh
             </h3>
           </div>
 
-          {/* Cụm công cụ bên phải: 'Đang học/Đã học' + Kính lúp (Tìm kiếm) + Sắp xếp (cùng một hàng, không rớt dòng, căn trái) */}
-          <div className="flex flex-row items-center justify-start gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar flex-nowrap w-full sm:w-auto shrink-0">
-            {/* 2 Tab: Đang học / Đã học */}
-            <div className="flex items-center p-0.5 rounded-md bg-muted/60 border border-border/70 min-h-[40px] h-10 sm:min-h-0 sm:h-8 shrink-0">
-              <button
-                type="button"
-                onClick={() => setActiveTab("active")}
-                className={cn(
-                  "px-2.5 py-1.5 sm:py-1 text-xs font-bold rounded-md transition-all cursor-pointer flex items-center gap-1.5 shrink-0",
-                  activeTab === "active"
-                    ? "bg-[#7D39EB] text-white shadow-xs"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-                title="Môn đang trong thời gian học"
-                aria-label="Môn đang trong thời gian học"
-              >
-                <BookOpen className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Đang học</span>
-                <span
-                  className={cn(
-                    "px-1.5 py-0.2 rounded text-[10px] font-mono",
-                    activeTab === "active" ? "bg-white/20 text-white" : "bg-muted text-muted-foreground"
-                  )}
-                >
-                  {newSubjects.length}
-                </span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setActiveTab("ended")}
-                className={cn(
-                  "px-2.5 py-1.5 sm:py-1 text-xs font-bold rounded-md transition-all cursor-pointer flex items-center gap-1.5 shrink-0",
-                  activeTab === "ended"
-                    ? "bg-[#7D39EB] text-white shadow-xs"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-                title="Môn đã kết thúc hoặc hoàn thành"
-                aria-label="Môn đã kết thúc hoặc hoàn thành"
-              >
-                <Archive className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Đã học</span>
-                <span
-                  className={cn(
-                    "px-1.5 py-0.2 rounded text-[10px] font-mono",
-                    activeTab === "ended" ? "bg-white/20 text-white" : "bg-muted text-muted-foreground"
-                  )}
-                >
-                  {oldSubjects.length}
-                </span>
-              </button>
-            </div>
-
-            {/* Nút Tìm kiếm (Icon Kính lúp - Popover) */}
-            <Popover open={isSearchOpen} onOpenChange={setIsSearchOpen}>
+          {/* Cụm công cụ bên phải: 1. Bộ lọc (icon Đầu lọc), 2. Sắp xếp, 3. Tìm kiếm */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            {/* 1. Nút Bộ lọc (Icon Đầu lọc) */}
+            <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
                   size="icon"
                   className={cn(
                     "min-h-[40px] min-w-[40px] h-10 w-10 sm:h-8 sm:w-8 rounded-md border border-border/80 transition-all active:scale-95 shrink-0",
-                    searchQuery ? "border-[#7D39EB] text-[#7D39EB] bg-[#7D39EB]/10" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    activeTab === "ended"
+                      ? "border-[#7D39EB] text-[#7D39EB] bg-[#7D39EB]/10"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
                   )}
-                  title="Tìm kiếm môn học"
-                  aria-label="Tìm kiếm môn học"
+                  title="Bộ lọc môn học (Đang học / Đã học)"
+                  aria-label="Bộ lọc môn học"
                 >
-                  <Search className="h-4 w-4" />
+                  <Filter className="h-4 w-4" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent
                 align="end"
-                className="w-64 p-2 rounded-md border border-border/80 bg-card shadow-lg"
+                className="w-56 p-2 rounded-md border border-border/80 bg-card shadow-lg space-y-1"
               >
-                <div className="relative">
-                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                  <Input
-                    placeholder="Tìm theo mã hoặc tên môn..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-8 h-8 text-xs rounded-md border-border/70 focus-visible:ring-[#7D39EB]"
-                    autoFocus
-                  />
-                  {searchQuery && (
-                    <button
-                      type="button"
-                      onClick={() => setSearchQuery("")}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  )}
+                <div className="px-2 py-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                  Trạng thái môn học
                 </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab("active");
+                    setIsFilterOpen(false);
+                  }}
+                  className={cn(
+                    "w-full px-2.5 py-2 rounded-md text-xs font-semibold flex items-center justify-between cursor-pointer transition-all",
+                    activeTab === "active"
+                      ? "bg-[#7D39EB]/15 text-[#7D39EB] font-bold"
+                      : "hover:bg-muted text-foreground/80"
+                  )}
+                >
+                  <div className="flex items-center gap-2">
+                    <BookOpen className="h-3.5 w-3.5" />
+                    <span>Đang học</span>
+                  </div>
+                  <span
+                    className={cn(
+                      "px-1.5 py-0.2 rounded text-[10px] font-mono",
+                      activeTab === "active" ? "bg-[#7D39EB] text-white" : "bg-muted text-muted-foreground"
+                    )}
+                  >
+                    {newSubjects.length}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab("ended");
+                    setIsFilterOpen(false);
+                  }}
+                  className={cn(
+                    "w-full px-2.5 py-2 rounded-md text-xs font-semibold flex items-center justify-between cursor-pointer transition-all",
+                    activeTab === "ended"
+                      ? "bg-[#7D39EB]/15 text-[#7D39EB] font-bold"
+                      : "hover:bg-muted text-foreground/80"
+                  )}
+                >
+                  <div className="flex items-center gap-2">
+                    <Archive className="h-3.5 w-3.5" />
+                    <span>Đã học</span>
+                  </div>
+                  <span
+                    className={cn(
+                      "px-1.5 py-0.2 rounded text-[10px] font-mono",
+                      activeTab === "ended" ? "bg-[#7D39EB] text-white" : "bg-muted text-muted-foreground"
+                    )}
+                  >
+                    {oldSubjects.length}
+                  </span>
+                </button>
               </PopoverContent>
             </Popover>
 
-            {/* Nút Sắp xếp (Icon Sắp xếp - Tích chọn biến + Dropdown cơ chế) */}
+            {/* 2. Nút Sắp xếp (Icon Sắp xếp - Tích chọn biến + Dropdown cơ chế) */}
             <Popover open={isSortOpen} onOpenChange={setIsSortOpen}>
               <PopoverTrigger asChild>
                 <Button
@@ -336,6 +326,48 @@ export function DashboardAttendanceCard({
                       </>
                     )}
                   </select>
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            {/* 3. Nút Tìm kiếm (Icon Kính lúp - Popover) */}
+            <Popover open={isSearchOpen} onOpenChange={setIsSearchOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className={cn(
+                    "min-h-[40px] min-w-[40px] h-10 w-10 sm:h-8 sm:w-8 rounded-md border border-border/80 transition-all active:scale-95 shrink-0",
+                    searchQuery ? "border-[#7D39EB] text-[#7D39EB] bg-[#7D39EB]/10" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  )}
+                  title="Tìm kiếm môn học"
+                  aria-label="Tìm kiếm môn học"
+                >
+                  <Search className="h-4 w-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent
+                align="end"
+                className="w-64 p-2 rounded-md border border-border/80 bg-card shadow-lg"
+              >
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                  <Input
+                    placeholder="Tìm theo mã hoặc tên môn..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-8 h-8 text-xs rounded-md border-border/70 focus-visible:ring-[#7D39EB]"
+                    autoFocus
+                  />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery("")}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  )}
                 </div>
               </PopoverContent>
             </Popover>
