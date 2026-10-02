@@ -128,10 +128,10 @@ export function Topbar() {
             <Button
               variant="ghost"
               size="icon"
-              className="relative rounded-lg h-9 w-9 text-muted-foreground hover:text-foreground bg-card/60 border border-border/40 hover:bg-card hover:border-[#7D39EB]/40 transition-all duration-200 active:scale-90"
+              className="relative rounded-lg min-h-[40px] min-w-[40px] h-10 w-10 sm:h-9 sm:w-9 text-muted-foreground hover:text-foreground bg-card/60 border border-border/40 hover:bg-card hover:border-[#7D39EB]/40 transition-all duration-200 active:scale-90"
               aria-label="Xem thông báo"
             >
-              <Bell className="h-4 w-4 transition-transform hover:rotate-12 duration-200" />
+              <Bell className="h-4.5 w-4.5 transition-transform hover:rotate-12 duration-200" />
               {unreadCount > 0 && (
                 <span className="absolute -top-1 -right-1 h-4 min-w-4 px-1 rounded-full bg-[#C6FF33] text-black font-extrabold text-[9px] flex items-center justify-center ring-2 ring-background animate-pulse">
                   {unreadCount}
@@ -210,13 +210,13 @@ export function Topbar() {
             variant="ghost"
             size="icon"
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="rounded-lg h-9 w-9 text-muted-foreground hover:text-foreground bg-card/60 border border-border/40 hover:bg-card hover:border-[#C6FF33]/40 transition-all duration-200 active:scale-90"
+            className="rounded-lg min-h-[40px] min-w-[40px] h-10 w-10 sm:h-9 sm:w-9 text-muted-foreground hover:text-foreground bg-card/60 border border-border/40 hover:bg-card hover:border-[#C6FF33]/40 transition-all duration-200 active:scale-90"
             aria-label="Chuyển đổi chế độ sáng/tối"
           >
             {theme === "dark" ? (
-              <Sun className="h-4 w-4 text-[#C6FF33] transition-transform rotate-0 hover:rotate-45 duration-300" />
+              <Sun className="h-4.5 w-4.5 text-[#C6FF33] transition-transform rotate-0 hover:rotate-45 duration-300" />
             ) : (
-              <Moon className="h-4 w-4 text-[#7D39EB] transition-transform rotate-0 hover:-rotate-12 duration-300" />
+              <Moon className="h-4.5 w-4.5 text-[#7D39EB] transition-transform rotate-0 hover:-rotate-12 duration-300" />
             )}
           </Button>
         )}
@@ -226,10 +226,10 @@ export function Topbar() {
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              className="relative h-9 w-9 rounded-lg p-0 ring-2 ring-[#7D39EB]/30 hover:ring-[#7D39EB] transition-all active:scale-95"
+              className="relative min-h-[40px] min-w-[40px] h-10 w-10 sm:h-9 sm:w-9 rounded-lg p-0 ring-2 ring-[#7D39EB]/30 hover:ring-[#7D39EB] transition-all active:scale-95"
               aria-label="Menu tài khoản cá nhân"
             >
-              <Avatar className="h-9 w-9 rounded-lg">
+              <Avatar className="h-10 w-10 sm:h-9 sm:w-9 rounded-lg">
                 <AvatarFallback
                   className="font-bold text-xs rounded-lg shadow-xs transition-colors"
                   style={{

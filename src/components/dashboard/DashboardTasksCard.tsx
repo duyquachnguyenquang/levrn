@@ -277,15 +277,15 @@ export function DashboardTasksCard({
           </span>
         </div>
 
-        {/* Cụm công cụ bên phải: Tabs Lọc nhanh + Kính lúp (Tìm kiếm) + Bộ lọc + Sắp xếp */}
-        <div className="flex items-center gap-1.5 flex-wrap self-start sm:self-auto shrink-0">
+        {/* Cụm công cụ bên phải: Tabs Lọc nhanh + Kính lúp (Tìm kiếm) + Sắp xếp (cùng một hàng, không rớt dòng, căn trái) */}
+        <div className="flex flex-row items-center justify-start gap-1.5 overflow-x-auto no-scrollbar flex-nowrap w-full sm:w-auto shrink-0">
           {/* Tabs nhanh: Tất cả / Lịch học / Cá nhân / Nhóm */}
-          <div className="flex items-center p-0.5 rounded-md bg-muted/60 border border-border/70 shrink-0">
+          <div className="flex items-center p-0.5 rounded-md bg-muted/60 border border-border/70 min-h-[40px] h-10 sm:min-h-0 sm:h-8 shrink-0">
             <button
               type="button"
               onClick={() => setFilterType("all")}
               className={cn(
-                "px-2 py-1 text-[11px] font-bold rounded-md transition-all cursor-pointer",
+                "px-2.5 py-1.5 sm:py-1 text-[11px] font-bold rounded-md transition-all cursor-pointer shrink-0",
                 filterType === "all"
                   ? "bg-[#7D39EB] text-white shadow-xs"
                   : "text-muted-foreground hover:text-foreground"
@@ -297,42 +297,48 @@ export function DashboardTasksCard({
               type="button"
               onClick={() => setFilterType("schedule")}
               className={cn(
-                "px-2 py-1 text-[11px] font-bold rounded-md transition-all cursor-pointer flex items-center gap-1",
+                "px-2.5 py-1.5 sm:py-1 text-[11px] font-bold rounded-md transition-all cursor-pointer flex items-center gap-1 shrink-0",
                 filterType === "schedule"
                   ? "bg-[#7D39EB] text-white shadow-xs"
                   : "text-muted-foreground hover:text-foreground"
               )}
               title="Lịch học trong tuần"
+              aria-label="Lịch học trong tuần"
             >
-              <span>Lịch học</span>
+              <Calendar className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Lịch học</span>
               <span className="text-[9.5px] font-mono opacity-80">({counts.schedule})</span>
             </button>
             <button
               type="button"
               onClick={() => setFilterType("personal")}
               className={cn(
-                "px-2 py-1 text-[11px] font-bold rounded-md transition-all cursor-pointer flex items-center gap-1",
+                "px-2.5 py-1.5 sm:py-1 text-[11px] font-bold rounded-md transition-all cursor-pointer flex items-center gap-1 shrink-0",
                 filterType === "personal"
                   ? "bg-[#7D39EB] text-white shadow-xs"
                   : "text-muted-foreground hover:text-foreground"
               )}
               title="Nhiệm vụ cá nhân"
+              aria-label="Nhiệm vụ cá nhân"
             >
-              <span>Cá nhân</span>
+              <User className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Cá nhân</span>
               <span className="text-[9.5px] font-mono opacity-80">({counts.personal})</span>
             </button>
             <button
               type="button"
               onClick={() => setFilterType("group")}
               className={cn(
-                "px-2 py-1 text-[11px] font-bold rounded-md transition-all cursor-pointer flex items-center gap-1",
+                "px-2.5 py-1.5 sm:py-1 text-[11px] font-bold rounded-md transition-all cursor-pointer flex items-center gap-1 shrink-0",
                 filterType === "group"
                   ? "bg-[#7D39EB] text-white shadow-xs"
                   : "text-muted-foreground hover:text-foreground"
               )}
               title="Nhiệm vụ nhóm"
+              aria-label="Nhiệm vụ nhóm"
             >
-              <span>Nhóm</span>
+              <Users className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Nhóm</span>
               <span className="text-[9.5px] font-mono opacity-80">({counts.group})</span>
             </button>
           </div>
@@ -344,7 +350,7 @@ export function DashboardTasksCard({
                 variant="outline"
                 size="icon"
                 className={cn(
-                  "h-8 w-8 rounded-md border border-border/80 transition-all active:scale-95 shrink-0",
+                  "min-h-[40px] min-w-[40px] h-10 w-10 sm:h-8 sm:w-8 rounded-md border border-border/80 transition-all active:scale-95 shrink-0",
                   searchQuery
                     ? "border-[#7D39EB] text-[#7D39EB] bg-[#7D39EB]/10"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted"
@@ -352,7 +358,7 @@ export function DashboardTasksCard({
                 title="Tìm kiếm nhiệm vụ"
                 aria-label="Tìm kiếm nhiệm vụ"
               >
-                <Search className="h-3.5 w-3.5" />
+                <Search className="h-4 w-4" />
               </Button>
             </PopoverTrigger>
             <PopoverContent
@@ -387,11 +393,11 @@ export function DashboardTasksCard({
               <Button
                 variant="outline"
                 size="icon"
-                className="h-8 w-8 rounded-md border border-border/80 hover:bg-muted text-muted-foreground hover:text-foreground shrink-0 transition-all active:scale-95"
+                className="min-h-[40px] min-w-[40px] h-10 w-10 sm:h-8 sm:w-8 rounded-md border border-border/80 hover:bg-muted text-muted-foreground hover:text-foreground shrink-0 transition-all active:scale-95"
                 title="Sắp xếp nhiệm vụ"
                 aria-label="Sắp xếp nhiệm vụ"
               >
-                <ArrowUpDown className="h-3.5 w-3.5" />
+                <ArrowUpDown className="h-4 w-4" />
               </Button>
             </PopoverTrigger>
             <PopoverContent

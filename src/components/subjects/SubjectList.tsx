@@ -41,6 +41,7 @@ import {
   Clock,
   CheckCircle2,
   Eye,
+  MapPin,
 } from "lucide-react";
 import { useAttendance } from "@/hooks/useAttendance";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -328,7 +329,7 @@ export function SubjectList({
             placeholder="Tìm kiếm môn học"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-8 pr-7 h-9 text-xs sm:text-sm bg-background/60 rounded-md border-border/60 focus-visible:ring-[#7D39EB] transition-all"
+            className="pl-8 pr-7 min-h-[40px] h-10 sm:h-9 text-xs sm:text-sm bg-background/60 rounded-md border-border/60 focus-visible:ring-[#7D39EB] transition-all"
           />
           {searchQuery && (
             <button
@@ -347,7 +348,7 @@ export function SubjectList({
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
-                className={`h-9 w-9 p-0 rounded-md border-border/80 transition-all active:scale-95 shrink-0 relative flex items-center justify-center ${
+                className={`min-h-[40px] min-w-[40px] h-10 w-10 sm:h-9 sm:w-9 p-0 rounded-md border-border/80 transition-all active:scale-95 shrink-0 relative flex items-center justify-center ${
                   sortBy !== "default"
                     ? "border-[#7D39EB] text-[#7D39EB] bg-[#7D39EB]/10"
                     : "text-muted-foreground hover:text-foreground hover:border-[#7D39EB]/40"
@@ -488,7 +489,7 @@ export function SubjectList({
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
-                className={`h-9 w-9 p-0 rounded-md border-border/80 transition-all active:scale-95 shrink-0 relative flex items-center justify-center ${
+                className={`min-h-[40px] min-w-[40px] h-10 w-10 sm:h-9 sm:w-9 p-0 rounded-md border-border/80 transition-all active:scale-95 shrink-0 relative flex items-center justify-center ${
                   isFilterActive
                     ? "border-[#7D39EB] text-[#7D39EB] bg-[#7D39EB]/10"
                     : "text-muted-foreground hover:text-foreground hover:border-[#7D39EB]/40"
@@ -591,11 +592,11 @@ export function SubjectList({
           </Popover>
 
           {/* Nút chuyển đổi giao diện: Xem theo Khối (5 môn/hàng) hoặc theo List */}
-          <div className="flex items-center p-0.5 bg-muted/60 rounded-md border border-border/70 h-9 shrink-0">
+          <div className="flex items-center p-0.5 bg-muted/60 rounded-md border border-border/70 min-h-[40px] h-10 sm:h-9 shrink-0">
             <button
               type="button"
               onClick={() => setViewMode("grid")}
-              className={`h-8 w-8 sm:w-auto sm:px-2.5 rounded-sm flex items-center justify-center gap-1 text-xs transition-all active:scale-95 cursor-pointer ${
+              className={`min-h-[36px] min-w-[36px] h-9 w-9 sm:h-8 sm:w-auto sm:px-2.5 rounded-sm flex items-center justify-center gap-1 text-xs transition-all active:scale-95 cursor-pointer ${
                 viewMode === "grid"
                   ? "bg-card text-foreground shadow-xs font-bold border border-border/40"
                   : "text-muted-foreground hover:text-foreground"
@@ -603,12 +604,12 @@ export function SubjectList({
               title="Xem dạng khối"
               aria-label="Xem dạng khối"
             >
-              <LayoutGrid className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <LayoutGrid className="h-4 w-4" />
             </button>
             <button
               type="button"
               onClick={() => setViewMode("list")}
-              className={`h-8 w-8 sm:w-auto sm:px-2.5 rounded-sm flex items-center justify-center gap-1 text-xs transition-all active:scale-95 cursor-pointer ${
+              className={`min-h-[36px] min-w-[36px] h-9 w-9 sm:h-8 sm:w-auto sm:px-2.5 rounded-sm flex items-center justify-center gap-1 text-xs transition-all active:scale-95 cursor-pointer ${
                 viewMode === "list"
                   ? "bg-card text-foreground shadow-xs font-bold border border-border/40"
                   : "text-muted-foreground hover:text-foreground"
@@ -616,7 +617,7 @@ export function SubjectList({
               title="Xem dạng danh sách"
               aria-label="Xem dạng danh sách"
             >
-              <List className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <List className="h-4 w-4" />
             </button>
           </div>
         </div>
@@ -642,8 +643,8 @@ export function SubjectList({
       {/* Hiển thị danh sách môn học theo chế độ Grid (5 môn/hàng) hoặc List */}
       {filteredSubjects.length > 0 ? (
         viewMode === "grid" ? (
-          /* Khối: mật độ hiển thị cân đối, chuẩn 5 thẻ/hàng trên màn hình máy tính */
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-5">
+          /* Khối: Mặc định 2 thẻ/hàng trên mobile, chuẩn 5 thẻ/hàng trên màn hình máy tính */
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-4">
             {filteredSubjects.map((subject) => (
               <SubjectCard
                 key={subject.id}
@@ -657,9 +658,94 @@ export function SubjectList({
             ))}
           </div>
         ) : (
-          /* List: Bảng phân chia các cột rõ ràng */
-          <div className="overflow-x-auto rounded-lg border border-border/80 bg-card shadow-xs">
-            <table className="w-full text-left border-collapse min-w-[900px]">
+          /* List: Trên mobile hiển thị gọn gàng trong toàn bộ chiều ngang thiết bị (KHÔNG cuộn ngang); Trên desktop hiển thị bảng đầy đủ */
+          <div className="w-full">
+            {/* Giao diện Mobile (dưới md): Danh sách hàng ngang co giãn 100% chiều ngang, tuyệt đối không có thanh kéo ngang */}
+            <div className="md:hidden flex flex-col gap-2 w-full">
+              {filteredSubjects.map((subject) => {
+                const cardColor = subject.color || "#7D39EB";
+                const scheduleDaysText =
+                  subject.scheduleDays && subject.scheduleDays.length > 0
+                    ? subject.scheduleDays.map((d) => (d === 0 ? "CN" : `T${d + 1}`)).join(", ")
+                    : subject.startDate && !isNaN(new Date(subject.startDate).getTime())
+                    ? new Date(subject.startDate).getDay() === 0 ? "CN" : `T${new Date(subject.startDate).getDay() + 1}`
+                    : "";
+                const timeText =
+                  subject.startTime && subject.endTime
+                    ? `${subject.startTime} - ${subject.endTime}`
+                    : subject.startTime || "";
+                const scheduleText =
+                  scheduleDaysText && timeText
+                    ? `${scheduleDaysText} • ${timeText}`
+                    : scheduleDaysText || timeText || "Chưa có lịch";
+                const locationText =
+                  subject.room && subject.campus
+                    ? `P.${subject.room} • ${subject.campus}`
+                    : subject.room
+                    ? `Phòng ${subject.room}`
+                    : subject.campus || "Chưa cập nhật";
+
+                return (
+                  <div
+                    key={subject.id}
+                    onClick={() => onEdit(subject)}
+                    className="w-full rounded-lg border border-border/80 bg-card p-3 flex items-center justify-between gap-3 shadow-2xs hover:border-[#7D39EB]/40 transition-all cursor-pointer"
+                  >
+                    <div className="min-w-0 flex-1 space-y-1">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span
+                          className="font-mono font-black text-[10px] px-1.5 py-0.5 rounded-md shrink-0 shadow-2xs"
+                          style={{
+                            backgroundColor: `${cardColor}20`,
+                            color: cardColor,
+                            border: `1px solid ${cardColor}40`,
+                          }}
+                        >
+                          {subject.code}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <MarqueeText
+                            text={subject.name}
+                            className="font-bold text-sm text-foreground"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Thông tin cơ bản Tầng 1: Thời gian & Địa điểm */}
+                      <div className="flex items-center gap-3 text-[11px] text-muted-foreground pt-0.5 flex-wrap">
+                        <span className="flex items-center gap-1 truncate max-w-[170px]">
+                          <Clock className="h-3 w-3 text-[#7D39EB] shrink-0" />
+                          <span className="truncate">{scheduleText}</span>
+                        </span>
+                        <span className="flex items-center gap-1 truncate max-w-[140px]">
+                          <MapPin className="h-3 w-3 text-emerald-500 shrink-0" />
+                          <span className="truncate">{locationText}</span>
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Nút điều hướng mở Pop-up chi tiết (Tầng 1 -> Tầng 2) */}
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEdit(subject);
+                      }}
+                      className="min-h-[40px] min-w-[40px] h-10 w-10 rounded-md border-border/80 text-muted-foreground hover:text-foreground hover:bg-[#7D39EB]/10 hover:border-[#7D39EB]/40 shrink-0"
+                      title="Xem chi tiết môn học"
+                      aria-label="Xem chi tiết môn học"
+                    >
+                      <Eye className="h-4 w-4 text-[#7D39EB]" />
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Giao diện Desktop (md trở lên): Bảng phân chia các cột rõ ràng */}
+            <div className="hidden md:block overflow-x-auto rounded-lg border border-border/80 bg-card shadow-xs">
+              <table className="w-full text-left border-collapse min-w-[900px]">
               <thead>
                 <tr className="border-b border-border/80 bg-muted/40 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
                   <th className="py-3 px-3.5 whitespace-nowrap">Mã môn</th>
@@ -855,6 +941,7 @@ export function SubjectList({
                 })}
               </tbody>
             </table>
+            </div>
           </div>
         )
       ) : (

@@ -59,13 +59,10 @@ export function SubjectStrategyCards({
             <Compass className="h-4 w-4 text-[#7D39EB]" />
             <span>Chiến lược học tập theo từng môn học</span>
           </h3>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Cá nhân hoá phương pháp tự học và mục tiêu giờ học hàng tuần theo từng môn.
-          </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-5">
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-4">
         {subjects.map((sub) => {
           const strategy = strategies[sub.id] || {
             subjectId: sub.id,
@@ -87,8 +84,8 @@ export function SubjectStrategyCards({
               key={sub.id}
               className="group relative rounded-xl border border-border/70 dark:border-border/60 bg-card overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between"
             >
-              {/* 1. Ảnh bìa môn học (Visual Banner) */}
-              <div className="relative h-40 sm:h-44 w-full overflow-hidden bg-muted/40 shrink-0">
+              {/* 1. Ảnh bìa môn học (Visual Banner) - Chiều cao thích ứng h-24 trên mobile */}
+              <div className="relative h-24 sm:h-36 w-full overflow-hidden bg-muted/40 shrink-0">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={coverUrl}

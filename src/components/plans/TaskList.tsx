@@ -145,16 +145,16 @@ export function TaskList({
 
   return (
     <div className="space-y-4">
-      {/* Thanh công cụ gom nhóm và lọc trạng thái */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-card rounded-lg border border-border/70 shadow-xs">
+      {/* Thanh công cụ gom nhóm và lọc trạng thái: luôn cùng một hàng, không rớt dòng, căn trái */}
+      <div className="flex flex-row items-center justify-start gap-2.5 p-3 bg-card rounded-lg border border-border/70 shadow-xs overflow-x-auto no-scrollbar flex-nowrap">
         {/* Lọc trạng thái nhanh */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5 shrink-0 flex-nowrap">
           <Button
             size="sm"
             variant={statusFilter === "all" ? "default" : "ghost"}
             onClick={() => setStatusFilter("all")}
             className={cn(
-              "h-7 text-xs rounded-md px-2.5 font-bold transition-all",
+              "min-h-[40px] h-10 px-3.5 sm:min-h-0 sm:h-8 sm:px-2.5 text-xs rounded-md font-bold transition-all shrink-0",
               statusFilter === "all"
                 ? "bg-foreground text-background"
                 : "text-muted-foreground hover:text-foreground"
@@ -168,7 +168,7 @@ export function TaskList({
             variant={statusFilter === "active" ? "default" : "ghost"}
             onClick={() => setStatusFilter("active")}
             className={cn(
-              "h-7 text-xs rounded-md px-2.5 font-bold transition-all",
+              "min-h-[40px] h-10 px-3.5 sm:min-h-0 sm:h-8 sm:px-2.5 text-xs rounded-md font-bold transition-all shrink-0",
               statusFilter === "active"
                 ? "bg-[#7D39EB] text-white"
                 : "text-muted-foreground hover:text-foreground"
@@ -182,7 +182,7 @@ export function TaskList({
             variant={statusFilter === "completed" ? "default" : "ghost"}
             onClick={() => setStatusFilter("completed")}
             className={cn(
-              "h-7 text-xs rounded-md px-2.5 font-bold transition-all",
+              "min-h-[40px] h-10 px-3.5 sm:min-h-0 sm:h-8 sm:px-2.5 text-xs rounded-md font-bold transition-all shrink-0",
               statusFilter === "completed"
                 ? "bg-[#C6FF33] text-black"
                 : "text-muted-foreground hover:text-foreground"
@@ -193,12 +193,12 @@ export function TaskList({
         </div>
 
         {/* Gom nhóm theo */}
-        <div className="flex items-center gap-1.5 text-xs">
-          <span className="text-muted-foreground font-semibold">Gom nhóm:</span>
+        <div className="flex items-center gap-1.5 text-xs shrink-0">
+          <span className="text-muted-foreground font-semibold shrink-0">Gom nhóm:</span>
           <select
             value={groupBy}
             onChange={(e) => setGroupBy(e.target.value as GroupByOption)}
-            className="h-7 text-xs bg-muted/70 border border-border/70 rounded-md px-2 font-bold text-foreground focus:outline-none focus:ring-1 focus:ring-[#7D39EB]"
+            className="min-h-[40px] h-10 sm:min-h-0 sm:h-8 text-xs bg-muted/70 border border-border/70 rounded-md px-2 font-bold text-foreground focus:outline-none focus:ring-1 focus:ring-[#7D39EB] shrink-0"
           >
             <option value="status">Theo Trạng thái</option>
             <option value="subject">Theo Môn học</option>

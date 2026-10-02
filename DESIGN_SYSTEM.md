@@ -125,10 +125,11 @@ Khi bố trí các nút tương tác (Buttons & Actions), phải tuân thủ ngh
 
 ---
 
-### 🔲 Quy tắc 11: Bố cục lưới thẻ - Chuẩn 5 thẻ mỗi hàng (5 Cards per Row)
+### 🔲 Quy tắc 11: Bố cục lưới thẻ - 2 thẻ/hàng trên Mobile & 5 thẻ/hàng trên PC
 - **Quy định:** Đối với tất cả các trang hiển thị danh sách dạng thẻ (Môn học, Đồ án nhóm, Thẻ chiến lược, Danh sách thẻ nhiệm vụ...):
-  - Số thẻ hiển thị trên mỗi hàng trên màn hình lớn / desktop chuẩn là **đúng 5 thẻ mỗi hàng**.
-  - Tailwind Grid class bắt buộc: `grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4` (hoặc `gap-4 sm:gap-5`).
+  - **Trên Mobile (Màn hình nhỏ):** Mặc định hiển thị **2 thẻ mỗi hàng** (`grid-cols-2`), khoảng cách `gap-2` đến `gap-3`. Thẻ được tối ưu gọn gàng, không bị vỡ layout hay clipped nội dung.
+  - **Trên PC / Desktop chuẩn (XL):** Bắt buộc hiển thị **đúng 5 thẻ mỗi hàng** (`xl:grid-cols-5`).
+  - Tailwind Grid class chuẩn: `grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-4`.
 
 ### ❌ Quy tắc 12: Nút Tắt / Thoát trên Pop-up lồng khung vuông bo góc 5-10%
 - **Quy định:** Toàn bộ nút Tắt / Thoát trên tất cả pop-up, modal, dialog **BẮT BUỘC** có dạng chữ x (`<X className="w-4 h-4" />`) được lồng trong **khung vuông bo góc 5-10%** (kích thước chuẩn `h-8 w-8 rounded-md`, có viền `border border-border/80`, nền `bg-background` hoặc `hover:bg-muted`), nằm ở góc trên bên phải, **ngang hàng và cân bằng chiều cao tuyệt đối với Header**.
@@ -145,18 +146,45 @@ Khi bố trí các nút tương tác (Buttons & Actions), phải tuân thủ ngh
     - Cột đích khi có thẻ rê vào (`dragOver`): kích hoạt viền sáng thương hiệu và nền highlight nhẹ (`border-[#7D39EB] bg-[#7D39EB]/5 ring-1 ring-[#7D39EB]/30`).
   - **Dung sai trên thiết bị cảm ứng:** Vẫn duy trì nút/dropdown chuyển trạng thái nhỏ gọn dự phòng bên trong thẻ để người dùng trên thiết bị di động/cảm ứng vẫn thao tác thuận tiện.
 
+### 📱 Quy tắc 14: Chuẩn hóa Giao diện Mobile (Mobile UX/UI Standards)
+- **Hạn chế tối đa kênh chữ, ưu tiên chuyển đổi sang icon:**
+  - Trên màn hình thiết bị di động (mobile), không gian hiển thị hẹp nên các nút bấm và thanh công cụ phải **tối giản hóa tối đa chữ**.
+  - Ưu tiên chuyển đổi toàn bộ sang dạng **Chỉ dùng Icon (Icon-only)** hoặc áp dụng kỹ thuật ẩn chữ trên mobile (`<span className="hidden sm:inline">...</span>`), chỉ hiển thị Icon sắc nét kèm thuộc tính `title` và `aria-label` đầy đủ để đảm bảo tính năng và hỗ trợ người dùng.
+- **Thân thiện với người dùng có ngón tay to (Touch-Friendly Targets):**
+  - Mọi nút bấm tương tác trên Mobile bắt buộc có kích thước vùng chạm tối thiểu **`min-h-[40px] min-w-[40px]`** (chuẩn `h-10 w-10` hoặc `h-10 px-3.5`).
+  - **Tuyệt đối KHÔNG** dùng các nút quá nhỏ (`h-7`, `h-8` tức 28px - 32px) trên mobile vì sẽ làm người dùng có ngón tay to bấm trượt, bấm hụt hoặc chạm nhầm vào nút lân cận.
+  - Khoảng cách an toàn giữa các nút bấm tối thiểu từ `gap-1.5` đến `gap-2.5` để chống bấm dính.
+- **Duy trì hàng ngang, không xuống dòng, căn hết về bên trái (No-Wrap & Align Left):**
+  - Các nút bấm hoặc cụm công cụ nằm cùng hàng ở chế độ PC thì trên Mobile **BẮT BUỘC vẫn nằm trên cùng một hàng duy nhất**.
+  - **CẤM:** Không được bẻ dòng, không nhảy dòng hoặc chuyển thành cột dọc (`flex-col` hay `flex-wrap` đối với các cụm nút bấm).
+  - Bắt buộc áp dụng `flex-row flex-nowrap shrink-0` và **căn toàn bộ về bên trái (`justify-start`)**.
+  - Nếu tổng chiều rộng hàng nút vượt quá màn hình điện thoại: Cho phép cuộn ngang mượt mà (`overflow-x-auto no-scrollbar justify-start`), giúp người dùng vuốt chọn dễ dàng mà cấu trúc trang không bị vỡ.
+
+### 📜 Quy tắc 15: Giao diện dạng danh sách (List View) trên Mobile - Vừa vặn chiều ngang, Không cuộn ngang
+- **Quy định:** Đối với tất cả giao diện hiển thị danh sách (List view, bảng công việc, danh sách môn học, lịch trình...):
+  - **Trên Mobile:** Nội dung danh sách bắt buộc phải được co gọn vừa khít trong chiều rộng màn hình thiết bị (`w-full`), **TUYỆT ĐỐI KHÔNG ÁP DỤNG THANH KÉO NGANG** (`no overflow-x-auto`, không kéo ngang danh sách).
+  - Tối ưu hiển thị responsive: Ẩn bớt các cột phụ ít quan trọng trên mobile (như ghi chú dài, ID, tag phụ) hoặc gộp vào các dòng phụ bên dưới tên thẻ, đảm bảo toàn bộ thông tin quan trọng đọc được ngay trong một khung nhìn mà không cần lướt ngang.
+
+---
+
+### 🪜 Quy tắc 16: Mô hình phân cấp thông tin 3 tầng (3-Tier Progressive Disclosure - Cả Mobile & PC)
+- **Quy định:** Mức độ hiển thị thông tin trên toàn hệ thống LEVRN tuân thủ nghiêm ngặt 3 tầng:
+  1. **Tầng 1 - Mặt ngoài thẻ / Dòng danh sách:** Chỉ hiển thị nội dung cơ bản, bao gồm: **Tên**, **Thời gian**, **Địa điểm** và các nút điều hướng (hoặc click trực tiếp vào thẻ/hàng để mở chi tiết). Không hiển thị tràn lan các nút chức năng quản trị hay mô tả phụ.
+  2. **Tầng 2 - Pop-up Thông tin chi tiết (Detail / View Mode):** Khi người dùng click vào thẻ/dòng, hệ thống mở Pop-up chi tiết hiển thị toàn diện các trường dữ liệu dưới dạng cố định (Read-only). Header pop-up gồm: **Tiêu đề**, **Nút Chỉnh sửa (`<Pencil />`)**, và **Nút Thoát (`<X />`)** cùng hàng, đồng kích thước (`h-8 w-8`).
+  3. **Tầng 3 - Pop-up Chỉnh sửa (Edit Mode):** Chỉ khi người dùng bấm vào nút Cây bút (`<Pencil />`) trong Pop-up chi tiết thì mới chuyển sang chế độ biểu mẫu cho phép chỉnh sửa dữ liệu.
+
 ---
 
 ## 3. Quy Tắc Tác Vụ Dành Cho AI (AI Working & Interaction Rules)
  
-### ⚡ Quy tắc 14: Tác phong làm việc của AI (Nhanh, Trúng, Không Screenshot)
+### ⚡ Quy tắc 17: Tác phong làm việc của AI (Nhanh, Trúng, Không Screenshot)
 - **Chỉ đọc đúng file cần làm:** Không quét hay duyệt qua các file không liên quan để tránh lãng phí thời gian và token.
 - **Làm nhanh và báo liền:** Viết code chính xác, dứt khoát, trả lời kết quả ngay lập tức khi hoàn thành.
 - **Người dùng tự test:** AI **không** sử dụng browser agent để test chụp ảnh màn hình (screenshot). Người dùng là người trực tiếp kiểm tra và nghiệm thu giao diện trên môi trường thực tế.
 
 ---
 
-### 🗄️ Quy tắc 15: Thay đổi trong Supabase (Walkthrough + SQL Script)
+### 🗄️ Quy tắc 16: Thay đổi trong Supabase (Walkthrough + SQL Script)
 - **Quy định:** Bất cứ khi nào có thay đổi về CSDL Supabase (thêm bảng, sửa cột, tạo Foreign Key, cấu hình RLS Policy, Function, Trigger, v.v.):
   1. **Walkthrough:** Trình bày rõ ràng từng bước thao tác trực tiếp trên giao diện Supabase Dashboard.
   2. **Mã SQL:** Cung cấp câu lệnh SQL hoàn chỉnh, chuẩn xác, sẵn sàng copy & paste vào SQL Editor của Supabase.
@@ -175,6 +203,9 @@ Khi bố trí các nút tương tác (Buttons & Actions), phải tuân thủ ngh
 | **Accent / Today** | Brand Lime | `bg-[#C6FF33]`, `text-[#C6FF33]`, `bg-secondary` |
 | **Dark Card Background**| Nền thẻ tối sang trọng | `bg-[#13151B]` / `bg-card` |
 | **Action Button** | Ưu tiên Icon-only | `<button title="..." className="h-8 w-8 rounded-md p-1.5 ..."><Icon className="w-4 h-4" /></button>` |
+| **Mobile Button Target** | Nút thân thiện ngón tay to (≥40px) | `min-h-[40px] min-w-[40px] h-10 w-10 sm:h-9 sm:w-9` hoặc `min-h-[40px] h-10 px-3.5 sm:h-9` |
+| **Mobile Button Row** | Cùng hàng PC, không rớt dòng, căn trái | `flex flex-row items-center justify-start gap-2 overflow-x-auto no-scrollbar flex-nowrap` |
+| **Mobile Text Reduction**| Ưu tiên icon, ẩn chữ trên mobile | `<Icon className="h-4 w-4" /><span className="hidden sm:inline">Tên nút</span>` |
 | **Form Label** | Có Icon trước chữ | `<Label className="flex items-center gap-1.5 text-xs font-semibold"><Icon className="w-3.5 h-3.5" /> Tên trường</Label>` |
 | **Modal Fields** | Đồng cấp, không bọc ô lớn | Các `div` trường dữ liệu đặt phẳng trực tiếp trong grid/form |
 | **Header Layout** | Không có chữ giải thích bên dưới | `<h1 className="text-xl font-bold tracking-tight">Tiêu đề</h1>` |

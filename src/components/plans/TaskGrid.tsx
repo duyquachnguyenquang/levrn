@@ -72,7 +72,7 @@ export function TaskGrid({
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-3">
       {tasks.map((task) => {
         const sub = subjectsMap.get(task.subjectId);
         const subColor = sub?.color || "#7D39EB";

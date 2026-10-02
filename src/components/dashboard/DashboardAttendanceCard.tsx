@@ -166,23 +166,24 @@ export function DashboardAttendanceCard({
             </h3>
           </div>
 
-          {/* Cụm công cụ bên phải: 'Đang học/Đã học' + Kính lúp (Tìm kiếm) + Sắp xếp */}
-          <div className="flex items-center gap-2 flex-wrap self-start sm:self-auto shrink-0">
+          {/* Cụm công cụ bên phải: 'Đang học/Đã học' + Kính lúp (Tìm kiếm) + Sắp xếp (cùng một hàng, không rớt dòng, căn trái) */}
+          <div className="flex flex-row items-center justify-start gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar flex-nowrap w-full sm:w-auto shrink-0">
             {/* 2 Tab: Đang học / Đã học */}
-            <div className="flex items-center p-0.5 rounded-md bg-muted/60 border border-border/70 shrink-0">
+            <div className="flex items-center p-0.5 rounded-md bg-muted/60 border border-border/70 min-h-[40px] h-10 sm:min-h-0 sm:h-8 shrink-0">
               <button
                 type="button"
                 onClick={() => setActiveTab("active")}
                 className={cn(
-                  "px-2.5 py-1 text-xs font-bold rounded-md transition-all cursor-pointer flex items-center gap-1.5",
+                  "px-2.5 py-1.5 sm:py-1 text-xs font-bold rounded-md transition-all cursor-pointer flex items-center gap-1.5 shrink-0",
                   activeTab === "active"
                     ? "bg-[#7D39EB] text-white shadow-xs"
                     : "text-muted-foreground hover:text-foreground"
                 )}
                 title="Môn đang trong thời gian học"
+                aria-label="Môn đang trong thời gian học"
               >
-                <BookOpen className="h-3 w-3" />
-                <span>Đang học</span>
+                <BookOpen className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Đang học</span>
                 <span
                   className={cn(
                     "px-1.5 py-0.2 rounded text-[10px] font-mono",
@@ -197,15 +198,16 @@ export function DashboardAttendanceCard({
                 type="button"
                 onClick={() => setActiveTab("ended")}
                 className={cn(
-                  "px-2.5 py-1 text-xs font-bold rounded-md transition-all cursor-pointer flex items-center gap-1.5",
+                  "px-2.5 py-1.5 sm:py-1 text-xs font-bold rounded-md transition-all cursor-pointer flex items-center gap-1.5 shrink-0",
                   activeTab === "ended"
                     ? "bg-[#7D39EB] text-white shadow-xs"
                     : "text-muted-foreground hover:text-foreground"
                 )}
                 title="Môn đã kết thúc hoặc hoàn thành"
+                aria-label="Môn đã kết thúc hoặc hoàn thành"
               >
-                <Archive className="h-3 w-3" />
-                <span>Đã học</span>
+                <Archive className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Đã học</span>
                 <span
                   className={cn(
                     "px-1.5 py-0.2 rounded text-[10px] font-mono",
@@ -224,13 +226,13 @@ export function DashboardAttendanceCard({
                   variant="outline"
                   size="icon"
                   className={cn(
-                    "h-8 w-8 rounded-md border border-border/80 transition-all active:scale-95 shrink-0",
+                    "min-h-[40px] min-w-[40px] h-10 w-10 sm:h-8 sm:w-8 rounded-md border border-border/80 transition-all active:scale-95 shrink-0",
                     searchQuery ? "border-[#7D39EB] text-[#7D39EB] bg-[#7D39EB]/10" : "text-muted-foreground hover:text-foreground hover:bg-muted"
                   )}
                   title="Tìm kiếm môn học"
                   aria-label="Tìm kiếm môn học"
                 >
-                  <Search className="h-3.5 w-3.5" />
+                  <Search className="h-4 w-4" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent
@@ -265,11 +267,11 @@ export function DashboardAttendanceCard({
                 <Button
                   variant="outline"
                   size="icon"
-                  className="h-8 w-8 rounded-md border border-border/80 hover:bg-muted text-muted-foreground hover:text-foreground shrink-0 transition-all active:scale-95"
+                  className="min-h-[40px] min-w-[40px] h-10 w-10 sm:h-8 sm:w-8 rounded-md border border-border/80 hover:bg-muted text-muted-foreground hover:text-foreground shrink-0 transition-all active:scale-95"
                   title="Sắp xếp danh sách"
                   aria-label="Sắp xếp danh sách"
                 >
-                  <ArrowUpDown className="h-3.5 w-3.5" />
+                  <ArrowUpDown className="h-4 w-4" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent

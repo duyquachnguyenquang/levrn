@@ -115,17 +115,17 @@ export default function GroupsPage() {
         </div>
 
         {/* Cụm 2 nút thao tác bên phải: Đồng bộ + Tạo nhóm mới (+) chỉ icon, luôn ngang hàng */}
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
           <Button
             variant="outline"
             size="icon"
             onClick={handleRefresh}
             disabled={isRefreshing}
-            className="rounded-md h-8 w-8 sm:h-10 sm:w-10 border-border/70 text-muted-foreground hover:text-foreground transition-all active:scale-95 shrink-0"
+            className="rounded-md min-h-[40px] min-w-[40px] h-10 w-10 sm:h-9 sm:w-9 border-border/70 text-muted-foreground hover:text-foreground transition-all active:scale-95 shrink-0"
             title="Đồng bộ dữ liệu"
             aria-label="Đồng bộ dữ liệu"
           >
-            <RefreshCw className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
           </Button>
 
           <Button
@@ -134,11 +134,11 @@ export default function GroupsPage() {
               setGroupToEdit(null);
               setCreateModalOpen(true);
             }}
-            className="h-8 w-8 sm:h-10 sm:w-10 bg-[#C6FF33] hover:bg-[#B5F51B] text-black font-black rounded-md shadow-md transition-all duration-200 hover:-translate-y-0.5 active:scale-95 shrink-0"
+            className="min-h-[40px] min-w-[40px] h-10 w-10 sm:h-9 sm:w-9 bg-[#C6FF33] hover:bg-[#B5F51B] text-black font-black rounded-md shadow-md transition-all duration-200 hover:-translate-y-0.5 active:scale-95 shrink-0"
             title="Tạo nhóm mới"
             aria-label="Tạo nhóm mới"
           >
-            <Plus className="h-4 w-4 sm:h-5 sm:w-5 stroke-[3]" />
+            <Plus className="h-4.5 w-4.5 stroke-[3]" />
           </Button>
         </div>
       </div>
@@ -239,23 +239,23 @@ export default function GroupsPage() {
         </Card>
       </div>
 
-      {/* Toolbar tìm kiếm và lọc */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2">
-        <div className="relative flex-1 max-w-md">
+      {/* Toolbar tìm kiếm và lọc: luôn cùng một hàng, không rớt dòng, căn trái */}
+      <div className="flex flex-row items-center justify-start gap-2.5 pt-2 overflow-x-auto no-scrollbar flex-nowrap">
+        <div className="relative flex-1 min-w-[200px] max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
           <Input
             placeholder="Tìm theo tên nhóm, đề tài đồ án, mã môn..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-9 pl-9 pr-4 text-xs rounded-lg bg-card border-border/80"
+            className="min-h-[40px] h-10 sm:h-9 pl-9 pr-4 text-xs rounded-lg bg-card border-border/80"
           />
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="h-9 text-xs px-3 rounded-lg bg-card border border-border/80 text-foreground focus:outline-none focus:ring-1 focus:ring-[#7D39EB]"
+            className="min-h-[40px] h-10 sm:h-9 text-xs px-3 rounded-lg bg-card border border-border/80 text-foreground focus:outline-none focus:ring-1 focus:ring-[#7D39EB] shrink-0"
           >
             <option value="all">Tất cả trạng thái</option>
             <option value="planning">Lên kế hoạch</option>
@@ -272,7 +272,7 @@ export default function GroupsPage() {
           Đang tải danh sách nhóm đồ án...
         </div>
       ) : filteredGroups.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-5">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-4">
           {filteredGroups.map((group) => (
             <GroupProjectCard
               key={group.id}

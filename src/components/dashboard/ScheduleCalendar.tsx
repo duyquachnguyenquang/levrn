@@ -384,35 +384,37 @@ export function ScheduleCalendar({
             </div>
 
             {/* Bên phải: Nút chuyển Tháng/Tuần (M/W) + Bộ chọn Tháng, Năm + Hôm nay + Phím điều hướng (< >) + Nút thêm nhiệm vụ (+) */}
-            <div className="flex flex-wrap items-center gap-2 self-start sm:self-center">
+            <div className="flex flex-row items-center justify-start gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar flex-nowrap w-full sm:w-auto shrink-0">
               {/* 1. Nút chuyển đổi xem Tháng (M) / Tuần (W) */}
-              <div className="flex items-center rounded-lg bg-muted/60 p-0.5 border border-border/60">
+              <div className="flex items-center rounded-lg bg-muted/60 p-0.5 border border-border/60 min-h-[40px] h-10 sm:min-h-0 sm:h-8 shrink-0">
                 <button
                   type="button"
                   onClick={() => setViewMode("month")}
                   className={cn(
-                    "flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold transition-all cursor-pointer",
+                    "flex items-center gap-1.5 min-h-[34px] px-2.5 sm:min-h-0 sm:py-1 rounded-md text-xs font-bold transition-all cursor-pointer",
                     viewMode === "month"
                       ? "bg-[#7D39EB] text-white shadow-xs"
                       : "text-muted-foreground hover:text-foreground"
                   )}
                   title="Chế độ xem Tháng (Month)"
+                  aria-label="Chế độ xem Tháng (Month)"
                 >
-                  <CalendarDays className="h-3.5 w-3.5" />
+                  <CalendarDays className="h-4 w-4" />
                   <span>M</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setViewMode("week")}
                   className={cn(
-                    "flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold transition-all cursor-pointer",
+                    "flex items-center gap-1.5 min-h-[34px] px-2.5 sm:min-h-0 sm:py-1 rounded-md text-xs font-bold transition-all cursor-pointer",
                     viewMode === "week"
                       ? "bg-[#7D39EB] text-white shadow-xs"
                       : "text-muted-foreground hover:text-foreground"
                   )}
                   title="Chế độ xem Tuần (Week)"
+                  aria-label="Chế độ xem Tuần (Week)"
                 >
-                  <CalendarRange className="h-3.5 w-3.5" />
+                  <CalendarRange className="h-4 w-4" />
                   <span>W</span>
                 </button>
               </div>
@@ -423,7 +425,7 @@ export function ScheduleCalendar({
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-8 gap-1.5 px-3 text-xs font-bold rounded-lg border-border/80 hover:border-[#7D39EB] hover:text-[#7D39EB] transition-all bg-background"
+                    className="min-h-[40px] h-10 sm:min-h-0 sm:h-8 gap-1.5 px-3 text-xs font-bold rounded-lg border-border/80 hover:border-[#7D39EB] hover:text-[#7D39EB] transition-all bg-background shrink-0"
                   >
                     <span>{monthNames[viewMonth]} {viewYear}</span>
                     <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
@@ -484,57 +486,60 @@ export function ScheduleCalendar({
                 </PopoverContent>
               </Popover>
 
-              {/* 3. Nút nhảy nhanh về Hôm nay */}
+              {/* 3. Nút nhảy nhanh về Hôm nay (Ưu tiên icon trên mobile) */}
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleGoToday}
-                className="text-xs font-bold h-8 px-2.5 rounded-lg border-border/80 hover:border-[#7D39EB] hover:text-[#7D39EB] active:scale-95 transition-all bg-background"
+                className="min-h-[40px] h-10 sm:min-h-0 sm:h-8 px-2.5 sm:px-3 text-xs font-bold rounded-lg border-border/80 hover:border-[#7D39EB] hover:text-[#7D39EB] active:scale-95 transition-all bg-background shrink-0 flex items-center gap-1.5"
+                title="Về ngày hôm nay"
+                aria-label="Về ngày hôm nay"
               >
-                Hôm nay
+                <CalendarIcon className="h-4 w-4 text-[#7D39EB]" />
+                <span className="hidden sm:inline">Hôm nay</span>
               </Button>
 
               {/* 4. Cụm mũi tên Trước / Sau (< >) */}
-              <div className="flex items-center gap-0.5 border border-border/80 rounded-lg p-0.5 bg-background">
+              <div className="flex items-center gap-0.5 border border-border/80 rounded-lg p-0.5 bg-background min-h-[40px] h-10 sm:min-h-0 sm:h-8 shrink-0">
                 <button
                   onClick={handlePrev}
                   aria-label="Trước"
-                  className="h-7 w-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors active:scale-90 cursor-pointer"
+                  className="min-h-[34px] min-w-[34px] sm:min-h-0 sm:min-w-0 sm:h-7 sm:w-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors active:scale-90 cursor-pointer"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </button>
                 <button
                   onClick={handleNext}
                   aria-label="Sau"
-                  className="h-7 w-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors active:scale-90 cursor-pointer"
+                  className="min-h-[34px] min-w-[34px] sm:min-h-0 sm:min-w-0 sm:h-7 sm:w-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors active:scale-90 cursor-pointer"
                 >
                   <ChevronRight className="h-4 w-4" />
                 </button>
               </div>
 
-              {/* 5. Nút Thêm nhiệm vụ (+) bên phải 2 nút trái phải */}
+              {/* 5. Nút Thêm nhiệm vụ (+) */}
               <Button
                 type="button"
                 size="sm"
                 onClick={() => setIsTaskAssignOpen(true)}
-                className="h-8 w-8 p-0 rounded-lg bg-[#7D39EB] hover:bg-[#6826d4] text-white shadow-xs hover:shadow transition-all active:scale-95 cursor-pointer flex items-center justify-center shrink-0"
+                className="min-h-[40px] min-w-[40px] h-10 w-10 sm:h-8 sm:w-8 p-0 rounded-lg bg-[#7D39EB] hover:bg-[#6826d4] text-white shadow-xs hover:shadow transition-all active:scale-95 cursor-pointer flex items-center justify-center shrink-0"
                 title="Thêm nhiệm vụ &amp; Gán hạn chót từ Kế hoạch"
                 aria-label="Thêm nhiệm vụ"
               >
-                <Plus className="h-4 w-4" />
+                <Plus className="h-4.5 w-4.5" />
               </Button>
 
-              {/* 6. Nút Đồng bộ Google Calendar (Icon-only theo chuẩn Button Hierarchy Rule 1.2) */}
+              {/* 6. Nút Đồng bộ Google Calendar */}
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 onClick={() => setIsGCalModalOpen(true)}
-                className="h-8 w-8 p-0 rounded-lg border-border/80 hover:border-[#7D39EB] hover:text-[#7D39EB] text-muted-foreground transition-all active:scale-95 cursor-pointer flex items-center justify-center shrink-0 bg-background"
+                className="min-h-[40px] min-w-[40px] h-10 w-10 sm:h-8 sm:w-8 p-0 rounded-lg border-border/80 hover:border-[#7D39EB] hover:text-[#7D39EB] text-muted-foreground transition-all active:scale-95 cursor-pointer flex items-center justify-center shrink-0 bg-background"
                 title="Đồng bộ Google Calendar"
                 aria-label="Đồng bộ Google Calendar"
               >
-                <CalendarSync className="h-4 w-4" />
+                <CalendarSync className="h-4.5 w-4.5" />
               </Button>
             </div>
           </div>

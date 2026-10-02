@@ -133,18 +133,18 @@ export default function GradesPage() {
         </div>
 
         {/* Nút thao tác bên phải: Tải lại, Tải dữ liệu xuống, Thêm môn học (+) */}
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
           {/* Nút Tải lại (icon Lặp lại) */}
           <Button
             variant="outline"
             size="icon"
             onClick={handleRefresh}
             disabled={isRefreshing}
-            className="rounded-md h-8 w-8 sm:h-10 sm:w-10 border-border/70 text-muted-foreground hover:text-foreground transition-all active:scale-95 shrink-0"
+            className="rounded-md min-h-[40px] min-w-[40px] h-10 w-10 sm:h-9 sm:w-9 border-border/70 text-muted-foreground hover:text-foreground transition-all active:scale-95 shrink-0"
             title="Tải lại dữ liệu"
             aria-label="Tải lại dữ liệu"
           >
-            <RefreshCw className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
           </Button>
 
           {/* Nút Tải dữ liệu xuống */}
@@ -152,22 +152,22 @@ export default function GradesPage() {
             variant="outline"
             size="icon"
             onClick={handleExportCSV}
-            className="rounded-md h-8 w-8 sm:h-10 sm:w-10 border-border/70 text-muted-foreground hover:text-foreground transition-all active:scale-95 shrink-0"
+            className="rounded-md min-h-[40px] min-w-[40px] h-10 w-10 sm:h-9 sm:w-9 border-border/70 text-muted-foreground hover:text-foreground transition-all active:scale-95 shrink-0"
             title="Tải dữ liệu xuống (CSV)"
             aria-label="Tải dữ liệu xuống (CSV)"
           >
-            <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <Download className="h-4 w-4" />
           </Button>
 
           {/* Nút Thêm môn học (dấu cộng chuẩn trang Môn học) */}
           <Button
             size="icon"
             onClick={handleOpenAddModal}
-            className="h-8 w-8 sm:h-10 sm:w-10 bg-[#C6FF33] hover:bg-[#B5F51B] text-black font-black rounded-md shadow-md transition-all duration-200 hover:-translate-y-0.5 active:scale-95 shrink-0"
+            className="min-h-[40px] min-w-[40px] h-10 w-10 sm:h-9 sm:w-9 bg-[#C6FF33] hover:bg-[#B5F51B] text-black font-black rounded-md shadow-md transition-all duration-200 hover:-translate-y-0.5 active:scale-95 shrink-0"
             title="Thêm môn học"
             aria-label="Thêm môn học"
           >
-            <Plus className="h-4 w-4 sm:h-5 sm:w-5 stroke-[3]" />
+            <Plus className="h-4.5 w-4.5 stroke-[3]" />
           </Button>
         </div>
       </div>
@@ -200,7 +200,7 @@ export default function GradesPage() {
             placeholder="Tìm theo tên môn hoặc mã môn..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-8 pr-8 h-9 text-xs bg-background/60 rounded-md border-border/60 focus-visible:ring-[#7D39EB] transition-all"
+            className="pl-8 pr-8 min-h-[40px] h-10 sm:h-9 text-xs bg-background/60 rounded-md border-border/60 focus-visible:ring-[#7D39EB] transition-all"
           />
           {searchQuery && (
             <button
@@ -217,14 +217,14 @@ export default function GradesPage() {
           <PopoverTrigger asChild>
             <Button
               variant="outline"
-              className={`h-9 px-3 rounded-md text-xs font-bold gap-2 border-border/80 transition-all active:scale-95 shrink-0 ${
+              className={`min-h-[40px] h-10 sm:h-9 px-3 rounded-md text-xs font-bold gap-2 border-border/80 transition-all active:scale-95 shrink-0 ${
                 isFilterActive
                   ? "border-[#7D39EB] text-[#7D39EB] bg-[#7D39EB]/10"
                   : "text-muted-foreground hover:text-foreground hover:border-[#7D39EB]/40"
               }`}
               title="Bộ lọc điểm số"
             >
-              <Filter className="h-3.5 w-3.5" />
+              <Filter className="h-4 w-4" />
               <span className="hidden sm:inline">Bộ lọc</span>
               {activeFilterCount > 0 && (
                 <span className="h-4 w-4 rounded-full bg-[#7D39EB] text-white text-[10px] flex items-center justify-center font-black">

@@ -69,32 +69,30 @@ export default function NotificationsPage() {
 
   return (
     <div className="space-y-6 pb-12">
-      {/* Header trang */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-[#7D39EB]/10 border border-[#7D39EB]/25 flex items-center justify-center text-[#7D39EB]">
-              <Bell className="h-4.5 w-4.5" />
-            </div>
-            <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-foreground flex items-center gap-2">
-              Trung tâm thông báo
-              {unreadCount > 0 && (
-                <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-[#C6FF33] text-black">
-                  {unreadCount} mới
-                </span>
-              )}
-            </h1>
+      {/* Header trang: Đồng bộ chuẩn Môn học & Kế hoạch, luôn nằm cùng hàng trên mọi thiết bị */}
+      <div className="flex flex-row items-center justify-between gap-2 sm:gap-4 pb-2 border-b border-border/50">
+        <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+          <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-md bg-[#7D39EB]/15 flex items-center justify-center text-[#7D39EB] shrink-0">
+            <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
           </div>
+          <h1 className="text-lg sm:text-2xl md:text-3xl font-black text-foreground tracking-tight truncate flex items-center gap-2">
+            <span>Trung tâm thông báo</span>
+            {unreadCount > 0 && (
+              <span className="text-[10px] sm:text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-[#C6FF33] text-black shrink-0">
+                {unreadCount} mới
+              </span>
+            )}
+          </h1>
         </div>
 
-        {/* Nút thao tác nhanh */}
-        <div className="flex items-center gap-2 flex-wrap">
+        {/* Nút thao tác nhanh: luôn cùng 1 hàng, căn trái, ưu tiên icon trên mobile */}
+        <div className="flex flex-row items-center justify-start gap-1.5 sm:gap-2 shrink-0 flex-nowrap">
           {unreadCount > 0 && (
             <Button
               variant="outline"
               size="icon"
               onClick={markAllAsRead}
-              className="h-9 w-9 rounded-lg border-border/80 text-muted-foreground hover:text-foreground"
+              className="min-h-[40px] min-w-[40px] h-10 w-10 sm:h-9 sm:w-9 rounded-lg border-border/80 text-muted-foreground hover:text-foreground shrink-0 transition-all active:scale-95"
               title="Đánh dấu tất cả đã đọc"
               aria-label="Đánh dấu tất cả đã đọc"
             >
@@ -106,7 +104,7 @@ export default function NotificationsPage() {
             variant="outline"
             size="icon"
             onClick={clearReadNotifications}
-            className="h-9 w-9 rounded-lg border-border/80 text-muted-foreground hover:text-destructive"
+            className="min-h-[40px] min-w-[40px] h-10 w-10 sm:h-9 sm:w-9 rounded-lg border-border/80 text-muted-foreground hover:text-destructive shrink-0 transition-all active:scale-95"
             title="Dọn dẹp các thông báo đã đọc"
             aria-label="Dọn dẹp các thông báo đã đọc"
           >
@@ -115,18 +113,20 @@ export default function NotificationsPage() {
 
           <Button
             onClick={() => setCreateModalOpen(true)}
-            className="h-9 px-3.5 text-xs font-bold rounded-lg bg-[#7D39EB] hover:bg-[#6D28D9] text-white shadow-xs gap-1.5"
+            className="min-h-[40px] min-w-[40px] h-10 sm:h-9 px-3 sm:px-3.5 text-xs font-bold rounded-lg bg-[#7D39EB] hover:bg-[#6D28D9] text-white shadow-xs gap-1.5 shrink-0 flex items-center justify-center transition-all active:scale-95"
+            title="Tạo nhắc nhở"
+            aria-label="Tạo nhắc nhở"
           >
-            <Plus className="h-4 w-4" />
-            <span>Tạo nhắc nhở</span>
+            <Plus className="h-4.5 w-4.5" />
+            <span className="hidden sm:inline">Tạo nhắc nhở</span>
           </Button>
         </div>
       </div>
 
       {/* Tabs phân loại & Search Toolbar */}
       <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 pt-2">
-        {/* Tab pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-full">
+        {/* Tab pills: luôn cùng hàng, không rớt dòng, căn trái */}
+        <div className="flex flex-row items-center justify-start gap-1.5 overflow-x-auto pb-1 max-w-full no-scrollbar flex-nowrap shrink-0">
           {[
             { key: "all", label: `Tất cả (${notifications.length})` },
             { key: "unread", label: `Chưa đọc (${unreadCount})` },
@@ -140,10 +140,10 @@ export default function NotificationsPage() {
               type="button"
               onClick={() => setActiveTab(tab.key as any)}
               className={cn(
-                "px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all",
+                "min-h-[40px] px-3.5 sm:px-3 sm:py-1.5 sm:min-h-0 rounded-lg text-xs font-bold whitespace-nowrap transition-all shrink-0 cursor-pointer",
                 activeTab === tab.key
                   ? "bg-[#7D39EB] text-white shadow-xs"
-                  : "bg-card border border-border/70 text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  : "bg-muted/60 text-muted-foreground hover:text-foreground"
               )}
             >
               {tab.label}

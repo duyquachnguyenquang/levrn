@@ -161,7 +161,7 @@ export function SubjectCard({
       new Date(subject.endDate).getTime() < new Date().setHours(0, 0, 0, 0)
     );
 
-  // Chuỗi lịch học
+  // Chuỗi lịch học và thời gian
   const scheduleDaysText =
     subject.scheduleDays && subject.scheduleDays.length > 0
       ? subject.scheduleDays.map((d) => (d === 0 ? "CN" : `T${d + 1}`)).join(", ")
@@ -174,11 +174,27 @@ export function SubjectCard({
       ? `${subject.startTime} - ${subject.endTime}`
       : subject.startTime || "";
 
+  const scheduleText =
+    scheduleDaysText && timeText
+      ? `${scheduleDaysText} • ${timeText}`
+      : scheduleDaysText || timeText || "Chưa có lịch";
+
+  // Chuỗi địa điểm (Phòng học / Cơ sở)
+  const locationText =
+    subject.room && subject.campus
+      ? `P.${subject.room} • ${subject.campus}`
+      : subject.room
+      ? `Phòng ${subject.room}`
+      : subject.campus || "Chưa cập nhật phòng";
+
   return (
     <>
-      <div className="group relative rounded-lg border border-border/75 dark:border-border/60 bg-card overflow-hidden shadow-xs hover:shadow-lg transition-all duration-200 hover:-translate-y-1 flex flex-col justify-between h-full">
-        {/* 1. Ảnh bìa môn học (Visual Banner) nhỏ gọn tinh tế h-28, tỉ lệ cân đối */}
-        <div className="relative h-28 w-full overflow-hidden bg-muted/40 shrink-0 select-none">
+      <div 
+        onClick={() => onEdit(subject)}
+        className="group relative rounded-lg border border-border/75 dark:border-border/60 bg-card overflow-hidden shadow-xs hover:shadow-lg transition-all duration-200 hover:-translate-y-1 flex flex-col justify-between h-full cursor-pointer"
+      >
+        {/* 1. Ảnh bìa môn học (Visual Banner) - Chiều cao co giãn h-20 trên mobile, h-28 trên desktop */}
+        <div className="relative h-20 sm:h-28 w-full overflow-hidden bg-muted/40 shrink-0 select-none">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={coverUrl}
@@ -187,17 +203,17 @@ export function SubjectCard({
             className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
           />
 
-          {/* Badge phân loại môn học nổi trên ảnh góc trái */}
-          <div className="absolute top-2.5 left-2.5 z-10 flex items-center gap-1.5 flex-wrap">
+          {/* Badge mã môn nổi trên ảnh góc trái */}
+          <div className="absolute top-2 left-2 z-10 flex items-center gap-1.5 flex-wrap">
             <span
-              className="font-mono font-black text-[11px] px-2 py-0.5 rounded-md text-white backdrop-blur-md border border-white/20 shadow-xs"
+              className="font-mono font-black text-[10px] sm:text-[11px] px-1.5 sm:px-2 py-0.5 rounded-md text-white backdrop-blur-md border border-white/20 shadow-xs"
               style={{ backgroundColor: `${cardColor}cc` }}
             >
               {subject.code}
             </span>
 
             {subject.category && (
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-black/60 backdrop-blur-md text-white/90 border border-white/15 shadow-xs">
+              <span className="hidden sm:inline-block text-[10px] font-bold px-2 py-0.5 rounded-md bg-black/60 backdrop-blur-md text-white/90 border border-white/15 shadow-xs">
                 {subject.category}
               </span>
             )}
@@ -207,32 +223,55 @@ export function SubjectCard({
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
         </div>
 
-        {/* 2. Thân nội dung Card (Body Content) - Rộng rãi, chữ to nổi bật, bảo toàn viền */}
-        <div className="px-3 pt-3 pb-3 space-y-2.5 flex-1 flex flex-col justify-between bg-card overflow-hidden">
-          <div className="space-y-2">
-            {/* Hàng trên: Tiêu đề môn học to nổi bật bên trái, Pie-chart bên phải ngang hàng */}
-            <div className="flex items-center justify-between gap-2.5 pt-0.5">
+        {/* 2. Thân nội dung Card (Body Content) - Tầng 1: Tên, Thời gian, Địa điểm */}
+        <div className="p-2.5 sm:p-3 space-y-2 flex-1 flex flex-col justify-between bg-card overflow-hidden">
+          <div className="space-y-1.5">
+            {/* Hàng trên: Tiêu đề môn học to nổi bật bên trái, Pie-chart tiến độ bên phải */}
+            <div className="flex items-center justify-between gap-2 pt-0.5">
               <div
-                onClick={() => onEdit(subject)}
-                className="cursor-pointer min-w-0 flex-1"
+                className="min-w-0 flex-1"
                 title={subject.name}
               >
                 <MarqueeText
                   text={subject.name}
-                  className="text-lg font-black tracking-tight text-foreground group-hover:text-[#7D39EB] transition-colors leading-tight"
+                  className="text-sm sm:text-base font-black tracking-tight text-foreground group-hover:text-[#7D39EB] transition-colors leading-tight"
                 />
               </div>
 
-              {/* Pie-chart thể hiện số ngày thực học / số ngày phải học hoặc trạng thái Xong */}
-              <AttendancePieChart
-                attended={checkinStatus.attendedCount}
-                total={checkinStatus.totalWeeks || 15}
-                size={48}
-                isCompleted={isCompleted}
-              />
+              {/* Pie-chart tiến độ gọn gàng (size 34 trên mobile, 44 trên PC) */}
+              <div className="shrink-0">
+                <div className="sm:hidden">
+                  <AttendancePieChart
+                    attended={checkinStatus.attendedCount}
+                    total={checkinStatus.totalWeeks || 15}
+                    size={34}
+                    isCompleted={isCompleted}
+                  />
+                </div>
+                <div className="hidden sm:block">
+                  <AttendancePieChart
+                    attended={checkinStatus.attendedCount}
+                    total={checkinStatus.totalWeeks || 15}
+                    size={44}
+                    isCompleted={isCompleted}
+                  />
+                </div>
+              </div>
             </div>
 
-            {/* Trạng thái Điểm danh hôm nay (nếu có ca học) */}
+            {/* Thông tin cốt lõi 1: Thời gian học (Thứ, Ca học) */}
+            <div className="flex items-center gap-1.5 text-[11px] sm:text-xs text-muted-foreground min-w-0">
+              <Clock className="w-3.5 h-3.5 text-[#7D39EB] shrink-0" />
+              <span className="truncate font-medium">{scheduleText}</span>
+            </div>
+
+            {/* Thông tin cốt lõi 2: Địa điểm học (Phòng học, Cơ sở) */}
+            <div className="flex items-center gap-1.5 text-[11px] sm:text-xs text-muted-foreground min-w-0">
+              <MapPin className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <span className="truncate font-medium">{locationText}</span>
+            </div>
+
+            {/* Điểm danh hôm nay nếu đúng ca học */}
             {checkinStatus.canCheckin && (
               <Button
                 type="button"
@@ -241,39 +280,27 @@ export function SubjectCard({
                   e.stopPropagation();
                   onCheckin?.(subject);
                 }}
-                className="w-full mt-1 h-7.5 bg-[#C6FF33] hover:bg-[#b2f310] text-black font-extrabold text-xs rounded-md shadow-xs transition-all hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-1.5"
+                className="w-full mt-1 h-7 bg-[#C6FF33] hover:bg-[#b2f310] text-black font-extrabold text-[11px] rounded-md shadow-xs transition-all active:scale-95 flex items-center justify-center gap-1"
                 title="Điểm danh buổi học hôm nay"
               >
-                <CheckCircle2 className="h-3.5 w-3.5 stroke-[2.5]" />
-                <span>Điểm danh ca học hôm nay</span>
+                <CheckCircle2 className="h-3 w-3 stroke-[2.5]" />
+                <span className="truncate">Điểm danh ca hôm nay</span>
               </Button>
             )}
 
             {checkinStatus.isCheckedIn && (
-              <div className="mt-1 w-full py-1 px-2.5 rounded-md bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-between text-xs text-emerald-600 dark:text-emerald-400 font-semibold">
-                <span className="flex items-center gap-1.5">
-                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-                  <span>Đã điểm danh hôm nay</span>
+              <div className="w-full py-0.5 px-2 rounded-md bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-between text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">
+                <span className="flex items-center gap-1 truncate">
+                  <CheckCircle2 className="h-3 w-3 text-emerald-500 shrink-0" />
+                  <span className="truncate">Đã điểm danh</span>
                 </span>
-                <span className="text-[10px] font-mono opacity-80">
+                <span className="text-[10px] font-mono opacity-80 shrink-0">
                   {checkinStatus.checkinTime
                     ? new Date(checkinStatus.checkinTime).toLocaleTimeString("vi-VN", {
                         hour: "2-digit",
                         minute: "2-digit",
                       })
-                    : "Hoàn tất"}
-                </span>
-              </div>
-            )}
-
-            {checkinStatus.isTodayClass && !checkinStatus.isInTimeWindow && !checkinStatus.isCheckedIn && (
-              <div className="mt-1 w-full py-1 px-2 rounded-md bg-amber-500/10 border border-amber-500/20 flex items-center justify-between text-[11px] text-amber-700 dark:text-amber-400 font-medium">
-                <span className="flex items-center gap-1.5 truncate">
-                  <Clock className="h-3 w-3 shrink-0" />
-                  <span className="truncate">Lịch: {formatShiftLabel(subject.startTime, subject.endTime)}</span>
-                </span>
-                <span className="text-[10px] text-muted-foreground shrink-0 ml-1">
-                  {checkinStatus.statusText}
+                    : "Xong"}
                 </span>
               </div>
             )}
@@ -282,111 +309,22 @@ export function SubjectCard({
           {/* Đường kẻ mờ phân tách */}
           <div className="border-t border-border/40 my-0.5" />
 
-          {/* 3. Footer: Nút Chi tiết bên trái, 3 nút tính năng bên phải (Google Drive, Course, Location) */}
-          <div className="flex items-center gap-1.5 pt-0.5 overflow-hidden w-full">
-            {/* Bên trái: Nút Chi tiết (icon con mắt + MarqueeText nếu tràn) */}
+          {/* 3. Footer: Nút điều hướng mở Pop-up chi tiết (Tầng 1 -> Tầng 2) */}
+          <div className="w-full pt-0.5">
             <Button
               variant="outline"
               size="sm"
-              onClick={() => onEdit(subject)}
-              className="h-8 flex-1 min-w-0 px-2 gap-1.5 text-xs font-semibold rounded-md border-border/80 hover:bg-[#7D39EB]/10 hover:text-[#7D39EB] hover:border-[#7D39EB]/40 transition-all flex items-center justify-center shadow-2xs overflow-hidden"
-              title="Chi tiết môn học"
-              aria-label="Chi tiết môn học"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(subject);
+              }}
+              className="w-full h-8 px-2 gap-1.5 text-xs font-bold rounded-md border-border/80 hover:bg-[#7D39EB]/10 hover:text-[#7D39EB] hover:border-[#7D39EB]/40 transition-all flex items-center justify-center shadow-2xs"
+              title="Xem thông tin chi tiết môn học"
+              aria-label="Xem thông tin chi tiết môn học"
             >
               <Eye className="h-3.5 w-3.5 shrink-0 text-[#7D39EB]" />
-              <MarqueeText
-                text="Chi tiết"
-                className="text-xs font-semibold select-none"
-                containerClassName="min-w-0 flex-1 text-center"
-              />
+              <span>Chi tiết</span>
             </Button>
-
-            {/* Bên phải: 3 nút tính năng (Google Drive, Course, Location) đồng chiều cao h-8 */}
-            <div className="flex items-center gap-1 shrink-0">
-              {/* 1. Nút Google Drive */}
-              {subject.driveUrl ? (
-                <a
-                  href={subject.driveUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="h-8 w-8 rounded-md flex items-center justify-center bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/25 transition-all shadow-2xs hover:scale-105 shrink-0"
-                  title="Mở Google Drive"
-                  aria-label="Mở Google Drive"
-                >
-                  <Folder className="h-3.5 w-3.5" />
-                </a>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => onEdit(subject)}
-                  className="h-8 w-8 rounded-md flex items-center justify-center bg-muted/20 text-muted-foreground/35 hover:text-amber-500 hover:bg-amber-500/10 border border-border/40 hover:border-amber-500/30 transition-all shadow-2xs shrink-0"
-                  title="Chưa có liên kết Google Drive (Nhấp để thêm)"
-                  aria-label="Chưa có Google Drive"
-                >
-                  <Folder className="h-3.5 w-3.5" />
-                </button>
-              )}
-
-              {/* 2. Nút LMS Course */}
-              {subject.courseUrl ? (
-                <a
-                  href={subject.courseUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="h-8 w-8 rounded-md flex items-center justify-center bg-[#7D39EB]/10 hover:bg-[#7D39EB]/20 text-[#7D39EB] border border-[#7D39EB]/25 transition-all shadow-2xs hover:scale-105 shrink-0"
-                  title="Mở LMS Course"
-                  aria-label="Mở LMS Course"
-                >
-                  <BookOpen className="h-3.5 w-3.5" />
-                </a>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => onEdit(subject)}
-                  className="h-8 w-8 rounded-md flex items-center justify-center bg-muted/20 text-muted-foreground/35 hover:text-[#7D39EB] hover:bg-[#7D39EB]/10 border border-border/40 hover:border-[#7D39EB]/30 transition-all shadow-2xs shrink-0"
-                  title="Chưa có liên kết LMS Course (Nhấp để thêm)"
-                  aria-label="Chưa có Course"
-                >
-                  <BookOpen className="h-3.5 w-3.5" />
-                </button>
-              )}
-
-              {/* 3. Nút Location (Bản đồ / Phòng học / Cơ sở) */}
-              {(() => {
-                const campusInfo = getCampusByName(subject.campus) || getCampusByName(subject.mapUrl);
-                const mapTargetUrl =
-                  campusInfo?.mapUrl ||
-                  subject.mapUrl ||
-                  (subject.campus
-                    ? `https://maps.google.com/?q=${encodeURIComponent(subject.campus)}`
-                    : subject.room
-                    ? `https://maps.google.com/?q=${encodeURIComponent(subject.room)}`
-                    : null);
-
-                return mapTargetUrl ? (
-                  <a
-                    href={mapTargetUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="h-8 w-8 rounded-md flex items-center justify-center bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 border border-emerald-500/25 transition-all shadow-2xs hover:scale-105 shrink-0"
-                    title={`Mở vị trí (${subject.room ? subject.room + " - " : ""}${subject.campus || "Bản đồ"})`}
-                    aria-label="Mở vị trí"
-                  >
-                    <MapPin className="h-3.5 w-3.5" />
-                  </a>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => onEdit(subject)}
-                    className="h-8 w-8 rounded-md flex items-center justify-center bg-muted/20 text-muted-foreground/35 hover:text-emerald-500 hover:bg-emerald-500/10 border border-border/40 hover:border-emerald-500/30 transition-all shadow-2xs shrink-0"
-                    title="Chưa có thông tin phòng/cơ sở (Nhấp để thêm)"
-                    aria-label="Chưa có vị trí"
-                  >
-                    <MapPin className="h-3.5 w-3.5" />
-                  </button>
-                );
-              })()}
-            </div>
           </div>
         </div>
       </div>

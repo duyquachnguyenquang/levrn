@@ -54,27 +54,27 @@ export function PlanHeader({
         </div>
 
         {/* Cụm 2 nút thao tác bên phải: Làm mới + Thêm (+) */}
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
           <Button
             variant="outline"
             size="icon"
             onClick={onRefresh}
             disabled={isRefreshing}
-            className="rounded-md h-8 w-8 sm:h-10 sm:w-10 border-border/70 text-muted-foreground hover:text-foreground transition-all active:scale-95 shrink-0"
+            className="rounded-md min-h-[40px] min-w-[40px] h-10 w-10 sm:h-9 sm:w-9 border-border/70 text-muted-foreground hover:text-foreground transition-all active:scale-95 shrink-0"
             title="Tải lại dữ liệu"
             aria-label="Tải lại dữ liệu"
           >
-            <RefreshCw className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
           </Button>
 
           <Button
             size="icon"
             onClick={onAddNew}
-            className="h-8 w-8 sm:h-10 sm:w-10 bg-[#C6FF33] hover:bg-[#B5F51B] text-black font-black rounded-md shadow-md transition-all duration-200 hover:-translate-y-0.5 active:scale-95 shrink-0"
+            className="min-h-[40px] min-w-[40px] h-10 w-10 sm:h-9 sm:w-9 bg-[#C6FF33] hover:bg-[#B5F51B] text-black font-black rounded-md shadow-md transition-all duration-200 hover:-translate-y-0.5 active:scale-95 shrink-0"
             title="Thêm nhiệm vụ"
             aria-label="Thêm nhiệm vụ"
           >
-            <Plus className="h-4 w-4 sm:h-5 sm:w-5 stroke-[3]" />
+            <Plus className="h-4.5 w-4.5 stroke-[3]" />
           </Button>
         </div>
       </div>
