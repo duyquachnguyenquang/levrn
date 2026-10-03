@@ -115,11 +115,12 @@ export function TaskListView({
               </button>
 
               <span
-                className="font-black px-1.5 py-0.5 rounded text-[10px] shrink-0"
+                className="w-14 h-5 inline-flex items-center justify-center font-mono font-black text-[10px] rounded-xs shrink-0 text-center tracking-tight truncate px-1 shadow-2xs"
                 style={{
                   backgroundColor: `${subColor}20`,
                   color: subColor,
                 }}
+                title={sub?.code || "MÔN"}
               >
                 {sub?.code || "MÔN"}
               </span>

@@ -760,8 +760,9 @@ export function ScheduleCalendar({
                                     <div className="flex items-center justify-between gap-1">
                                       {sub && (
                                         <span
-                                          className="px-1 py-0.2 rounded text-[9px] font-extrabold text-white shrink-0"
+                                          className="w-12 h-4 inline-flex items-center justify-center rounded text-[9px] font-mono font-extrabold text-white shrink-0 text-center tracking-tight truncate px-0.5"
                                           style={{ backgroundColor: sub.color || "#7D39EB" }}
+                                          title={sub.code}
                                         >
                                           {sub.code}
                                         </span>

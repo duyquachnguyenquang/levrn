@@ -188,7 +188,10 @@ export function SemesterGradeTable({
                         {/* Cụm bên trái: Mã môn + Số tín chỉ (hàng trên) & Tên môn (hàng dưới) */}
                         <div className="flex-1 min-w-0 space-y-1">
                           <div className="flex items-center gap-2">
-                            <span className="font-mono font-bold text-[11px] px-2 py-0.5 rounded-md bg-[#7D39EB]/15 text-[#7D39EB] border border-[#7D39EB]/25 shrink-0">
+                            <span
+                              className="w-14 h-5 inline-flex items-center justify-center font-mono font-bold text-[11px] rounded-md bg-[#7D39EB]/15 text-[#7D39EB] border border-[#7D39EB]/25 shrink-0 text-center tracking-tight truncate px-1 shadow-2xs"
+                              title={course.subjectCode}
+                            >
                               {course.subjectCode}
                             </span>
                             <span className="text-[11px] text-muted-foreground font-semibold flex items-center gap-1 shrink-0">

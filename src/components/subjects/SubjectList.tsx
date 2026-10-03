@@ -698,12 +698,13 @@ export function SubjectList({
                     <div className="min-w-0 flex-1 space-y-1">
                       <div className="flex items-center gap-1.5 min-w-0">
                         <span
-                          className="font-mono font-black text-[10px] px-1.5 py-0.5 rounded-md shrink-0 shadow-2xs"
+                          className="w-14 h-5 inline-flex items-center justify-center font-mono font-black text-[10px] rounded-md shrink-0 text-center tracking-tight truncate px-1 shadow-2xs"
                           style={{
                             backgroundColor: `${cardColor}20`,
                             color: cardColor,
                             border: `1px solid ${cardColor}40`,
                           }}
+                          title={subject.code}
                         >
                           {subject.code}
                         </span>
@@ -791,7 +792,7 @@ export function SubjectList({
                         <button
                           type="button"
                           onClick={() => onEdit(subject)}
-                          className="font-mono font-black text-xs px-2 py-0.5 rounded-md inline-block shadow-2xs hover:scale-105 active:scale-95 transition-all cursor-pointer text-left"
+                          className="w-16 h-6 inline-flex items-center justify-center font-mono font-black text-xs rounded-md shadow-2xs hover:scale-105 active:scale-95 transition-all cursor-pointer text-center truncate px-1"
                           style={{
                             backgroundColor: `${cardColor}20`,
                             color: cardColor,

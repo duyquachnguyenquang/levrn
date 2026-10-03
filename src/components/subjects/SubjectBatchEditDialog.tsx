@@ -686,8 +686,9 @@ export function SubjectBatchEditDialog({
                         </div>
 
                         <span
-                          className="font-mono font-black text-[10px] px-1.5 py-0.5 rounded text-white shrink-0 shadow-2xs"
+                          className="w-14 h-5 inline-flex items-center justify-center font-mono font-black text-[10px] rounded text-white shrink-0 text-center tracking-tight truncate px-1 shadow-2xs"
                           style={{ backgroundColor: cardColor }}
+                          title={sub.code}
                         >
                           {sub.code}
                         </span>

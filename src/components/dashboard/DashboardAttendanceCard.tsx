@@ -395,11 +395,12 @@ export function DashboardAttendanceCard({
                       style={{ backgroundColor: isEnded ? "#94a3b8" : subColor }}
                     />
                     <span
-                      className="font-mono font-black px-1.5 py-0.5 rounded-xs text-[10px] shrink-0"
+                      className="w-14 h-5 inline-flex items-center justify-center font-mono font-black text-[10px] rounded-xs shrink-0 text-center tracking-tight truncate px-1 shadow-2xs"
                       style={{
                         backgroundColor: isEnded ? "#e2e8f0" : `${subColor}20`,
                         color: isEnded ? "#64748b" : subColor,
                       }}
+                      title={sub.code}
                     >
                       {sub.code}
                     </span>

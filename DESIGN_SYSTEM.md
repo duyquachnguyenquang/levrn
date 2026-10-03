@@ -185,6 +185,15 @@ Khi bố trí các nút tương tác (Buttons & Actions), phải tuân thủ ngh
   - **TUYỆT ĐỐI KHÔNG** để bất kỳ tính năng, nút bấm, biểu tượng, nhãn hay danh sách lựa chọn bên trong bị lấn sang, tràn mép (overflow), đè lên nhau, hay vượt ra ngoài khung viền bao quanh của ô gây lỗi hiển thị.
   - Bắt buộc phải tính toán độ rộng, khoảng cách và đệm an toàn (`p-2.5` đến `p-3.5`, `w-fit` hoặc `w-full` cân xứng), không để xảy ra hiện tượng nút hoặc chữ bị chen lấn, kẹt mép.
 
+### 📏 Quy tắc 18: Chuẩn hóa Chiều ngang Cố định cho Thẻ Mã / Badge trong Danh sách (Fixed-Width Alignment)
+- **Quy định:** Trong tất cả các giao diện danh sách (List view, bảng hàng ngang, card Dashboard như Điểm danh, Nhiệm vụ, Lịch học, Quản lý môn học, v.v.):
+  - **TUYỆT ĐỐI KHÔNG** để thẻ mã môn (`sub.code`), thẻ phân loại (`task.type`, `category`) có chiều rộng co giãn tự nhiên (`w-auto`), gây hiện tượng thụt vào thò ra zíc zắc làm lệch cột hiển thị của Tên môn / Tiêu đề.
+  - **Khóa chiều ngang cố định (Fixed Width & Centered Alignment):**
+    - **Thẻ mã môn học (Subject Code Badge):** Cố định chiều rộng chuẩn **`w-14` (56px)** hoặc **`w-[54px]`** (chiều cao chuẩn `h-5` ~20px), căn giữa tuyệt đối (`inline-flex items-center justify-center text-center shrink-0`), font mono đậm (`font-mono font-black text-[10px] sm:text-[11px]`), bo góc nhẹ 5-10% (`rounded-xs` hoặc `rounded-md`), `truncate` chống tràn.
+    - **Thẻ phân loại nhiệm vụ (Task Type Badge như Lịch học / Cá nhân / Nhóm):** Cố định chiều rộng chuẩn **`w-14` (56px)**, căn giữa `inline-flex items-center justify-center text-center shrink-0 font-mono font-bold text-[9.5px] rounded-xs`.
+    - **Thẻ mã môn phụ trong nhiệm vụ (`[CODE]`):** Cố định chiều rộng chuẩn **`w-12` (48px)** hoặc **`w-14` (56px)**, căn giữa `inline-flex items-center justify-center text-center font-mono font-bold text-[10px] shrink-0 truncate`.
+  - **Hiệu quả thị giác:** Tạo thành một trục gióng dọc thẳng tắp (Vertical Alignment Column), toàn bộ tên môn học / tiêu đề nội dung bắt đầu chính xác tại cùng một tọa độ X, giao diện ngăn nắp, đồng bộ, chuẩn chỉ và sắc nét theo phong cách Sharp Tech.
+
 ---
 
 ## 3. Quy Tắc Tác Vụ Dành Cho AI (AI Working & Interaction Rules)
@@ -211,6 +220,8 @@ Khi bố trí các nút tương tác (Buttons & Actions), phải tuân thủ ngh
 | **Card Radius** | Bo góc 5-10% (cứng cáp) | `rounded-lg` (8px) hoặc `rounded-md` (6px) |
 | **Close Button Pop-up** | Khung vuông bo 5-10% ngang Header | `<button className="h-8 w-8 rounded-md border border-border/80 bg-background flex items-center justify-center ..."><X className="w-4 h-4" /></button>` |
 | **Cards Grid** | 5 thẻ mỗi hàng | `grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5` |
+| **Thẻ mã môn trong List** | Chiều ngang cố định `w-14`, căn giữa | `w-14 h-5 inline-flex items-center justify-center font-mono font-black text-[10px] rounded-xs shrink-0 text-center truncate px-1` |
+| **Thẻ phân loại trong List** | Chiều ngang cố định `w-14`, căn giữa | `w-14 h-5 inline-flex items-center justify-center font-mono font-bold text-[9.5px] rounded-xs shrink-0 text-center truncate` |
 | **Primary Color** | Brand Violet | `bg-[#7D39EB]`, `text-[#7D39EB]`, `bg-primary` |
 | **Accent / Today** | Brand Lime | `bg-[#C6FF33]`, `text-[#C6FF33]`, `bg-secondary` |
 | **Dark Card Background**| Nền thẻ tối sang trọng | `bg-[#13151B]` / `bg-card` |

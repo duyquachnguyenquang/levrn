@@ -120,6 +120,15 @@ Khi tạo hoặc chỉnh sửa các nút thao tác:
   - **TUYỆT ĐỐI KHÔNG** để bất kỳ tính năng, nút bấm, biểu tượng, nhãn hay danh sách lựa chọn bên trong bị lấn sang, tràn mép (overflow), đè lên nhau, hay vượt ra ngoài khung viền bao quanh của ô gây lỗi hiển thị.
   - Phải bố trí khoảng đệm an toàn (`p-2.5` đến `p-3.5`), độ rộng ô tương thích và tỷ lệ cân xứng, đảm bảo trải nghiệm nhìn và bấm chính xác, sạch sẽ.
 
+### 1.17. Chuẩn hóa Chiều ngang Cố định cho Thẻ Mã / Badge trong Danh sách (Fixed-Width Alignment)
+- Trong mọi giao diện hiển thị danh sách (List view, bảng hàng ngang, card Dashboard như Điểm danh, Nhiệm vụ, Lịch học, Quản lý môn học, v.v.):
+  - **CỐ ĐỊNH CHIỀU NGANG THẺ MÃ / BADGE:** Tuyệt đối không để thẻ mã môn (`sub.code`) hay thẻ phân loại (`task.type`, `category`) có chiều rộng co giãn tự nhiên (`w-auto`), gây hiện tượng thụt vào thò ra zíc zắc làm lệch cột hiển thị của Tên môn / Tiêu đề.
+  - **Quy chuẩn kích thước & căn chỉnh:**
+    - **Thẻ mã môn học (Subject Code Badge):** Cố định chiều rộng chuẩn **`w-14` (56px)** hoặc **`w-[54px]`** (chiều cao chuẩn `h-5` ~20px), căn giữa tuyệt đối (`inline-flex items-center justify-center text-center shrink-0`), font mono đậm (`font-mono font-black text-[10px] sm:text-[11px]`), bo góc nhẹ 5-10% (`rounded-xs` hoặc `rounded-md`), `truncate` chống tràn.
+    - **Thẻ phân loại nhiệm vụ (Task Type Badge như Lịch học / Cá nhân / Nhóm):** Cố định chiều rộng chuẩn **`w-14` (56px)**, căn giữa `inline-flex items-center justify-center text-center shrink-0 font-mono font-bold text-[9.5px] rounded-xs`.
+    - **Thẻ mã môn phụ trong nhiệm vụ (`[CODE]`):** Cố định chiều rộng chuẩn **`w-12` (48px)** hoặc **`w-14` (56px)**, căn giữa `inline-flex items-center justify-center text-center font-mono font-bold text-[10px] shrink-0 truncate`.
+  - **Hiệu quả:** Tạo thành một trục gióng dọc thẳng tắp (Vertical Alignment Column), toàn bộ tên môn học / tiêu đề nội dung bắt đầu chính xác tại cùng một tọa độ X, giao diện ngăn nắp, đồng bộ, chuẩn chỉ và sắc nét theo phong cách Sharp Tech.
+
 ---
 
 ## 2. QUY TẮC TÁC VỤ & PHẢN HỒI CỦA AI (AI OPERATIONAL RULES)

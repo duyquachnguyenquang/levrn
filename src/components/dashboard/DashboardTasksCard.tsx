@@ -478,22 +478,22 @@ export function DashboardTasksCard({
                 <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
                   {/* Badge phân loại trực quan */}
                   {task.type === "schedule" ? (
-                    <span className="px-1.5 py-0.5 rounded text-[9.5px] font-bold bg-[#7D39EB]/15 text-[#7D39EB] shrink-0 font-mono">
+                    <span className="w-14 h-5 inline-flex items-center justify-center rounded-xs text-[9.5px] font-bold bg-[#7D39EB]/15 text-[#7D39EB] shrink-0 font-mono text-center truncate">
                       Lịch học
                     </span>
                   ) : task.type === "personal" ? (
-                    <span className="px-1.5 py-0.5 rounded text-[9.5px] font-bold bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 shrink-0 font-mono">
+                    <span className="w-14 h-5 inline-flex items-center justify-center rounded-xs text-[9.5px] font-bold bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 shrink-0 font-mono text-center truncate">
                       Cá nhân
                     </span>
                   ) : (
-                    <span className="px-1.5 py-0.5 rounded text-[9.5px] font-bold bg-amber-500/15 text-amber-700 dark:text-amber-400 shrink-0 font-mono">
+                    <span className="w-14 h-5 inline-flex items-center justify-center rounded-xs text-[9.5px] font-bold bg-amber-500/15 text-amber-700 dark:text-amber-400 shrink-0 font-mono text-center truncate">
                       Nhóm
                     </span>
                   )}
 
                   {/* Mã môn nếu có */}
                   {task.code && (
-                    <span className="font-mono font-bold text-[10px] text-muted-foreground shrink-0 hidden sm:inline">
+                    <span className="w-14 h-5 inline-flex items-center justify-center font-mono font-bold text-[10px] text-muted-foreground shrink-0 hidden sm:inline-flex text-center truncate px-0.5" title={task.code}>
                       [{task.code}]
                     </span>
                   )}
