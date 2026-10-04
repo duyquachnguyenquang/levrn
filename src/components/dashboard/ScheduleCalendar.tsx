@@ -15,8 +15,12 @@ import {
   CalendarRange,
   Plus,
   CalendarSync,
+  CheckCircle2,
+  CalendarCheck,
+  Check,
+  AlertCircle,
 } from "lucide-react";
-import { Subject, StudyTask, StudyTaskFormData } from "@/lib/types";
+import { Subject, StudyTask, StudyTaskFormData, AttendanceRecord } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -28,6 +32,7 @@ import {
 import { TaskAssignModal } from "./TaskAssignModal";
 import { GoogleCalendarModal } from "@/components/calendar/GoogleCalendarModal";
 import { useStudyPlans } from "@/hooks/useStudyPlans";
+import { useAttendance } from "@/hooks/useAttendance";
 import { cn } from "@/lib/utils";
 
 export interface ClassSession {
@@ -42,6 +47,21 @@ export function toDateKey(date: Date): string {
   const m = String(date.getMonth() + 1).padStart(2, "0");
   const d = String(date.getDate()).padStart(2, "0");
   return `${y}-${m}-${d}`;
+}
+
+// Định dạng ngày tiếng Việt: Thứ Hai, 05/10/2026
+export function formatDateVi(dateStr: string): string {
+  if (!dateStr) return "";
+  const parts = dateStr.split("-").map(Number);
+  if (parts.length !== 3) return dateStr;
+  const d = new Date(parts[0], parts[1] - 1, parts[2]);
+  if (isNaN(d.getTime())) return dateStr;
+  const dayNames = ["Chủ Nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"];
+  const dayName = dayNames[d.getDay()];
+  const dd = String(parts[2]).padStart(2, "0");
+  const mm = String(parts[1]).padStart(2, "0");
+  const yyyy = parts[0];
+  return `${dayName}, ${dd}/${mm}/${yyyy}`;
 }
 
 // Tính toán toàn bộ các buổi học của tất cả môn học
@@ -108,6 +128,15 @@ interface ScheduleCalendarProps {
     updates: Partial<StudyTaskFormData>
   ) => Promise<{ success: boolean; error?: string }>;
   onRefreshTasks?: () => void;
+  attendanceRecords?: AttendanceRecord[];
+  onCheckinDate?: (
+    dateStr: string,
+    subjectsToMark: Subject[]
+  ) => Promise<{ success: boolean; message?: string }>;
+  onCancelCheckinDate?: (
+    dateStr: string,
+    subjectsToCancel: Subject[]
+  ) => Promise<{ success: boolean; message?: string }>;
 }
 
 export function ScheduleCalendar({
@@ -118,6 +147,9 @@ export function ScheduleCalendar({
   onAddTask: propOnAddTask,
   onUpdateTask: propOnUpdateTask,
   onRefreshTasks: propOnRefreshTasks,
+  attendanceRecords: propAttendanceRecords,
+  onCheckinDate: propOnCheckinDate,
+  onCancelCheckinDate: propOnCancelCheckinDate,
 }: ScheduleCalendarProps) {
   const today = useMemo(() => new Date(), []);
   const todayKey = useMemo(() => toDateKey(today), [today]);
@@ -127,6 +159,12 @@ export function ScheduleCalendar({
   const tasks = propTasks ?? fallbackPlans.tasks;
   const onAddTask = propOnAddTask ?? fallbackPlans.addTask;
   const onUpdateTask = propOnUpdateTask ?? fallbackPlans.updateTask;
+
+  // Hook attendance dự phòng nếu props không truyền
+  const fallbackAttendance = useAttendance(subjects);
+  const attendanceRecords = propAttendanceRecords ?? fallbackAttendance.records;
+  const onCheckinDate = propOnCheckinDate;
+  const onCancelCheckinDate = propOnCancelCheckinDate;
 
   // Trạng thái modal thêm nhiệm vụ / gán hạn chót (+)
   const [isTaskAssignOpen, setIsTaskAssignOpen] = useState(false);
@@ -170,6 +208,85 @@ export function ScheduleCalendar({
   const sessionsByDate = useMemo(() => {
     return calculateAllSessions(subjects);
   }, [subjects]);
+
+  // Kiểm tra 1 ca học cụ thể đã được điểm danh hay chưa
+  const isSessionCheckedIn = React.useCallback(
+    (ses: ClassSession) => {
+      return attendanceRecords.some(
+        (r) =>
+          r.subjectId === ses.subject.id &&
+          r.date === ses.dateStr &&
+          (r.status === "present" || r.status === "late")
+      );
+    },
+    [attendanceRecords]
+  );
+
+  // Lấy số ngày đã điểm danh của môn học
+  const getSubjectAttendedCount = React.useCallback(
+    (subjectId: string) => {
+      return attendanceRecords.filter(
+        (r) =>
+          r.subjectId === subjectId &&
+          (r.status === "present" || r.status === "late")
+      ).length;
+    },
+    [attendanceRecords]
+  );
+
+  // Danh sách các ca học của ngày đang chọn
+  const selectedSessions = useMemo(() => {
+    return sessionsByDate.get(selectedDateStr) || [];
+  }, [sessionsByDate, selectedDateStr]);
+
+  const isSelectedPast = selectedDateStr < todayKey;
+  const isSelectedToday = selectedDateStr === todayKey;
+  const isSelectedFuture = selectedDateStr > todayKey;
+
+  const isAllCheckedIn = useMemo(() => {
+    if (selectedSessions.length === 0) return false;
+    return selectedSessions.every((ses) => isSessionCheckedIn(ses));
+  }, [selectedSessions, isSessionCheckedIn]);
+
+  const hasUncheckedSelected = useMemo(() => {
+    if (selectedSessions.length === 0) return false;
+    return selectedSessions.some((ses) => !isSessionCheckedIn(ses));
+  }, [selectedSessions, isSessionCheckedIn]);
+
+  // Xử lý điểm danh / điểm danh bù cho ngày đang chọn
+  const handleCheckinSelectedDate = async () => {
+    if (selectedSessions.length === 0 || isSelectedFuture) return;
+    const subjectsToMark = selectedSessions.map((s) => s.subject);
+    if (onCheckinDate) {
+      await onCheckinDate(selectedDateStr, subjectsToMark);
+    } else {
+      await fallbackAttendance.checkinMultipleSubjectsForDate(selectedDateStr, subjectsToMark);
+    }
+  };
+
+  // Xử lý hủy điểm danh cho ngày đang chọn (khi bấm nhầm)
+  const handleCancelCheckinSelectedDate = async () => {
+    if (selectedSessions.length === 0) return;
+    const subjectsToCancel = selectedSessions.map((s) => s.subject);
+    if (onCancelCheckinDate) {
+      await onCancelCheckinDate(selectedDateStr, subjectsToCancel);
+    } else {
+      await fallbackAttendance.cancelCheckinForDate(
+        selectedDateStr,
+        subjectsToCancel.map((s) => s.id)
+      );
+    }
+  };
+
+  // Xử lý điểm danh cho 1 môn cụ thể
+  const handleCheckinSingleSubject = async (sub: Subject) => {
+    if (isSelectedFuture) return;
+    if (onCheckinDate) {
+      await onCheckinDate(selectedDateStr, [sub]);
+    } else {
+      await fallbackAttendance.checkinMultipleSubjectsForDate(selectedDateStr, [sub]);
+    }
+  };
 
   // Map các nhiệm vụ theo ngày (dateKey) dựa trên deadline hoặc date
   const tasksByDate = useMemo(() => {
@@ -369,8 +486,64 @@ export function ScheduleCalendar({
               </h3>
             </div>
 
-            {/* Bên phải: 1. Chọn tháng (icon Lịch), 2. Đồng bộ GCal, 3. Thêm nhiệm vụ (+) */}
+            {/* Bên phải: Nút Điểm danh (nếu ngày chọn có lịch học, bên trái nút Xem lịch), 1. Chọn tháng (icon Lịch), 2. Đồng bộ GCal, 3. Thêm nhiệm vụ (+) */}
             <div className="flex items-center gap-1.5 shrink-0">
+              {/* Nút Điểm danh / Điểm danh bù: Chỉ hiện khi ngày đang chọn có lịch học, nằm BÊN TRÁI nút Xem lịch */}
+              {selectedSessions.length > 0 && (
+                <>
+                  {isSelectedPast && hasUncheckedSelected ? (
+                    // Ngày học cũ chưa điểm danh -> Hiện nút Điểm danh bù
+                    <Button
+                      type="button"
+                      onClick={handleCheckinSelectedDate}
+                      className="min-h-[40px] min-w-[40px] h-10 w-10 sm:h-8 sm:w-auto sm:px-2.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-700 dark:text-amber-300 font-bold transition-all active:scale-95 cursor-pointer flex items-center justify-center shrink-0 shadow-xs"
+                      title={`Điểm danh bù ngày ${formatDateVi(selectedDateStr)}`}
+                      aria-label="Điểm danh bù"
+                    >
+                      <CalendarCheck className="h-4 w-4 sm:mr-1.5 text-amber-600 dark:text-amber-400 shrink-0" />
+                      <span className="hidden sm:inline text-xs">Điểm danh bù</span>
+                    </Button>
+                  ) : isSelectedFuture ? (
+                    // Ngày học chưa đến -> Nút Điểm danh chuyển xám, không thể bấm
+                    <Button
+                      type="button"
+                      disabled
+                      className="min-h-[40px] min-w-[40px] h-10 w-10 sm:h-8 sm:w-auto sm:px-2.5 rounded-lg bg-muted text-muted-foreground/50 border border-border/60 font-bold cursor-not-allowed flex items-center justify-center shrink-0 opacity-60 pointer-events-none"
+                      title={`Chưa đến ngày học (${formatDateVi(selectedDateStr)})`}
+                      aria-label="Chưa đến ngày học"
+                    >
+                      <CheckCircle2 className="h-4 w-4 sm:mr-1.5 text-muted-foreground/40 shrink-0" />
+                      <span className="hidden sm:inline text-xs">Điểm danh</span>
+                    </Button>
+                  ) : hasUncheckedSelected ? (
+                    // Ngày hôm nay hoặc có ca học chưa điểm danh -> Hiện nút Điểm danh
+                    <Button
+                      type="button"
+                      onClick={handleCheckinSelectedDate}
+                      className="min-h-[40px] min-w-[40px] h-10 w-10 sm:h-8 sm:w-auto sm:px-2.5 rounded-lg bg-[#7D39EB] hover:bg-[#6826d4] text-white font-bold transition-all active:scale-95 cursor-pointer flex items-center justify-center shrink-0 shadow-xs"
+                      title={`Điểm danh ngày ${formatDateVi(selectedDateStr)}`}
+                      aria-label="Điểm danh"
+                    >
+                      <CheckCircle2 className="h-4 w-4 sm:mr-1.5 text-[#C6FF33] shrink-0" />
+                      <span className="hidden sm:inline text-xs">Điểm danh</span>
+                    </Button>
+                  ) : (
+                    // Đã điểm danh đầy đủ -> Trạng thái Đã điểm danh
+                    <Button
+                      type="button"
+                      onClick={handleCancelCheckinSelectedDate}
+                      variant="outline"
+                      className="min-h-[40px] min-w-[40px] h-10 w-10 sm:h-8 sm:w-auto sm:px-2.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/30 text-emerald-700 dark:text-emerald-300 font-bold transition-all active:scale-95 cursor-pointer flex items-center justify-center shrink-0"
+                      title={`Đã điểm danh ngày ${formatDateVi(selectedDateStr)} (Nhấp để hủy nếu nhầm)`}
+                      aria-label="Đã điểm danh"
+                    >
+                      <Check className="h-4 w-4 sm:mr-1.5 text-emerald-500 shrink-0" />
+                      <span className="hidden sm:inline text-xs">Đã điểm danh</span>
+                    </Button>
+                  )}
+                </>
+              )}
+
               {/* 1. Chọn tháng & Chế độ xem (Nút dạng icon Lịch) */}
               <Popover
                 open={monthPickerOpen}
@@ -544,6 +717,9 @@ export function ScheduleCalendar({
                 {monthCells.map((cell, idx) => {
                   const hasSessions = cell.sessions.length > 0;
                   const hasTasks = cell.tasks.length > 0;
+                  const isCellPast = cell.dateKey < todayKey;
+                  const cellUncheckedSessions = cell.sessions.filter((ses) => !isSessionCheckedIn(ses));
+                  const isCellPastUnchecked = isCellPast && cellUncheckedSessions.length > 0;
 
                   return (
                     <button
@@ -551,20 +727,28 @@ export function ScheduleCalendar({
                       type="button"
                       onClick={() => onSelectDate(cell.dateKey)}
                       className={cn(
-                        "relative h-14 sm:h-16 w-full rounded-lg flex flex-col items-center justify-between p-1.5 transition-all duration-200 cursor-pointer text-xs font-semibold select-none group border",
+                        "relative h-13 sm:h-14 w-full rounded-lg flex flex-col items-center justify-between p-1.5 transition-all duration-200 cursor-pointer text-xs font-semibold select-none group border",
                         cell.isSelected
                           ? "bg-[#7D39EB] text-white border-[#7D39EB] font-extrabold shadow-md shadow-[#7D39EB]/30 scale-[1.02] z-10"
                           : cell.isToday
                           ? "border-[#C6FF33] text-foreground font-black bg-[#C6FF33]/10"
+                          : isCellPastUnchecked
+                          ? "bg-rose-500/10 border-rose-500/40 text-foreground hover:border-rose-500 hover:bg-rose-500/15"
                           : cell.isCurrentMonth
                           ? "bg-card border-border/60 text-foreground hover:border-[#7D39EB]/50 hover:bg-muted/50"
                           : "bg-muted/10 border-transparent text-muted-foreground/30 hover:bg-muted/30"
                       )}
                     >
-                      {/* Hàng trên: Số ngày & Huy hiệu hạn chót nếu có */}
+                      {/* Hàng trên: Số ngày, Dấu hiệu chưa điểm danh & Huy hiệu hạn chót */}
                       <div className="w-full flex items-center justify-between px-0.5">
-                        <span className="text-xs sm:text-sm leading-none font-bold">
+                        <span className="text-xs sm:text-sm leading-none font-bold flex items-center gap-1">
                           {cell.day}
+                          {isCellPastUnchecked && (
+                            <span
+                              className="h-1.5 w-1.5 rounded-full bg-rose-500 ring-2 ring-rose-500/30 animate-pulse"
+                              title="Ngày học cũ chưa điểm danh bù"
+                            />
+                          )}
                         </span>
                         {hasTasks && (
                           <span
@@ -582,25 +766,40 @@ export function ScheduleCalendar({
                         )}
                       </div>
 
-                      {/* Dấu chấm và tên mã môn học thu nhỏ */}
+                      {/* Dấu chấm ca học */}
                       <div className="w-full flex flex-col items-center gap-0.5 mt-auto">
                         {hasSessions ? (
                           <div className="flex items-center justify-center gap-1">
-                            {cell.sessions.slice(0, 3).map((ses, sIdx) => (
-                              <span
-                                key={sIdx}
-                                className={cn(
-                                  "h-1.5 w-1.5 rounded-full transition-transform group-hover:scale-125",
-                                  cell.isSelected ? "bg-white" : ""
-                                )}
-                                style={{
-                                  backgroundColor: cell.isSelected
-                                    ? "#FFFFFF"
-                                    : ses.subject.color || "#C6FF33",
-                                }}
-                                title={`${ses.subject.code} - ${ses.subject.name}`}
-                              />
-                            ))}
+                            {cell.sessions.slice(0, 3).map((ses, sIdx) => {
+                              const checked = isSessionCheckedIn(ses);
+                              const pastUnchecked = isCellPast && !checked;
+
+                              return (
+                                <span
+                                  key={sIdx}
+                                  className={cn(
+                                    "h-1.5 w-1.5 rounded-full transition-transform group-hover:scale-125",
+                                    cell.isSelected ? "bg-white" : ""
+                                  )}
+                                  style={{
+                                    backgroundColor: cell.isSelected
+                                      ? "#FFFFFF"
+                                      : pastUnchecked
+                                      ? "#F43F5E"
+                                      : checked
+                                      ? "#10B981"
+                                      : ses.subject.color || "#C6FF33",
+                                  }}
+                                  title={
+                                    pastUnchecked
+                                      ? `[${ses.subject.code}] Chưa điểm danh bù`
+                                      : checked
+                                      ? `[${ses.subject.code}] Đã điểm danh`
+                                      : `${ses.subject.code} - ${ses.subject.name}`
+                                  }
+                                />
+                              );
+                            })}
                           </div>
                         ) : (
                           <span className="h-1.5" />
@@ -613,23 +812,141 @@ export function ScheduleCalendar({
 
               {/* Chú thích màu nhỏ bên dưới */}
               <div className="pt-3 border-t border-border/50 flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground">
-                <div className="flex flex-wrap items-center gap-3">
-                  <span className="flex items-center gap-1.5">
+                <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
+                  <span className="flex items-center gap-1">
                     <span className="h-2 w-2 rounded-full border border-[#C6FF33] bg-[#C6FF33]/40" />
                     Hôm nay
                   </span>
-                  <span className="flex items-center gap-1.5">
+                  <span className="flex items-center gap-1">
                     <span className="h-2 w-2 rounded-full bg-[#7D39EB]" />
-                    Có lịch học
+                    Lịch học
                   </span>
-                  <span className="flex items-center gap-1.5">
+                  <span className="flex items-center gap-1">
+                    <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                    Đã điểm danh
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="h-2 w-2 rounded-full bg-rose-500 ring-1 ring-rose-500/40" />
+                    Chưa điểm danh bù
+                  </span>
+                  <span className="flex items-center gap-1">
                     <span className="h-2 w-2 rounded-full bg-amber-500" />
-                    Có hạn chót nhiệm vụ
+                    Hạn chót
                   </span>
                 </div>
-                <span className="text-[11px]">
-                  Nhấp vào bất kỳ ngày nào để xem chi tiết ở mục <strong>Lịch học trong ngày</strong> bên trên
-                </span>
+              </div>
+
+              {/* Chi tiết ca học của ngày đang chọn */}
+              <div className="pt-3 border-t border-border/60 space-y-2">
+                <div className="flex items-center justify-between text-xs font-bold text-foreground">
+                  <div className="flex items-center gap-1.5">
+                    <Clock className="h-3.5 w-3.5 text-[#7D39EB]" />
+                    <span>Ca học: {formatDateVi(selectedDateStr)}</span>
+                    {selectedSessions.length > 0 && (
+                      <Badge variant="outline" className="text-[10px] py-0 px-1.5 font-mono">
+                        {selectedSessions.length} ca
+                      </Badge>
+                    )}
+                  </div>
+                  {isSelectedPast && hasUncheckedSelected && (
+                    <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold flex items-center gap-1">
+                      <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+                      Cần điểm danh bù
+                    </span>
+                  )}
+                </div>
+
+                {selectedSessions.length > 0 ? (
+                  <div className="space-y-1.5">
+                    {selectedSessions.map((ses, idx) => {
+                      const isCheckedIn = isSessionCheckedIn(ses);
+                      const attendedCount = getSubjectAttendedCount(ses.subject.id);
+                      const totalWeeks = ses.subject.totalWeeks || 15;
+
+                      return (
+                        <div
+                          key={idx}
+                          className="p-2.5 rounded-lg border border-border/70 bg-card hover:border-[#7D39EB]/50 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-2"
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            {/* Mã môn cố định w-14 theo quy chuẩn 1.17 */}
+                            <span
+                              className="w-14 h-5 inline-flex items-center justify-center text-center shrink-0 font-mono font-black text-[10px] sm:text-[11px] rounded-xs text-white truncate"
+                              style={{ backgroundColor: ses.subject.color || "#7D39EB" }}
+                              title={ses.subject.code}
+                            >
+                              {ses.subject.code}
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <p className="font-bold text-xs text-foreground truncate">
+                                {ses.subject.name}
+                              </p>
+                              <div className="flex items-center gap-2 text-[10px] text-muted-foreground font-mono">
+                                {ses.subject.startTime && (
+                                  <span>
+                                    {ses.subject.startTime} - {ses.subject.endTime || ""}
+                                  </span>
+                                )}
+                                {ses.subject.room && <span>• P.{ses.subject.room}</span>}
+                                {ses.subject.campus && <span>• {ses.subject.campus}</span>}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Dữ liệu cốt lõi: Đã học bao nhiêu ngày & Nút thao tác */}
+                          <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                            <div className="text-right">
+                              <span className="text-[11px] font-bold text-foreground block">
+                                Đã học:{" "}
+                                <span className="text-[#7D39EB] font-black">
+                                  {attendedCount}
+                                </span>
+                                /{totalWeeks} ngày
+                              </span>
+                            </div>
+                            {isCheckedIn ? (
+                              <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 text-[10px] font-bold py-0.5">
+                                <Check className="h-3 w-3 mr-1" /> Đã điểm danh
+                              </Badge>
+                            ) : isSelectedPast ? (
+                              <Button
+                                type="button"
+                                size="sm"
+                                onClick={() => handleCheckinSingleSubject(ses.subject)}
+                                className="h-6 px-2 text-[10px] font-bold bg-amber-500 hover:bg-amber-600 text-white rounded-md cursor-pointer active:scale-95"
+                              >
+                                Điểm danh bù
+                              </Button>
+                            ) : isSelectedFuture ? (
+                              <Button
+                                type="button"
+                                size="sm"
+                                disabled
+                                className="h-6 px-2 text-[10px] font-bold bg-muted text-muted-foreground/50 border border-border/60 rounded-md cursor-not-allowed opacity-60 pointer-events-none"
+                                title="Chưa đến ngày học, không thể điểm danh trước"
+                              >
+                                Điểm danh
+                              </Button>
+                            ) : (
+                              <Button
+                                type="button"
+                                size="sm"
+                                onClick={() => handleCheckinSingleSubject(ses.subject)}
+                                className="h-6 px-2 text-[10px] font-bold bg-[#7D39EB] hover:bg-[#6826d4] text-white rounded-md cursor-pointer active:scale-95"
+                              >
+                                Điểm danh
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="py-2.5 px-3 rounded-lg border border-dashed border-border/60 text-center text-xs text-muted-foreground/80 italic">
+                    Không có ca học nào trong ngày này.
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -716,6 +1033,31 @@ export function ScheduleCalendar({
                                         </span>
                                       </div>
                                     )}
+
+                                    {/* Trạng thái điểm danh & Số ngày đã học */}
+                                    {(() => {
+                                      const isChecked = isSessionCheckedIn(ses);
+                                      const isPast = wDay.dateKey < todayKey;
+                                      const attendedCount = getSubjectAttendedCount(sub.id);
+                                      const totalWeeks = sub.totalWeeks || 15;
+
+                                      return (
+                                        <div className="pt-1 flex items-center justify-between text-[9px] font-bold border-t border-border/40 mt-1">
+                                          <span className="text-muted-foreground font-mono">
+                                            Đã học {attendedCount}/{totalWeeks} ngày
+                                          </span>
+                                          {isChecked ? (
+                                            <span className="text-emerald-600 dark:text-emerald-400 font-extrabold flex items-center gap-0.5">
+                                              <Check className="h-2.5 w-2.5" /> Đã điểm danh
+                                            </span>
+                                          ) : isPast ? (
+                                            <span className="text-rose-600 dark:text-rose-400 font-extrabold flex items-center gap-0.5">
+                                              <AlertCircle className="h-2.5 w-2.5" /> Chưa bù
+                                            </span>
+                                          ) : null}
+                                        </div>
+                                      );
+                                    })()}
                                   </div>
                                 </div>
                               );

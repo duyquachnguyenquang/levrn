@@ -1,23 +1,19 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import {
-  CheckCircle2,
-} from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import { useSubjects } from "@/hooks/useSubjects";
 import { useStudyPlans } from "@/hooks/useStudyPlans";
 import { useGroups } from "@/hooks/useGroups";
 import { useAttendance } from "@/hooks/useAttendance";
 import { useNotifications } from "@/hooks/useNotifications";
-import { getSubjectCheckinStatus } from "@/lib/checkinUtils";
 import {
   ScheduleCalendar,
   toDateKey,
 } from "@/components/dashboard/ScheduleCalendar";
-import { DashboardAttendanceCard } from "@/components/dashboard/DashboardAttendanceCard";
 import { DashboardTasksCard } from "@/components/dashboard/DashboardTasksCard";
-import { AttendanceStatus } from "@/lib/types";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { Subject } from "@/lib/types";
 
 // Tính câu chào dựa theo thời điểm trong ngày
 function getTimeBasedGreeting(): string {
@@ -46,79 +42,17 @@ export default function DashboardPage() {
   const { profile } = useUserProfile();
   const [greeting, setGreeting] = useState<string>("Chào buổi sáng");
 
-  // Điểm danh & Thông báo
+  // Quản lý Điểm danh & Thông báo
   const {
     records: attendanceRecords,
-    checkinSubjectToday,
-    editOrAddAttendanceRecord,
-    deleteAttendanceRecord,
+    checkinMultipleSubjectsForDate,
+    cancelCheckinForDate,
   } = useAttendance(subjects);
   const { addNotification } = useNotifications();
   const [checkinToast, setCheckinToast] = useState<string | null>(null);
 
-  // Xử lý điểm danh trực tiếp 1-chạm
-  const handleCheckin = async (subject: any) => {
-    const res = await checkinSubjectToday(subject);
-    if (res.success) {
-      const now = new Date();
-      const timeStr = now.toLocaleTimeString("vi-VN", {
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-      });
-      const dateStr = now.toLocaleDateString("vi-VN");
-      const status = getSubjectCheckinStatus(subject, attendanceRecords);
-
-      await addNotification({
-        title: `Điểm danh thành công: [${subject.code}] ${subject.name}`,
-        message: `Bạn đã điểm danh lúc ${timeStr} ngày ${dateStr} (Buổi ${status.sessionNumber}/${status.totalWeeks}). Dữ liệu thời gian điểm danh đã được cập nhật trực tiếp vào Dashboard.`,
-        type: "success",
-        category: "attendance",
-        link: "/dashboard",
-      });
-
-      setCheckinToast(
-        `Đã điểm danh môn [${subject.code}] ${subject.name} lúc ${timeStr}!`
-      );
-      setTimeout(() => setCheckinToast(null), 4500);
-    }
-  };
-
-  // Xử lý chỉnh sửa thời gian điểm danh (áp dụng cho ngày quên điểm danh)
-  const handleEditCheckin = async (params: {
-    subject: any;
-    date: string;
-    time?: string;
-    status: AttendanceStatus;
-    notes?: string;
-    recordId?: string;
-  }) => {
-    const res = await editOrAddAttendanceRecord(params);
-    if (res.success) {
-      const parts = params.date.split("-");
-      const dateVi =
-        parts.length === 3
-          ? `${parts[2]}/${parts[1]}/${parts[0]}`
-          : params.date;
-      const timeDisplay = params.time ? `lúc ${params.time}` : "";
-
-      await addNotification({
-        title: `Cập nhật điểm danh: [${params.subject.code}] ${params.subject.name}`,
-        message: `Đã chỉnh sửa thời gian điểm danh ngày ${dateVi} ${timeDisplay} cho môn [${params.subject.code}] ${params.subject.name}.`,
-        type: "info",
-        category: "attendance",
-        link: "/dashboard",
-      });
-
-      setCheckinToast(
-        `Đã cập nhật thời gian điểm danh ngày ${dateVi} cho môn [${params.subject.code}]!`
-      );
-      setTimeout(() => setCheckinToast(null), 4500);
-    }
-    return res;
-  };
-
   const today = useMemo(() => new Date(), []);
+  const todayKey = useMemo(() => toDateKey(today), [today]);
 
   // Ngày đang được chọn để theo dõi lịch học trong ngày (mặc định hôm nay)
   const [selectedDateStr, setSelectedDateStr] = useState<string>(() => {
@@ -129,9 +63,78 @@ export default function DashboardPage() {
     setGreeting(getTimeBasedGreeting());
   }, []);
 
+  // Xử lý điểm danh / điểm danh bù thẳng từ Lịch học
+  const handleCheckinDate = async (dateStr: string, subjectsToMark: Subject[]) => {
+    if (dateStr > todayKey) {
+      setCheckinToast("Chưa đến ngày học, không thể điểm danh trước!");
+      setTimeout(() => setCheckinToast(null), 3000);
+      return { success: false, message: "Chưa đến ngày học" };
+    }
+
+    const res = await checkinMultipleSubjectsForDate(dateStr, subjectsToMark);
+    if (res.success) {
+      const parts = dateStr.split("-");
+      const dateVi = parts.length === 3 ? `${parts[2]}/${parts[1]}` : dateStr;
+      const codes = subjectsToMark.map((s) => s.code).join(", ");
+      const isPast = dateStr < todayKey;
+
+      const firstSub = subjectsToMark[0];
+      const wasAlreadyChecked = attendanceRecords.some(
+        (r) =>
+          r.subjectId === firstSub.id &&
+          r.date === dateStr &&
+          (r.status === "present" || r.status === "late")
+      );
+      const currentAttended = attendanceRecords.filter(
+        (r) =>
+          r.subjectId === firstSub.id &&
+          (r.status === "present" || r.status === "late")
+      ).length;
+      const attendedCount = wasAlreadyChecked ? currentAttended : currentAttended + 1;
+      const totalWeeks = firstSub.totalWeeks || 15;
+
+      const title = isPast
+        ? `Điểm danh bù: [${codes}] ngày ${dateVi}`
+        : `Điểm danh thành công: [${codes}] ngày ${dateVi}`;
+
+      const message = `Đã ghi nhận điểm danh môn [${codes}] ngày ${dateVi} (Đã học ${attendedCount}/${totalWeeks} ngày).`;
+
+      await addNotification({
+        title,
+        message,
+        type: "success",
+        category: "attendance",
+        link: "/dashboard",
+      });
+
+      setCheckinToast(
+        isPast
+          ? `Đã điểm danh bù ngày ${dateVi} cho môn [${codes}] (Đã học ${attendedCount}/${totalWeeks} ngày)!`
+          : `Đã điểm danh môn [${codes}] ngày ${dateVi} (Đã học ${attendedCount}/${totalWeeks} ngày)!`
+      );
+      setTimeout(() => setCheckinToast(null), 4000);
+    }
+    return res;
+  };
+
+  // Xử lý hủy điểm danh một ngày khi cần
+  const handleCancelCheckinDate = async (dateStr: string, subjectsToCancel: Subject[]) => {
+    const res = await cancelCheckinForDate(
+      dateStr,
+      subjectsToCancel.map((s) => s.id)
+    );
+    if (res.success) {
+      const parts = dateStr.split("-");
+      const dateVi = parts.length === 3 ? `${parts[2]}/${parts[1]}` : dateStr;
+      setCheckinToast(`Đã hủy điểm danh ngày ${dateVi}!`);
+      setTimeout(() => setCheckinToast(null), 3000);
+    }
+    return res;
+  };
+
   return (
     <div className="space-y-6 sm:space-y-7 animate-in fade-in-50 duration-300">
-      {/* Toast thông báo điểm danh thành công */}
+      {/* Toast thông báo điểm danh */}
       {checkinToast && (
         <div className="p-3.5 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs font-semibold flex items-center justify-between gap-3 shadow-md animate-in fade-in-50 duration-200">
           <div className="flex items-center gap-2">
@@ -156,29 +159,23 @@ export default function DashboardPage() {
         </h2>
       </div>
 
-      {/* 2. LỊCH HỌC ĐƯA LÊN TRÊN (Toàn chiều rộng) */}
-      <ScheduleCalendar
-        subjects={subjects}
-        selectedDateStr={selectedDateStr}
-        onSelectDate={setSelectedDateStr}
-        tasks={planTasks}
-        onAddTask={addPlanTask}
-        onUpdateTask={updatePlanTask}
-        onRefreshTasks={refreshPlanTasks}
-      />
-
-      {/* 3. ĐIỂM DANH VÀ NHIỆM VỤ ĐƯA XUỐNG DƯỚI - CÂN BẰNG KÍCH THƯỚC (50% - 50%) */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-stretch">
-        {/* Box 1: Điểm danh (Trái - Đang học / Đã học, Search, Sort, 1 dòng mỗi môn, Pop-up xem chi tiết) */}
-        <DashboardAttendanceCard
+      {/* 2. BỐ CỤC DASHBOARD: LỊCH HỌC BÊN TRÁI, NHIỆM VỤ BÊN PHẢI */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
+        {/* Cột trái: Lịch học (tích hợp tính năng Điểm danh & Điểm danh bù) */}
+        <ScheduleCalendar
           subjects={subjects}
+          selectedDateStr={selectedDateStr}
+          onSelectDate={setSelectedDateStr}
+          tasks={planTasks}
+          onAddTask={addPlanTask}
+          onUpdateTask={updatePlanTask}
+          onRefreshTasks={refreshPlanTasks}
           attendanceRecords={attendanceRecords}
-          onCheckin={handleCheckin}
-          onEditCheckin={handleEditCheckin}
-          onDeleteRecord={deleteAttendanceRecord}
+          onCheckinDate={handleCheckinDate}
+          onCancelCheckinDate={handleCancelCheckinDate}
         />
 
-        {/* Box 2: Nhiệm vụ (Phải - Lịch học, Nhiệm vụ cá nhân & Nhiệm vụ nhóm trong tuần, Search, Filter, Sort) */}
+        {/* Cột phải: Nhiệm vụ (Lịch học, Nhiệm vụ cá nhân & Nhiệm vụ nhóm trong tuần) */}
         <DashboardTasksCard
           subjects={subjects}
           personalTasks={planTasks}

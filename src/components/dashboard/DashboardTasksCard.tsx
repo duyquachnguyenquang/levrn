@@ -120,8 +120,11 @@ export function DashboardTasksCard({
 
     // A. Lịch học trong tuần
     subjects.forEach((sub) => {
+      // Chỉ tạo lịch học nếu môn học đã có ngày bắt đầu cụ thể
+      if (!sub.startDate) return;
+
       const scheduleDays = sub.scheduleDays || [];
-      if (scheduleDays.length === 0 && sub.startDate) {
+      if (scheduleDays.length === 0) {
         const p = sub.startDate.split("-").map(Number);
         if (p.length === 3) {
           scheduleDays.push(new Date(p[0], p[1] - 1, p[2]).getDay());
@@ -276,9 +279,9 @@ export function DashboardTasksCard({
   }, [allWeekItems]);
 
   return (
-    <Card className="rounded-lg border border-border/80 bg-card p-3.5 sm:p-5 shadow-xs flex flex-col justify-between transition-all duration-300 hover:border-border/90 hover:shadow-md h-full min-h-[380px]">
+    <Card className="rounded-lg border border-border/80 bg-card p-3.5 sm:p-5 shadow-xs flex flex-col transition-all duration-300 hover:border-border/90 hover:shadow-md h-full min-h-[380px]">
       {/* 1. Header Tinh gọn - Ngang hàng trên cả PC & Mobile, căn phải cụm nút: 1. Bộ lọc (icon Đầu lọc), 2. Sắp xếp, 3. Tìm kiếm (Rule 1.1, Rule 1.13) */}
-      <div className="flex flex-row items-center justify-between gap-2 sm:gap-3 pb-3 border-b border-border/60">
+      <div className="flex flex-row items-center justify-between gap-2 sm:gap-3 pb-3 border-b border-border/60 shrink-0">
         {/* Tiêu đề card */}
         <div className="flex items-center gap-2 min-w-0">
           <div className="h-8 w-8 rounded-md bg-[#7D39EB]/15 text-[#7D39EB] flex items-center justify-center shrink-0">
@@ -471,8 +474,8 @@ export function DashboardTasksCard({
         </div>
       </div>
 
-      {/* 2. Danh sách nhiệm vụ trong tuần - Single Row tinh gọn cân xứng */}
-      <div className="py-2.5 space-y-2 flex-1 max-h-[290px] overflow-y-auto pr-1">
+      {/* 2. Danh sách nhiệm vụ trong tuần - Bắt đầu ngay dưới Header */}
+      <div className="pt-3 space-y-2 flex-1 overflow-y-auto pr-1">
         {displayedTasks.length > 0 ? (
           displayedTasks.map((task) => {
             const isToday = task.date === todayKey;

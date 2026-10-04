@@ -167,7 +167,10 @@ export function SubjectList({
   const [sortOpen, setSortOpen] = useState(false);
   const { grades } = useCourseGrades();
 
-  // Xác định phân loại tiến độ môn học: 1: Học xong, 2: Đang học, 3: Chưa học
+  // Xác định phân loại tiến độ môn học theo thứ tự ưu tiên hiển thị:
+  // 1: Đang học (ưu tiên cao nhất lên đầu trang để người dùng dễ theo dõi)
+  // 2: Chưa học (các môn sắp diễn ra)
+  // 3: Học xong (đã hoàn thành / thuộc các học kỳ trước)
   const getSubjectProgressCategory = (subject: Subject): number => {
     const checkinStatus = getSubjectCheckinStatus(subject, attendanceRecords);
     const isCompleted = isSubjectCompleted({
@@ -179,7 +182,7 @@ export function SubjectList({
       totalWeeks: checkinStatus.totalWeeks,
     });
 
-    if (isCompleted) return 1; // Học xong
+    if (isCompleted) return 3; // Học xong -> xếp sau cùng
 
     const isStarted =
       checkinStatus.attendedCount > 0 ||
@@ -187,11 +190,12 @@ export function SubjectList({
         subject.startDate &&
         !isNaN(new Date(subject.startDate).getTime()) &&
         new Date(subject.startDate).getTime() <= Date.now()
-      );
+      ) ||
+      (subject.semester && (subject.semester.includes("2026-2027") || subject.semester === CURRENT_SEMESTER));
 
-    if (isStarted) return 2; // Đang học
+    if (isStarted) return 1; // Đang học -> Ưu tiên 1 lên đầu trang!
 
-    return 3; // Chưa học
+    return 2; // Chưa học -> ở giữa
   };
 
   // Lấy điểm số của môn học từ bảng điểm
@@ -248,7 +252,7 @@ export function SubjectList({
       return [...list].sort((a, b) => b.name.localeCompare(a.name, "vi"));
     }
     if (sortBy === "progress") {
-      // Đã xong (1) -> Đang học (2) -> Chưa học (3)
+      // Đang học (1) -> Chưa học (2) -> Học xong (3)
       return [...list].sort((a, b) => {
         const catA = getSubjectProgressCategory(a);
         const catB = getSubjectProgressCategory(b);
@@ -273,7 +277,13 @@ export function SubjectList({
       });
     }
 
-    return list;
+    // Mặc định: Sắp xếp theo thứ tự những môn đang học lên trước để tiện theo dõi
+    return [...list].sort((a, b) => {
+      const catA = getSubjectProgressCategory(a);
+      const catB = getSubjectProgressCategory(b);
+      if (catA !== catB) return catA - catB;
+      return a.name.localeCompare(b.name, "vi");
+    });
   }, [
     subjects,
     searchQuery,
@@ -436,7 +446,7 @@ export function SubjectList({
               >
                 <span className="flex items-center gap-2">
                   <CheckCircle2 className="h-3.5 w-3.5 text-[#7D39EB]" />
-                  <span>Tiến độ (Học xong → Đang học → Chưa học)</span>
+                  <span>Tiến độ (Đang học → Chưa học → Học xong)</span>
                 </span>
                 {sortBy === "progress" && <Check className="h-3.5 w-3.5 text-[#7D39EB]" />}
               </button>

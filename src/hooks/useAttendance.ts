@@ -37,14 +37,7 @@ export function generateSessionsForSubject(subject: Subject): AttendanceRecord[]
     const dateStr = sessionDate.toISOString().split("T")[0];
 
     // Xác định trạng thái mặc định (nếu ngày đã qua -> present hoặc upcoming)
-    const todayStr = new Date().toISOString().split("T")[0];
-    let status: AttendanceStatus = "upcoming";
-
-    // Tạo mẫu một vài buổi đã học cho demo sinh động
-    if (i === 1) status = "present";
-    else if (i === 2) status = "present";
-    else if (i === 3) status = "late";
-    else if (i === 4 && dateStr <= todayStr) status = "present";
+    const status: AttendanceStatus = "upcoming";
 
     sessions.push({
       id: `att-${subject.id}-${i}`,
@@ -57,7 +50,6 @@ export function generateSessionsForSubject(subject: Subject): AttendanceRecord[]
       endTime: subject.endTime || "10:30",
       room: subject.room || "P.101",
       status,
-      notes: i === 3 ? "Đến trễ 15 phút do kẹt xe" : undefined,
       createdAt: new Date().toISOString(),
     });
   }
@@ -123,13 +115,42 @@ export function useAttendance(subjects: Subject[] = []) {
       }
     }
 
-    // 3. Nếu vẫn trống và có danh sách môn học, tự động sinh dữ liệu demo cho các môn hiện có
+    // 3. Nếu vẫn trống và có danh sách môn học, tự động sinh dữ liệu các buổi học cho các môn hiện có
     if (loadedRecords.length === 0 && subjects.length > 0) {
       const generated = subjects.flatMap((s) => generateSessionsForSubject(s));
       loadedRecords = generated;
       if (typeof window !== "undefined") {
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(generated));
       }
+    }
+
+    // 4. Dọn dẹp dữ liệu demo cũ: reset MỌI bản ghi present/late không có checkinTime hợp lệ
+    // ID demo cũ: att-{subjectId}-{1..15} (kết thúc bằng số 1-2 chữ số)
+    // ID thực: att-{subjectId}-{timestamp13} hoặc att-{subjectId}-{timestamp}-{random}
+    const LEGACY_ID_REGEX = /^att-[^-]+-(\d{1,2})$/; // chỉ match suffix 1-2 chữ số (session number)
+    const VALID_CHECKIN_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/;   // ISO datetime
+
+    let hasCleanedMock = false;
+    loadedRecords = loadedRecords.map((r) => {
+      const isLegacyId = LEGACY_ID_REGEX.test(r.id);
+      const hasValidCheckin = r.checkinTime && VALID_CHECKIN_RE.test(r.checkinTime);
+      const isGhostPresent = (r.status === "present" || r.status === "late") && !hasValidCheckin;
+      const isDemoNote = r.notes === "Đến trễ 15 phút do kẹt xe";
+
+      if (isDemoNote || (isLegacyId && isGhostPresent)) {
+        hasCleanedMock = true;
+        return {
+          ...r,
+          status: "upcoming" as AttendanceStatus,
+          notes: isDemoNote ? undefined : r.notes,
+          checkinTime: undefined,
+        };
+      }
+      return r;
+    });
+
+    if (hasCleanedMock && typeof window !== "undefined") {
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(loadedRecords));
     }
 
     setRecords(loadedRecords);
@@ -511,6 +532,113 @@ export function useAttendance(subjects: Subject[] = []) {
     };
   }, [subjectSummaries]);
 
+  // Điểm danh cho danh sách các môn vào một ngày cụ thể (áp dụng cả điểm danh hôm nay và điểm danh bù)
+  const checkinMultipleSubjectsForDate = useCallback(
+    async (dateStr: string, subjectsToMark: Subject[]): Promise<{ success: boolean; message: string }> => {
+      if (!subjectsToMark || subjectsToMark.length === 0) {
+        return { success: false, message: "Không có môn học nào để điểm danh" };
+      }
+
+      // Không cho phép điểm danh ngày tương lai
+      const now = new Date();
+      const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+      if (dateStr > todayStr) {
+        return { success: false, message: "Chưa đến ngày học, không thể điểm danh trước" };
+      }
+
+      const nowIso = now.toISOString();
+      let updatedList = [...records];
+
+      for (const sub of subjectsToMark) {
+        const existingIdx = updatedList.findIndex(
+          (r) => r.subjectId === sub.id && r.date === dateStr
+        );
+
+        if (existingIdx >= 0) {
+          updatedList[existingIdx] = {
+            ...updatedList[existingIdx],
+            status: "present",
+            checkinTime: nowIso,
+            updatedAt: nowIso,
+          };
+        } else {
+          const totalWeeks = sub.totalWeeks || 15;
+          const subRecords = updatedList.filter((r) => r.subjectId === sub.id);
+          const attendedCount = subRecords.filter(
+            (r) => r.status === "present" || r.status === "late"
+          ).length;
+          const sessionNumber = Math.min(totalWeeks, attendedCount + 1);
+
+          const newRec: AttendanceRecord = {
+            id: `att-${sub.id}-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+            subjectId: sub.id,
+            subjectCode: sub.code,
+            subjectName: sub.name,
+            sessionNumber,
+            date: dateStr,
+            startTime: sub.startTime || "08:00",
+            endTime: sub.endTime || "10:30",
+            room: sub.room || "P.101",
+            status: "present",
+            checkinTime: nowIso,
+            createdAt: nowIso,
+            updatedAt: nowIso,
+          };
+          updatedList.unshift(newRec);
+        }
+      }
+
+      await saveRecords(updatedList);
+      return { success: true, message: "Điểm danh thành công" };
+    },
+    [records, saveRecords]
+  );
+
+  // Hủy điểm danh cho một ngày (khi bấm nhầm)
+  const cancelCheckinForDate = useCallback(
+    async (dateStr: string, subjectIds?: string[]): Promise<{ success: boolean; message: string }> => {
+      let updatedList = [...records];
+      if (subjectIds && subjectIds.length > 0) {
+        updatedList = updatedList.map((r) => {
+          if (r.date === dateStr && subjectIds.includes(r.subjectId)) {
+            return { ...r, status: "upcoming" as AttendanceStatus, updatedAt: new Date().toISOString() };
+          }
+          return r;
+        });
+      } else {
+        updatedList = updatedList.map((r) => {
+          if (r.date === dateStr) {
+            return { ...r, status: "upcoming" as AttendanceStatus, updatedAt: new Date().toISOString() };
+          }
+          return r;
+        });
+      }
+      await saveRecords(updatedList);
+      return { success: true, message: "Đã hủy điểm danh" };
+    },
+    [records, saveRecords]
+  );
+
+  // Lấy số ngày đã học/điểm danh của 1 môn học
+  const getSubjectAttendedCount = useCallback(
+    (subjectId: string): number => {
+      return records.filter(
+        (r) => r.subjectId === subjectId && (r.status === "present" || r.status === "late")
+      ).length;
+    },
+    [records]
+  );
+
+  // Kiểm tra 1 môn học đã điểm danh vào ngày cụ thể chưa
+  const isSubjectDateCheckedIn = useCallback(
+    (dateStr: string, subjectId: string): boolean => {
+      return records.some(
+        (r) => r.subjectId === subjectId && r.date === dateStr && (r.status === "present" || r.status === "late")
+      );
+    },
+    [records]
+  );
+
   return {
     records,
     subjectSummaries,
@@ -521,6 +649,10 @@ export function useAttendance(subjects: Subject[] = []) {
     updateSessionStatus,
     quickMarkSession,
     checkinSubjectToday,
+    checkinMultipleSubjectsForDate,
+    cancelCheckinForDate,
+    getSubjectAttendedCount,
+    isSubjectDateCheckedIn,
     editOrAddAttendanceRecord,
     deleteAttendanceRecord,
     markTodayPresent,
