@@ -80,17 +80,9 @@ export function GroupDetailDialog({
   const [newMemberPhone, setNewMemberPhone] = useState("");
   const [showAddMemberForm, setShowAddMemberForm] = useState(false);
 
-  // Chỉ lấy các thẻ nhiệm vụ con, loại bỏ thẻ Nhiệm vụ chính (topic) để tránh gây nhiễu
   const tasksToShow = useMemo(() => {
     if (!group) return [];
-    const normalizedTopic = group.topic?.trim().toLowerCase() || "";
-    return group.tasks.filter((t) => {
-      const normalizedTitle = t.title.trim().toLowerCase();
-      if (normalizedTopic && normalizedTitle === normalizedTopic) {
-        return false;
-      }
-      return true;
-    });
+    return group.tasks || [];
   }, [group]);
 
   if (!group) return null;
@@ -253,6 +245,18 @@ export function GroupDetailDialog({
                   )}
                 </button>
               </div>
+
+              {activeTab === "tasks" && (
+                <button
+                  type="button"
+                  onClick={() => setTaskModalOpen(true)}
+                  className="h-8 w-8 rounded-md bg-[#7D39EB] text-white hover:bg-[#6D28D9] flex items-center justify-center shadow-xs transition-all"
+                  title="Giao nhiệm vụ mới cho nhóm"
+                  aria-label="Giao nhiệm vụ mới cho nhóm"
+                >
+                  <Plus className="h-4 w-4" />
+                </button>
+              )}
 
               {activeTab === "members" && (
                 <button

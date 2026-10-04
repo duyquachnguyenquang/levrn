@@ -194,22 +194,46 @@ export function GroupProjectCard({
           {/* Đường kẻ mờ phân tách */}
           <div className="border-t border-border/40 my-0.5" />
 
-          {/* 3. Footer: Nút điều hướng mở Pop-up chi tiết (Tầng 1 -> Tầng 2) */}
-          <div className="w-full pt-0.5">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                onOpenDetail(group);
-              }}
-              className="w-full h-8 px-2 gap-1.5 text-xs font-bold rounded-md border-border/80 hover:bg-[#7D39EB]/10 hover:text-[#7D39EB] hover:border-[#7D39EB]/40 transition-all flex items-center justify-center shadow-2xs"
-              title="Xem chi tiết đồ án nhóm"
-              aria-label="Xem chi tiết đồ án nhóm"
-            >
-              <Eye className="h-3.5 w-3.5 shrink-0 text-[#7D39EB]" />
-              <span>Chi tiết</span>
-            </Button>
+          {/* 3. Footer: Thông tin thành viên & Cụm nút điều hướng góc phải (Chuẩn Rule 1.8 & 1.15) */}
+          <div className="w-full pt-0.5 flex items-center justify-between text-xs text-muted-foreground">
+            <div className="flex items-center gap-1 font-semibold text-[11px]">
+              <Users className="w-3 h-3 text-[#7D39EB]" />
+              <span>{group.members.length} tv</span>
+              {totalTasks > 0 && (
+                <span className="text-[10px] text-muted-foreground/80 font-mono ml-1">
+                  • {completedTasks}/{totalTasks} việc
+                </span>
+              )}
+            </div>
+
+            <div className="ml-auto flex items-center gap-1">
+              {group.driveUrl && (
+                <a
+                  href={group.driveUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="h-7 w-7 rounded-md border border-border/70 hover:bg-amber-500/10 hover:border-amber-500/30 flex items-center justify-center text-amber-500 transition-all"
+                  title="Mở Google Drive đồ án"
+                  aria-label="Mở Google Drive đồ án"
+                >
+                  <Folder className="w-3.5 h-3.5" />
+                </a>
+              )}
+              {group.chatUrl && (
+                <a
+                  href={group.chatUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="h-7 w-7 rounded-md border border-border/70 hover:bg-emerald-500/10 hover:border-emerald-500/30 flex items-center justify-center text-emerald-500 transition-all"
+                  title="Mở Zalo / Discord nhóm"
+                  aria-label="Mở Zalo / Discord nhóm"
+                >
+                  <MessageCircle className="w-3.5 h-3.5" />
+                </a>
+              )}
+            </div>
           </div>
         </div>
       </div>

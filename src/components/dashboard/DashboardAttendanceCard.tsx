@@ -17,7 +17,6 @@ import {
 } from "@/lib/types";
 import {
   CheckCircle2,
-  Eye,
   CheckCheck,
   Search,
   Filter,
@@ -155,11 +154,11 @@ export function DashboardAttendanceCard({
   return (
     <>
       {/* Container Thẻ chỉ bo tròn 5-10% (rounded-lg) theo Rule 1.6 */}
-      <Card id="attendance-card" className="rounded-lg border border-border/80 bg-card p-5 shadow-xs flex flex-col justify-between transition-all duration-300 hover:border-border/90 hover:shadow-md h-full min-h-[380px] scroll-mt-6">
+      <Card id="attendance-card" className="rounded-lg border border-border/80 bg-card p-3.5 sm:p-5 shadow-xs flex flex-col justify-between transition-all duration-300 hover:border-border/90 hover:shadow-md h-full min-h-[380px] scroll-mt-6">
         {/* 1. Header Tinh gọn - Ngang hàng trên cả PC & Mobile, căn phải cụm nút: Bộ lọc, Sắp xếp, Tìm kiếm */}
-        <div className="flex flex-row items-center justify-between gap-3 pb-3 border-b border-border/60">
+        <div className="flex flex-row items-center justify-between gap-2 sm:gap-3 pb-3 border-b border-border/60">
           {/* Tiêu đề card */}
-          <div className="flex items-center gap-2.5 min-w-0">
+          <div className="flex items-center gap-2 min-w-0">
             <div className="h-8 w-8 rounded-md bg-[#7D39EB]/15 text-[#7D39EB] flex items-center justify-center shrink-0">
               <CheckCircle2 className="h-4 w-4" />
             </div>
@@ -169,7 +168,7 @@ export function DashboardAttendanceCard({
           </div>
 
           {/* Cụm công cụ bên phải: 1. Bộ lọc (icon Đầu lọc), 2. Sắp xếp, 3. Tìm kiếm */}
-          <div className="flex items-center gap-1.5 shrink-0">
+          <div className="flex items-center gap-2 shrink-0">
             {/* 1. Nút Bộ lọc (Icon Đầu lọc) */}
             <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
               <PopoverTrigger asChild>
@@ -386,10 +385,14 @@ export function DashboardAttendanceCard({
               return (
                 <div
                   key={sub.id}
-                  className="h-11 px-3 rounded-md bg-muted/30 border border-border/60 hover:border-border/90 flex items-center justify-between gap-2 overflow-hidden transition-all text-left"
+                  className="h-11 px-2.5 sm:px-3 rounded-md bg-muted/30 border border-border/60 hover:border-border/90 flex items-center justify-between gap-2 overflow-hidden transition-all text-left"
                 >
-                  {/* BÊN TRÁI: Vạch màu, Mã môn, Tên môn (MarqueeText) */}
-                  <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
+                  {/* BÊN TRÁI: Vạch màu, Mã môn, Tên môn (Click để mở xem chi tiết) */}
+                  <div
+                    onClick={() => setViewingSubject(sub)}
+                    className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden cursor-pointer group/item"
+                    title={`Bấm xem chi tiết môn ${sub.name}`}
+                  >
                     <div
                       className="w-1.5 h-6 rounded-full shrink-0"
                       style={{ backgroundColor: isEnded ? "#94a3b8" : subColor }}
@@ -408,51 +411,44 @@ export function DashboardAttendanceCard({
                       <MarqueeText
                         text={sub.name}
                         className={cn(
-                          "font-bold text-xs truncate",
+                          "font-bold text-xs truncate group-hover/item:text-[#7D39EB] transition-colors",
                           isEnded ? "text-foreground/80" : "text-foreground"
                         )}
                       />
                     </div>
                   </div>
 
-                  {/* BÊN PHẢI: Nút Điểm danh (nếu Đang học) & Nút Chi tiết */}
+                  {/* BÊN PHẢI: Nút Điểm danh Icon-only, không chữ, không còn nút Xem chi tiết Con mắt */}
                   <div className="flex items-center gap-1.5 shrink-0">
-                    {/* Cơ chế Điểm danh: Chỉ cho môn Đang học */}
                     {!isEnded ? (
                       checkinStatus.isCheckedIn ? (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 rounded-md">
-                          <CheckCheck className="h-3 w-3 text-emerald-500" />
-                          <span className="hidden sm:inline">Đã điểm danh</span>
-                        </span>
+                        <div
+                          className="h-8 w-8 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-emerald-500 flex items-center justify-center shrink-0 shadow-2xs"
+                          title="Đã điểm danh hôm nay"
+                          aria-label="Đã điểm danh"
+                        >
+                          <CheckCheck className="h-4 w-4 stroke-[2.5]" />
+                        </div>
                       ) : (
                         <Button
-                          size="sm"
+                          size="icon"
                           disabled={isCheckingIn}
-                          onClick={() => handleQuickCheckin(sub)}
-                          className="h-7 px-2.5 bg-[#C6FF33] hover:bg-[#b2f310] text-black font-black text-[11px] rounded-md shadow-2xs transition-all active:scale-95 flex items-center gap-1"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleQuickCheckin(sub);
+                          }}
+                          className="h-8 w-8 bg-[#C6FF33] hover:bg-[#b2f310] text-black font-black rounded-md shadow-2xs transition-all active:scale-95 flex items-center justify-center shrink-0"
                           title="Bấm điểm danh cho môn học này"
+                          aria-label="Điểm danh"
                         >
-                          <CheckCircle2 className="h-3 w-3 stroke-[2.5]" />
-                          <span>{isCheckingIn ? "..." : "Điểm danh"}</span>
+                          <CheckCircle2 className="h-4 w-4 stroke-[2.5]" />
                         </Button>
                       )
                     ) : (
-                      <span className="text-[10px] font-bold text-muted-foreground bg-muted px-2 py-0.5 rounded-md">
+                      <span className="text-[10px] font-bold text-muted-foreground bg-muted px-2 py-1 rounded-md shrink-0">
                         Đã học
                       </span>
                     )}
-
-                    {/* NÚT CHI TIẾT (Icon-only theo Rule 1.2: mở pop-up Xem chi tiết & Edit) */}
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => setViewingSubject(sub)}
-                      className="h-7 w-7 rounded-md border border-border/80 hover:bg-muted text-muted-foreground hover:text-foreground shrink-0 transition-all active:scale-95"
-                      title="Xem chi tiết môn học và điểm danh"
-                      aria-label="Xem chi tiết"
-                    >
-                      <Eye className="h-3.5 w-3.5" />
-                    </Button>
                   </div>
                 </div>
               );

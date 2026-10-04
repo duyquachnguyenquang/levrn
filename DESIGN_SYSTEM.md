@@ -196,6 +196,20 @@ Khi bố trí các nút tương tác (Buttons & Actions), phải tuân thủ ngh
 
 ---
 
+### 👁️ Quy tắc 18: Hình thức List View: Bỏ nút Xem chi tiết (icon Con mắt) - Click trực tiếp vào Tên / Dòng
+- **Áp dụng trên cả Mobile và PC cho tất cả các giao diện danh sách (List view):** Điểm danh, Nhiệm vụ, Lịch học, Quản lý môn học, v.v.
+- **TUYỆT ĐỐI KHÔNG** đặt nút riêng "Xem chi tiết" hay icon Con mắt (`<Eye />`) ở các hàng danh sách.
+- Chuyển toàn bộ cơ chế mở xem chi tiết / lịch sử sang thao tác **click trực tiếp vào tên môn học, tiêu đề nhiệm vụ hoặc dòng danh sách** (`cursor-pointer hover:underline` hoặc `hover:text-[#7D39EB]`).
+- **Hiệu quả:** Giải phóng diện tích chiều ngang tối đa, giúp tên môn học và tiêu đề có không gian rộng rãi, thoáng đãng, không bị co ngắn hay tràn mép ngoài.
+
+---
+
+### 📐 Quy tắc 19: Bố cục Box & Cụm nút tính năng trên Mobile: Dàn trải gần viền & Khoảng cách đều đặn
+- **Dàn trải gần viền của Box:** Giảm padding dư thừa của card/box trên mobile (`p-3` hoặc `p-3.5 sm:p-5`), các phần tử nội dung phân bổ dàn trải gần viền ngoài của box hơn (`w-full justify-between`), giải phóng diện tích, không để mép ngoài quá dày tạo cảm giác chật chội.
+- **Khoảng cách nút tính năng đều đặn:** Các cụm nút tính năng/công cụ (Filter, Sort, Search, Add...) phải duy trì khoảng cách đều đặn (`gap-2` đến `gap-2.5`), phân bổ hài hòa, tuyệt đối không để xảy ra tình trạng "chỗ thì rộng quá, chỗ thì bó chật chội vào nhau".
+
+---
+
 ## 3. Quy Tắc Tác Vụ Dành Cho AI (AI Working & Interaction Rules)
  
 ### ⚡ Quy tắc 17: Tác phong làm việc của AI (Nhanh, Trúng, Không Screenshot)
@@ -232,3 +246,5 @@ Khi bố trí các nút tương tác (Buttons & Actions), phải tuân thủ ngh
 | **Form Label** | Có Icon trước chữ | `<Label className="flex items-center gap-1.5 text-xs font-semibold"><Icon className="w-3.5 h-3.5" /> Tên trường</Label>` |
 | **Modal Fields** | Đồng cấp, không bọc ô lớn | Các `div` trường dữ liệu đặt phẳng trực tiếp trong grid/form |
 | **Header Layout** | Không có chữ giải thích bên dưới | `<h1 className="text-xl font-bold tracking-tight">Tiêu đề</h1>` |
+| **List View Xem Chi Tiết**| Bỏ nút Con mắt, click trực tiếp vào tên môn/tiêu đề | `<div onClick={() => setViewing(item)} className="cursor-pointer group"><span className="group-hover:text-[#7D39EB]">Tên</span></div>` |
+| **Box Padding Mobile** | Dàn trải gần viền box, không mép dày | `p-3.5 sm:p-5` hoặc `p-3 sm:p-4` kết hợp `w-full justify-between` |

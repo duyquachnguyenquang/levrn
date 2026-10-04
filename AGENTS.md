@@ -129,6 +129,16 @@ Khi tạo hoặc chỉnh sửa các nút thao tác:
     - **Thẻ mã môn phụ trong nhiệm vụ (`[CODE]`):** Cố định chiều rộng chuẩn **`w-12` (48px)** hoặc **`w-14` (56px)**, căn giữa `inline-flex items-center justify-center text-center font-mono font-bold text-[10px] shrink-0 truncate`.
   - **Hiệu quả:** Tạo thành một trục gióng dọc thẳng tắp (Vertical Alignment Column), toàn bộ tên môn học / tiêu đề nội dung bắt đầu chính xác tại cùng một tọa độ X, giao diện ngăn nắp, đồng bộ, chuẩn chỉ và sắc nét theo phong cách Sharp Tech.
 
+### 1.18. Hình thức List View: Bỏ nút Xem chi tiết (icon Con mắt) - Click trực tiếp vào Tên / Dòng để xem
+- **Áp dụng trên cả Mobile và PC cho tất cả các dạng danh sách (List view):** Điểm danh, Nhiệm vụ, Lịch học, Danh sách môn học...
+  - **TUYỆT ĐỐI KHÔNG** đặt nút riêng "Xem chi tiết" hay icon Con mắt (`<Eye />`) ở các hàng danh sách.
+  - Chuyển toàn bộ cơ chế mở xem chi tiết / lịch sử sang thao tác **click trực tiếp vào tên môn học, tiêu đề nhiệm vụ hoặc dòng danh sách** (`cursor-pointer`).
+  - **Hiệu quả:** Giải phóng diện tích chiều ngang tối đa, giúp tên môn học và tiêu đề có không gian rộng rãi, thoáng đãng, không bị co ngắn hay tràn mép ngoài.
+
+### 1.19. Bố cục Box & Cụm nút tính năng trên Mobile: Dàn trải gần viền & Khoảng cách đều đặn
+- **Dàn trải gần viền của Box:** Giảm padding dư thừa của card/box trên mobile (`p-3` hoặc `p-3.5 sm:p-5`), các phần tử nội dung phân bổ dàn trải gần viền ngoài của box hơn (`w-full justify-between`), giải phóng diện tích, không để mép ngoài quá dày tạo cảm giác chật chội.
+- **Khoảng cách nút tính năng đều đặn:** Các cụm nút tính năng/công cụ (Filter, Sort, Search, Add...) phải duy trì khoảng cách đều đặn (`gap-2` đến `gap-2.5`), phân bổ hài hòa, tuyệt đối không để xảy ra tình trạng "chỗ thì rộng quá, chỗ thì bó chật chội vào nhau".
+
 ---
 
 ## 2. QUY TẮC TÁC VỤ & PHẢN HỒI CỦA AI (AI OPERATIONAL RULES)

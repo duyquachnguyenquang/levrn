@@ -15,7 +15,7 @@ import {
   GroupProject,
   GroupProjectFormData,
   GroupMember,
-  GroupTask,
+  GroupProjectStatus,
   Subject,
 } from "@/lib/types";
 import { CURRENT_SEMESTER } from "@/lib/semesterUtils";
@@ -23,7 +23,6 @@ import {
   Users,
   Calendar,
   BookOpen,
-  ListTodo,
   Clock,
   Link2,
   Folder,
@@ -36,12 +35,11 @@ import {
   ExternalLink,
   CheckCircle2,
   Image as ImageIcon,
-  Sparkles,
+  FileText,
 } from "lucide-react";
 import Link from "next/link";
 import { DateTimePicker } from "@/components/ui/datetime-picker";
 import { useCourseGrades } from "@/hooks/useCourseGrades";
-import { IMAGE_PRESETS } from "@/lib/imagePresets";
 
 interface GroupProjectModalProps {
   open: boolean;
@@ -51,12 +49,6 @@ interface GroupProjectModalProps {
   onSave: (data: GroupProjectFormData, id?: string) => void;
 }
 
-interface FormTaskItem {
-  id: string;
-  title: string;
-  dueDate?: string;
-}
-
 export function GroupProjectModal({
   open,
   onOpenChange,
@@ -64,7 +56,7 @@ export function GroupProjectModal({
   subjects,
   onSave,
 }: GroupProjectModalProps) {
-  // 1. Nhóm (Tên nhóm)
+  // 1. Tên nhóm
   const [name, setName] = useState("");
 
   // 2. Học kỳ & Môn học (phân tầng theo Học kỳ)
@@ -87,10 +79,12 @@ export function GroupProjectModal({
     return subjects.filter((s) => s.semester === selectedSemester);
   }, [subjects, selectedSemester]);
 
-  // 3. Danh sách Nhiệm vụ (Tasks) kèm Hạn nộp
-  const [tasks, setTasks] = useState<FormTaskItem[]>([]);
-  const [newTaskTitle, setNewTaskTitle] = useState("");
-  const [newTaskDueDate, setNewTaskDueDate] = useState("");
+  // 3. Đề tài đồ án / Báo cáo
+  const [topic, setTopic] = useState("");
+
+  // 4. Trạng thái & Hạn nộp bài
+  const [status, setStatus] = useState<GroupProjectStatus>("in_progress");
+  const [deadline, setDeadline] = useState("");
 
   // Tích hợp Quản lý điểm số môn học
   const { grades: allCourseGrades, updateComponentScore } = useCourseGrades();
@@ -108,13 +102,13 @@ export function GroupProjectModal({
     );
   }, [allCourseGrades, subjectId, subjectCode]);
 
-  // 4. Liên kết chung (Google Drive & Zalo/Discord) & Ảnh bìa
+  // 5. Liên kết chung (Google Drive & Zalo/Discord) & Ảnh bìa
   const [driveUrl, setDriveUrl] = useState("");
   const [chatUrl, setChatUrl] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [previewError, setPreviewError] = useState(false);
 
-  // 5. Danh sách Thành viên (kèm SĐT)
+  // 6. Danh sách Thành viên (kèm SĐT)
   const [members, setMembers] = useState<GroupMember[]>([
     {
       id: "mem-self",
@@ -139,34 +133,15 @@ export function GroupProjectModal({
       setSubjectCode(groupToEdit.subjectCode);
       setSubjectName(groupToEdit.subjectName);
 
-      // Load tasks
-      if (groupToEdit.tasks && groupToEdit.tasks.length > 0) {
-        setTasks(
-          groupToEdit.tasks.map((t) => ({
-            id: t.id,
-            title: t.title,
-            dueDate: t.dueDate ? t.dueDate.slice(0, 16) : undefined,
-          }))
-        );
-      } else if (groupToEdit.topic) {
-        setTasks([
-          {
-            id: `gt-initial`,
-            title: groupToEdit.topic,
-            dueDate: groupToEdit.deadline ? groupToEdit.deadline.slice(0, 16) : undefined,
-          },
-        ]);
-      } else {
-        setTasks([]);
-      }
+      setTopic(groupToEdit.topic || "");
+      setStatus(groupToEdit.status || "in_progress");
+      setDeadline(groupToEdit.deadline ? groupToEdit.deadline.slice(0, 16) : "");
 
       setDriveUrl(groupToEdit.driveUrl || "");
       setChatUrl(groupToEdit.chatUrl || "");
       setImageUrl(groupToEdit.imageUrl || "");
       setPreviewError(false);
       setMembers(groupToEdit.members || []);
-      setNewTaskTitle("");
-      setNewTaskDueDate("");
       setNewMemberName("");
       setNewMemberId("");
       setNewMemberPhone("");
@@ -193,9 +168,10 @@ export function GroupProjectModal({
       setSubjectCode(targetSub?.code || "SUB");
       setSubjectName(targetSub?.name || "Môn học");
 
-      setTasks([]);
-      setNewTaskTitle("");
-      setNewTaskDueDate("");
+      setTopic("");
+      setStatus("in_progress");
+      setDeadline("");
+
       setDriveUrl("");
       setChatUrl("");
       setImageUrl("");
@@ -266,26 +242,6 @@ export function GroupProjectModal({
     }
   };
 
-  // Thêm nhiệm vụ con vào nhóm
-  const handleAddTask = () => {
-    if (!newTaskTitle.trim()) return;
-    setTasks((prev) => [
-      ...prev,
-      {
-        id: `task-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
-        title: newTaskTitle.trim(),
-        dueDate: newTaskDueDate || undefined,
-      },
-    ]);
-    setNewTaskTitle("");
-    setNewTaskDueDate("");
-  };
-
-  // Xoá nhiệm vụ con
-  const handleRemoveTask = (taskId: string) => {
-    setTasks((prev) => prev.filter((t) => t.id !== taskId));
-  };
-
   // Thêm thành viên
   const handleAddMember = () => {
     if (!newMemberName.trim()) return;
@@ -312,42 +268,7 @@ export function GroupProjectModal({
   // Submit form
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return;
-
-    // Tự động gom nhiệm vụ đang gõ dở nếu chưa ấn +
-    const finalTasks = [...tasks];
-    if (newTaskTitle.trim()) {
-      finalTasks.push({
-        id: `task-${Date.now()}`,
-        title: newTaskTitle.trim(),
-        dueDate: newTaskDueDate || undefined,
-      });
-    }
-
-    if (finalTasks.length === 0) return;
-
-    // Tìm deadline sớm nhất từ các nhiệm vụ
-    const dueDates = finalTasks
-      .map((t) => t.dueDate)
-      .filter(Boolean)
-      .sort() as string[];
-    const earliestDeadline = dueDates.length > 0 ? new Date(dueDates[0]).toISOString() : undefined;
-
-    // Đồng bộ topic chuỗi nhiệm vụ để tương thích với Supabase NOT NULL và Card
-    const topicSummary = finalTasks.map((t) => t.title).join(", ");
-
-    const groupTasks: GroupTask[] = finalTasks.map((t, idx) => {
-      const existing = groupToEdit?.tasks?.find((gt) => gt.id === t.id);
-      return {
-        id: t.id || `gt-${Date.now()}-${idx}`,
-        groupId: groupToEdit?.id || "",
-        title: t.title,
-        status: existing?.status || "todo",
-        priority: existing?.priority || "medium",
-        dueDate: t.dueDate ? t.dueDate.slice(0, 10) : undefined,
-        createdAt: existing?.createdAt || new Date().toISOString(),
-      };
-    });
+    if (!name.trim() || !topic.trim()) return;
 
     const parsedScore = gradeScore.trim() !== "" ? parseFloat(gradeScore) : null;
     const validScore = parsedScore !== null && !isNaN(parsedScore) ? Math.min(10, Math.max(0, parsedScore)) : null;
@@ -357,11 +278,11 @@ export function GroupProjectModal({
       subjectId: subjectId || undefined,
       subjectCode: subjectCode || "SUB",
       subjectName: subjectName || "Môn học",
-      topic: topicSummary,
+      topic: topic.trim(),
       description: groupToEdit?.description || undefined,
       semester: selectedSemester || undefined,
-      status: groupToEdit?.status || "in_progress",
-      deadline: earliestDeadline || groupToEdit?.deadline || undefined,
+      status: status,
+      deadline: deadline ? new Date(deadline).toISOString() : groupToEdit?.deadline || undefined,
       driveUrl: driveUrl.trim() || undefined,
       chatUrl: chatUrl.trim() || undefined,
       imageUrl: imageUrl.trim() || undefined,
@@ -377,7 +298,8 @@ export function GroupProjectModal({
         avatarColor: m.role === "leader" ? "#7D39EB" : "#3B82F6",
         contributionScore: m.contributionScore ?? 100,
       })),
-      tasks: groupTasks,
+      // BẢO TOÀN DỮ LIỆU NHIỆM VỤ HIỆN CÓ, TUYỆT ĐỐI KHÔNG TỰ ĐỘNG THÊM NHIỆM VỤ MỚI
+      tasks: groupToEdit?.tasks || [],
     };
 
     onSave(data, groupToEdit?.id);
@@ -392,7 +314,7 @@ export function GroupProjectModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg border-border shadow-2xl p-5 sm:p-6">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg border-border shadow-2xl p-5 sm:p-6 [&>button.absolute]:hidden">
         {/* 1. Header Dialog: Tiêu đề ngắn gọn, không có đoạn văn dài */}
         <DialogHeader className="pb-3 border-b border-border/60">
           <DialogTitle className="text-base sm:text-lg font-bold text-foreground">
@@ -401,16 +323,16 @@ export function GroupProjectModal({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 py-2">
-          {/* 2. Nhóm (Tên nhóm) */}
+          {/* 2. Tên nhóm */}
           <div className="space-y-1.5">
             <Label htmlFor="grp-name" className="text-xs font-bold text-foreground flex items-center gap-1.5">
               <Users className="h-3.5 w-3.5 text-[#7D39EB]" />
-              <span>Nhóm</span>
+              <span>Tên nhóm</span>
               <span className="text-destructive">*</span>
             </Label>
             <Input
               id="grp-name"
-              placeholder="VD: Nhóm 01"
+              placeholder="VD: Nhóm 04 - Logistics Warriors"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
@@ -466,193 +388,156 @@ export function GroupProjectModal({
             </div>
           </div>
 
-          {/* 4. Nhiệm vụ & Hạn nộp (hỗ trợ 1 hoặc nhiều nhiệm vụ con) */}
-          <div className="space-y-2 pt-2 border-t border-border/50">
-            <Label className="text-xs font-bold text-foreground flex items-center gap-1.5">
-              <ListTodo className="h-3.5 w-3.5 text-[#7D39EB]" />
-              <span>Nhiệm vụ {tasks.length > 0 && `(${tasks.length})`}</span>
+          {/* 4. Đề tài đồ án / Báo cáo */}
+          <div className="space-y-1.5">
+            <Label htmlFor="grp-topic" className="text-xs font-bold text-foreground flex items-center gap-1.5">
+              <FileText className="h-3.5 w-3.5 text-[#7D39EB]" />
+              <span>Đề tài đồ án / Báo cáo</span>
               <span className="text-destructive">*</span>
             </Label>
+            <Input
+              id="grp-topic"
+              placeholder="VD: Tối ưu hoá mạng lưới kho bãi và trung tâm phân phối miền Nam"
+              value={topic}
+              onChange={(e) => setTopic(e.target.value)}
+              required
+              className="h-9 text-xs rounded-lg bg-card"
+            />
+          </div>
 
-            {/* Hàng nhập nhiệm vụ con + Hạn nộp + nút icon (+) */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-              <div className="relative flex-1">
-                <Input
-                  placeholder="Nhiệm vụ / Đề tài báo cáo..."
-                  value={newTaskTitle}
-                  onChange={(e) => setNewTaskTitle(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      handleAddTask();
-                    }
-                  }}
-                  className="h-9 text-xs rounded-lg bg-card"
-                />
-              </div>
-
-              <div className="flex items-center gap-2 shrink-0">
-                <div className="w-full sm:w-48">
-                  <DateTimePicker
-                    value={newTaskDueDate}
-                    onChange={setNewTaskDueDate}
-                    placeholder="Hạn nộp..."
-                    includeTime={true}
-                  />
-                </div>
-
-                <Button
-                  type="button"
-                  size="icon"
-                  onClick={handleAddTask}
-                  disabled={!newTaskTitle.trim()}
-                  className="h-9 w-9 bg-[#7D39EB] hover:bg-[#6D28D9] text-white rounded-lg shrink-0 transition-transform active:scale-95"
-                  title="Thêm nhiệm vụ"
-                  aria-label="Thêm nhiệm vụ"
-                >
-                  <Plus className="h-4 w-4 stroke-[2.5]" />
-                </Button>
-              </div>
+          {/* 5. Trạng thái & Hạn nộp bài */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* Trạng thái đồ án */}
+            <div className="space-y-1.5">
+              <Label htmlFor="grp-status" className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                <Clock className="h-3.5 w-3.5 text-[#7D39EB]" />
+                <span>Trạng thái đồ án</span>
+              </Label>
+              <select
+                id="grp-status"
+                value={status}
+                onChange={(e) => setStatus(e.target.value as GroupProjectStatus)}
+                className="w-full h-9 text-xs px-3 rounded-lg bg-card border border-border/80 text-foreground focus:outline-none focus:ring-1 focus:ring-[#7D39EB]"
+              >
+                <option value="planning">Lên kế hoạch</option>
+                <option value="in_progress">Đang thực hiện</option>
+                <option value="submitted">Đã nộp bài</option>
+                <option value="completed">Hoàn thành</option>
+              </select>
             </div>
 
-            {/* Gán Trọng số điểm từ phần Quản lý điểm số của môn học */}
-            <div className="p-3 rounded-lg border border-[#7D39EB]/30 bg-[#7D39EB]/5 space-y-2 mt-2">
-              <div className="flex items-center justify-between">
-                <Label className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                  <Award className="h-3.5 w-3.5 text-[#7D39EB]" />
-                  <span>Gán trọng số điểm từ Quản lý điểm số</span>
+            {/* Hạn nộp bài */}
+            <div className="space-y-1.5">
+              <Label htmlFor="grp-deadline" className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                <Calendar className="h-3.5 w-3.5 text-[#7D39EB]" />
+                <span>Hạn nộp bài</span>
+              </Label>
+              <DateTimePicker
+                id="grp-deadline"
+                value={deadline}
+                onChange={setDeadline}
+                placeholder="Chọn hạn nộp bài..."
+                includeTime={true}
+              />
+            </div>
+          </div>
+
+          {/* 6. Gán Trọng số điểm từ phần Quản lý điểm số của môn học */}
+          <div className="p-3 rounded-lg border border-[#7D39EB]/30 bg-[#7D39EB]/5 space-y-2 mt-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                <Award className="h-3.5 w-3.5 text-[#7D39EB]" />
+                <span>Gán trọng số điểm từ Quản lý điểm số</span>
+              </Label>
+              <Link
+                href="/grades"
+                target="_blank"
+                className="text-[11px] font-semibold text-[#7D39EB] hover:underline flex items-center gap-1"
+                title="Xem bảng điểm môn học"
+              >
+                <span>Quản lý điểm số</span>
+                <ExternalLink className="h-3 w-3" />
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-end">
+              {/* Chọn cột điểm thành phần */}
+              <div className="sm:col-span-7 space-y-1">
+                <Label htmlFor="grade-comp-select" className="text-[10px] font-semibold text-muted-foreground">
+                  Cột điểm của môn {subjectCode ? `[${subjectCode}]` : ""}
                 </Label>
-                <Link
-                  href="/grades"
-                  target="_blank"
-                  className="text-[11px] font-semibold text-[#7D39EB] hover:underline flex items-center gap-1"
-                  title="Xem bảng điểm môn học"
+                <select
+                  id="grade-comp-select"
+                  value={gradeComponentId}
+                  onChange={(e) => handleSelectGradeComponent(e.target.value)}
+                  className="w-full h-8 text-xs px-2 rounded-md bg-card border border-border/80 text-foreground focus:outline-none focus:ring-1 focus:ring-[#7D39EB]"
                 >
-                  <span>Quản lý điểm số</span>
-                  <ExternalLink className="h-3 w-3" />
-                </Link>
+                  <option value="">-- Chưa gán cột điểm --</option>
+                  {currentCourseGrade?.components && currentCourseGrade.components.length > 0 ? (
+                    currentCourseGrade.components.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name} ({c.weight}%) {c.score !== null && c.score !== undefined ? `• Điểm: ${c.score}/10` : "• Chưa có điểm"}
+                      </option>
+                    ))
+                  ) : (
+                    <option value="" disabled>
+                      Môn học này chưa có cột điểm thành phần
+                    </option>
+                  )}
+                </select>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-end">
-                {/* Chọn cột điểm thành phần */}
-                <div className="sm:col-span-7 space-y-1">
-                  <Label htmlFor="grade-comp-select" className="text-[10px] font-semibold text-muted-foreground">
-                    Cột điểm của môn {subjectCode ? `[${subjectCode}]` : ""}
+              {/* Trọng số (%) & Điểm số đạt được */}
+              <div className="sm:col-span-5 grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <Label className="text-[10px] font-semibold text-muted-foreground">
+                    Trọng số (%)
                   </Label>
-                  <select
-                    id="grade-comp-select"
-                    value={gradeComponentId}
-                    onChange={(e) => handleSelectGradeComponent(e.target.value)}
-                    className="w-full h-8 text-xs px-2 rounded-md bg-card border border-border/80 text-foreground focus:outline-none focus:ring-1 focus:ring-[#7D39EB]"
-                  >
-                    <option value="">-- Chưa gán cột điểm --</option>
-                    {currentCourseGrade?.components && currentCourseGrade.components.length > 0 ? (
-                      currentCourseGrade.components.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.name} ({c.weight}%) {c.score !== null && c.score !== undefined ? `• Điểm: ${c.score}/10` : "• Chưa có điểm"}
-                        </option>
-                      ))
-                    ) : (
-                      <option value="" disabled>
-                        Môn học này chưa có cột điểm thành phần
-                      </option>
-                    )}
-                  </select>
-                </div>
-
-                {/* Trọng số (%) & Điểm số đạt được */}
-                <div className="sm:col-span-5 grid grid-cols-2 gap-2">
-                  <div className="space-y-1">
-                    <Label className="text-[10px] font-semibold text-muted-foreground">
-                      Trọng số (%)
-                    </Label>
-                    <div className="relative">
-                      <Input
-                        type="number"
-                        min={0}
-                        max={100}
-                        placeholder="30"
-                        value={gradeWeight ?? ""}
-                        onChange={(e) => setGradeWeight(e.target.value ? Number(e.target.value) : undefined)}
-                        className="h-8 text-xs font-mono font-bold rounded-md bg-card pr-5"
-                      />
-                      <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground font-bold">
-                        %
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="space-y-1">
-                    <Label className="text-[10px] font-semibold text-muted-foreground">
-                      Điểm (Hệ 10)
-                    </Label>
+                  <div className="relative">
                     <Input
                       type="number"
                       min={0}
-                      max={10}
-                      step={0.1}
-                      placeholder="VD: 8.5"
-                      value={gradeScore}
-                      onChange={(e) => setGradeScore(e.target.value)}
-                      className="h-8 text-xs font-mono font-black text-[#7D39EB] rounded-md bg-card"
+                      max={100}
+                      placeholder="30"
+                      value={gradeWeight ?? ""}
+                      onChange={(e) => setGradeWeight(e.target.value ? Number(e.target.value) : undefined)}
+                      className="h-8 text-xs font-mono font-bold rounded-md bg-card pr-5"
                     />
+                    <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground font-bold">
+                      %
+                    </span>
                   </div>
+                </div>
+
+                <div className="space-y-1">
+                  <Label className="text-[10px] font-semibold text-muted-foreground">
+                    Điểm (Hệ 10)
+                  </Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    max={10}
+                    step={0.1}
+                    placeholder="VD: 8.5"
+                    value={gradeScore}
+                    onChange={(e) => setGradeScore(e.target.value)}
+                    className="h-8 text-xs font-mono font-black text-[#7D39EB] rounded-md bg-card"
+                  />
                 </div>
               </div>
-
-              {gradeComponentId && (
-                <div className="flex items-center gap-1.5 text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
-                  <CheckCircle2 className="h-3 w-3 shrink-0" />
-                  <span>
-                    Đã liên kết với <strong>{gradeComponentName}</strong> ({gradeWeight || 0}%). Điểm nhập ở đây sẽ đồng bộ tức thì sang Quản lý điểm số.
-                  </span>
-                </div>
-              )}
             </div>
 
-            {/* Danh sách nhiệm vụ đã thêm */}
-            {tasks.length > 0 && (
-              <div className="space-y-1.5 pt-1">
-                {tasks.map((t, idx) => (
-                  <div
-                    key={t.id}
-                    className="flex items-center justify-between gap-2 p-2 rounded-lg bg-muted/40 border border-border/70 text-xs"
-                  >
-                    <div className="flex items-center gap-2 min-w-0 flex-1">
-                      <span className="h-5 w-5 rounded-md bg-[#7D39EB]/15 text-[#7D39EB] font-bold text-[10px] flex items-center justify-center shrink-0 font-mono">
-                        {idx + 1}
-                      </span>
-                      <span className="font-semibold text-foreground truncate">{t.title}</span>
-                    </div>
-
-                    <div className="flex items-center gap-2 shrink-0">
-                      {t.dueDate && (
-                        <span className="text-[11px] font-medium text-amber-500 flex items-center gap-1 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20">
-                          <Clock className="h-3 w-3" />
-                          {new Date(t.dueDate).toLocaleDateString("vi-VN", {
-                            day: "2-digit",
-                            month: "2-digit",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </span>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveTask(t.id)}
-                        className="text-muted-foreground hover:text-destructive p-1 rounded-md transition-colors"
-                        title="Xoá nhiệm vụ"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
+            {gradeComponentId && (
+              <div className="flex items-center gap-1.5 text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
+                <CheckCircle2 className="h-3 w-3 shrink-0" />
+                <span>
+                  Đã liên kết với <strong>{gradeComponentName}</strong> ({gradeWeight || 0}%). Điểm nhập ở đây sẽ đồng bộ tức thì sang Quản lý điểm số.
+                </span>
               </div>
             )}
           </div>
 
-          {/* 5. Liên kết (chỉ Google Drive và Zalo/Discord) */}
+          {/* 7. Liên kết (Google Drive và Zalo/Discord) */}
           <div className="space-y-2 pt-2 border-t border-border/50">
             <Label className="text-xs font-bold text-foreground flex items-center gap-1.5">
               <Link2 className="h-3.5 w-3.5 text-[#7D39EB]" />
@@ -680,7 +565,7 @@ export function GroupProjectModal({
             </div>
           </div>
 
-          {/* 6. Ảnh bìa đồ án (Permanent link) */}
+          {/* 8. Ảnh bìa đồ án (Permanent link) */}
           <div className="space-y-2 pt-2 border-t border-border/50">
             <Label className="text-xs font-bold text-foreground flex items-center gap-1.5">
               <ImageIcon className="h-3.5 w-3.5 text-[#7D39EB]" />
@@ -724,7 +609,7 @@ export function GroupProjectModal({
             </div>
           </div>
 
-          {/* 7. Thành viên (kèm Số điện thoại, nút chỉ dấu cộng) */}
+          {/* 9. Thành viên (kèm Số điện thoại, nút chỉ dấu cộng) */}
           <div className="space-y-2 pt-2 border-t border-border/50">
             <div className="flex items-center justify-between">
               <Label className="text-xs font-bold text-foreground flex items-center gap-1.5">
@@ -792,6 +677,7 @@ export function GroupProjectModal({
                       onClick={() => handleRemoveMember(m.id)}
                       className="text-muted-foreground hover:text-destructive ml-1"
                       title="Xoá thành viên"
+                      aria-label="Xoá thành viên"
                     >
                       <Trash2 className="h-3 w-3" />
                     </button>
@@ -801,20 +687,20 @@ export function GroupProjectModal({
             </div>
           </div>
 
-          {/* Footer dialog */}
+          {/* Footer dialog: Button text-only chuẩn quy tắc 1.2 */}
           <DialogFooter className="pt-3 border-t border-border/60 flex items-center justify-end gap-2">
             <Button
               type="button"
               variant="ghost"
               onClick={() => onOpenChange(false)}
-              className="text-xs h-8"
+              className="text-xs h-8 rounded-md"
             >
               Hủy
             </Button>
             <Button
               type="submit"
-              disabled={!name.trim() || (tasks.length === 0 && !newTaskTitle.trim())}
-              className="text-xs h-8 bg-[#7D39EB] hover:bg-[#6D28D9] text-white font-bold"
+              disabled={!name.trim() || !topic.trim()}
+              className="text-xs h-8 bg-[#7D39EB] hover:bg-[#6D28D9] text-white font-bold rounded-md"
             >
               {groupToEdit ? "Lưu thay đổi" : "Tạo nhóm"}
             </Button>

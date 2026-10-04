@@ -155,48 +155,47 @@ export function DashboardTasksCard({
       }
     });
 
-    // B. Nhiệm vụ cá nhân trong tuần (hoặc đang hoạt động)
+    // B. Nhiệm vụ cá nhân trong tuần (Chỉ lấy trong tuần hiện tại: T2 - CN)
     personalTasks.forEach((pt) => {
-      // Ưu tiên các task trong tuần hoặc chưa hoàn thành
-      const isInWeek = pt.date ? pt.date >= weekRange.start && pt.date <= weekRange.end : true;
+      const taskDate = pt.date || todayKey;
+      if (taskDate < weekRange.start || taskDate > weekRange.end) return;
+
       const isDone = pt.status === "completed";
       const targetSub = subjects.find((s) => s.id === pt.subjectId);
 
-      if (isInWeek || !isDone) {
-        items.push({
-          id: pt.id,
-          type: "personal",
-          title: pt.title,
-          code: targetSub?.code || "CÁ NHÂN",
-          date: pt.date || todayKey,
-          time: pt.durationMinutes ? `${pt.durationMinutes}p` : undefined,
-          completed: isDone,
-          priority: pt.priority || "medium",
-          color: "#06B6D4",
-        });
-      }
+      items.push({
+        id: pt.id,
+        type: "personal",
+        title: pt.title,
+        code: targetSub?.code || "CÁ NHÂN",
+        date: taskDate,
+        time: pt.timeblock?.startTime || (pt.durationMinutes ? `${pt.durationMinutes}p` : undefined),
+        completed: isDone,
+        priority: pt.priority || "medium",
+        color: "#06B6D4",
+      });
     });
 
-    // C. Nhiệm vụ nhóm trong tuần
+    // C. Nhiệm vụ nhóm trong tuần (Chỉ lấy trong tuần hiện tại: T2 - CN)
     groups.forEach((grp) => {
       (grp.tasks || []).forEach((gt) => {
         const dueDateStr = gt.dueDate ? gt.dueDate.split("T")[0] : undefined;
-        const isInWeek = dueDateStr ? dueDateStr >= weekRange.start && dueDateStr <= weekRange.end : true;
-        if (isInWeek || gt.status !== "done") {
-          items.push({
-            id: gt.id,
-            type: "group",
-            title: gt.title,
-            code: grp.subjectCode || "NHÓM",
-            groupName: grp.name,
-            date: dueDateStr || todayKey,
-            completed: gt.status === "done",
-            priority: (gt.priority as any) || "medium",
-            assigneeName: gt.assigneeName,
-            groupId: grp.id,
-            color: "#F59E0B",
-          });
-        }
+        if (!dueDateStr || dueDateStr < weekRange.start || dueDateStr > weekRange.end) return;
+
+        items.push({
+          id: gt.id,
+          type: "group",
+          title: gt.title,
+          code: grp.subjectCode || "NHÓM",
+          groupName: grp.name,
+          date: dueDateStr,
+          time: gt.dueDate && gt.dueDate.includes("T") ? gt.dueDate.split("T")[1]?.slice(0, 5) : undefined,
+          completed: gt.status === "done",
+          priority: (gt.priority as any) || "medium",
+          assigneeName: gt.assigneeName,
+          groupId: grp.id,
+          color: "#F59E0B",
+        });
       });
     });
 
@@ -223,25 +222,41 @@ export function DashboardTasksCard({
       );
     }
 
-    // Sắp xếp
+    // Sắp xếp theo yêu cầu:
+    // 1. Đẩy những nhiệm vụ chưa làm (!completed) lên trên, tất cả nhiệm vụ đã làm (completed) xuống dưới
+    // 2. Mặc định từ trên xuống dưới là ngày đến hạn từ gần nhất đến xa nhất (asc)
     result.sort((a, b) => {
+      const aDone = !!a.completed;
+      const bDone = !!b.completed;
+      if (aDone !== bDone) {
+        return aDone ? 1 : -1;
+      }
+
       if (sortType === "date") {
         const dateA = a.date || "";
         const dateB = b.date || "";
-        const cmp = dateA.localeCompare(dateB);
-        return sortDirection === "asc" ? cmp : -cmp;
+        if (dateA !== dateB) {
+          return sortDirection === "asc" ? dateA.localeCompare(dateB) : dateB.localeCompare(dateA);
+        }
+        const timeA = a.time || "";
+        const timeB = b.time || "";
+        return sortDirection === "asc" ? timeA.localeCompare(timeB) : timeB.localeCompare(timeA);
       }
 
       if (sortType === "priority") {
         const weight: Record<string, number> = { urgent: 4, high: 3, medium: 2, low: 1 };
         const wA = weight[a.priority || "medium"] || 2;
         const wB = weight[b.priority || "medium"] || 2;
-        return sortDirection === "asc" ? wA - wB : wB - wA;
+        if (wA !== wB) {
+          return sortDirection === "asc" ? wA - wB : wB - wA;
+        }
+        return (a.date || "").localeCompare(b.date || "");
       }
 
       if (sortType === "name") {
-        const cmp = a.title.localeCompare(b.title, "vi");
-        return sortDirection === "asc" ? cmp : -cmp;
+        return sortDirection === "asc"
+          ? a.title.localeCompare(b.title, "vi")
+          : b.title.localeCompare(a.title, "vi");
       }
 
       return 0;
@@ -261,11 +276,11 @@ export function DashboardTasksCard({
   }, [allWeekItems]);
 
   return (
-    <Card className="rounded-lg border border-border/80 bg-card p-5 shadow-xs flex flex-col justify-between transition-all duration-300 hover:border-border/90 hover:shadow-md h-full min-h-[380px]">
+    <Card className="rounded-lg border border-border/80 bg-card p-3.5 sm:p-5 shadow-xs flex flex-col justify-between transition-all duration-300 hover:border-border/90 hover:shadow-md h-full min-h-[380px]">
       {/* 1. Header Tinh gọn - Ngang hàng trên cả PC & Mobile, căn phải cụm nút: 1. Bộ lọc (icon Đầu lọc), 2. Sắp xếp, 3. Tìm kiếm (Rule 1.1, Rule 1.13) */}
-      <div className="flex flex-row items-center justify-between gap-3 pb-3 border-b border-border/60">
+      <div className="flex flex-row items-center justify-between gap-2 sm:gap-3 pb-3 border-b border-border/60">
         {/* Tiêu đề card */}
-        <div className="flex items-center gap-2.5 min-w-0">
+        <div className="flex items-center gap-2 min-w-0">
           <div className="h-8 w-8 rounded-md bg-[#7D39EB]/15 text-[#7D39EB] flex items-center justify-center shrink-0">
             <CheckSquare className="h-4 w-4" />
           </div>
@@ -278,7 +293,7 @@ export function DashboardTasksCard({
         </div>
 
         {/* Cụm công cụ bên phải: 1. Bộ lọc (icon Đầu lọc), 2. Sắp xếp, 3. Tìm kiếm */}
-        <div className="flex items-center gap-1.5 shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
           {/* 1. Nút Bộ lọc (Icon Đầu lọc) */}
           <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
             <PopoverTrigger asChild>
@@ -461,39 +476,42 @@ export function DashboardTasksCard({
         {displayedTasks.length > 0 ? (
           displayedTasks.map((task) => {
             const isToday = task.date === todayKey;
+            const isOverdue = !task.completed && !!task.date && task.date < todayKey;
 
             return (
               <div
                 key={task.id}
                 className={cn(
-                  "h-11 px-3 rounded-md border flex items-center justify-between gap-2 overflow-hidden transition-all text-left",
+                  "h-11 px-2.5 sm:px-3 rounded-md border flex items-center justify-between gap-2 overflow-hidden transition-all text-left",
                   task.completed
-                    ? "bg-muted/20 border-border/40 opacity-75"
+                    ? "bg-muted/20 border-border/40 opacity-70"
                     : isToday
                     ? "bg-[#7D39EB]/5 border-[#7D39EB]/30 hover:border-[#7D39EB]/60"
+                    : isOverdue
+                    ? "bg-rose-500/5 border-rose-500/25 hover:border-rose-500/50"
                     : "bg-muted/30 border border-border/60 hover:border-border/90"
                 )}
               >
                 {/* Trái: Vạch nhận diện, Badge phân loại, Tên nhiệm vụ */}
                 <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
-                  {/* Badge phân loại trực quan */}
+                  {/* Badge phân loại trực quan (Cố định w-14 theo Rule 1.17) */}
                   {task.type === "schedule" ? (
-                    <span className="w-14 h-5 inline-flex items-center justify-center rounded-xs text-[9.5px] font-bold bg-[#7D39EB]/15 text-[#7D39EB] shrink-0 font-mono text-center truncate">
+                    <span className="w-14 h-5 inline-flex items-center justify-center rounded-xs text-[9.5px] font-bold bg-[#7D39EB]/15 text-[#7D39EB] shrink-0 font-mono text-center truncate shadow-2xs">
                       Lịch học
                     </span>
                   ) : task.type === "personal" ? (
-                    <span className="w-14 h-5 inline-flex items-center justify-center rounded-xs text-[9.5px] font-bold bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 shrink-0 font-mono text-center truncate">
+                    <span className="w-14 h-5 inline-flex items-center justify-center rounded-xs text-[9.5px] font-bold bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 shrink-0 font-mono text-center truncate shadow-2xs">
                       Cá nhân
                     </span>
                   ) : (
-                    <span className="w-14 h-5 inline-flex items-center justify-center rounded-xs text-[9.5px] font-bold bg-amber-500/15 text-amber-700 dark:text-amber-400 shrink-0 font-mono text-center truncate">
+                    <span className="w-14 h-5 inline-flex items-center justify-center rounded-xs text-[9.5px] font-bold bg-amber-500/15 text-amber-700 dark:text-amber-400 shrink-0 font-mono text-center truncate shadow-2xs">
                       Nhóm
                     </span>
                   )}
 
                   {/* Mã môn nếu có */}
                   {task.code && (
-                    <span className="w-14 h-5 inline-flex items-center justify-center font-mono font-bold text-[10px] text-muted-foreground shrink-0 hidden sm:inline-flex text-center truncate px-0.5" title={task.code}>
+                    <span className="w-12 h-5 inline-flex items-center justify-center font-mono font-bold text-[10px] text-muted-foreground shrink-0 hidden sm:inline-flex text-center truncate px-0.5" title={task.code}>
                       [{task.code}]
                     </span>
                   )}
@@ -510,24 +528,25 @@ export function DashboardTasksCard({
                   </div>
                 </div>
 
-                {/* Phải: Ngày/Giờ & Thao tác check hoàn thành */}
+                {/* Phải: Badge Ngày/Giờ nổi bật & Thao tác check hoàn thành */}
                 <div className="flex items-center gap-2 shrink-0">
-                  {/* Ngày & Thời gian */}
-                  <div className="flex items-center gap-1 text-[10px] font-mono text-muted-foreground">
-                    <Clock className="h-3 w-3 text-[#7D39EB] shrink-0" />
-                    <span
-                      className={cn(
-                        "font-bold",
-                        isToday ? "text-[#7D39EB] dark:text-[#C6FF33]" : ""
-                      )}
-                    >
-                      {formatTaskDate(task.date, todayKey)}
-                    </span>
-                    {task.time && (
-                      <span className="hidden sm:inline">
-                        • {task.time}
-                      </span>
+                  {/* Badge Ngày & Thời gian nổi bật */}
+                  <div
+                    className={cn(
+                      "px-2 py-0.5 rounded-md font-mono text-[10px] sm:text-[10.5px] font-bold flex items-center gap-1 shrink-0 border shadow-2xs transition-all",
+                      task.completed
+                        ? "bg-muted/40 text-muted-foreground/60 border-border/40"
+                        : isOverdue
+                        ? "bg-rose-500/15 text-rose-500 border-rose-500/30"
+                        : isToday
+                        ? "bg-[#7D39EB]/15 text-[#7D39EB] dark:bg-[#C6FF33]/20 dark:text-[#C6FF33] border-[#7D39EB]/30 dark:border-[#C6FF33]/40"
+                        : "bg-muted/70 text-foreground border-border/80"
                     )}
+                    title={task.date ? `Hạn: ${task.date}${task.time ? ` • ${task.time}` : ""}` : undefined}
+                  >
+                    <Clock className="h-3 w-3 shrink-0" />
+                    <span>{formatTaskDate(task.date, todayKey)}</span>
+                    {task.time && <span className="font-semibold">{task.time.includes("-") ? task.time : `• ${task.time}`}</span>}
                   </div>
 
                   {/* Checkbox hoàn thành nhanh cho task cá nhân & nhóm */}
@@ -535,32 +554,36 @@ export function DashboardTasksCard({
                     <button
                       type="button"
                       onClick={() => onTogglePersonalTask(task.id, !task.completed)}
-                      className="h-6 w-6 rounded-md hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground cursor-pointer transition-all active:scale-95"
+                      className="h-8 w-8 rounded-md hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground cursor-pointer transition-all active:scale-95 shrink-0"
                       title={task.completed ? "Đánh dấu chưa hoàn thành" : "Hoàn thành nhiệm vụ"}
+                      aria-label={task.completed ? "Đánh dấu chưa hoàn thành" : "Hoàn thành nhiệm vụ"}
                     >
                       {task.completed ? (
-                        <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                        <CheckCircle2 className="h-4.5 w-4.5 text-emerald-500" />
                       ) : (
-                        <Circle className="h-4 w-4" />
+                        <Circle className="h-4.5 w-4.5" />
                       )}
                     </button>
                   ) : task.type === "group" && onToggleGroupTask && task.groupId ? (
                     <button
                       type="button"
                       onClick={() => onToggleGroupTask(task.groupId!, task.id, !task.completed)}
-                      className="h-6 w-6 rounded-md hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground cursor-pointer transition-all active:scale-95"
+                      className="h-8 w-8 rounded-md hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground cursor-pointer transition-all active:scale-95 shrink-0"
                       title={task.completed ? "Đánh dấu chưa xong" : "Hoàn thành nhiệm vụ nhóm"}
+                      aria-label={task.completed ? "Đánh dấu chưa xong" : "Hoàn thành nhiệm vụ nhóm"}
                     >
                       {task.completed ? (
-                        <CheckCircle2 className="h-4 w-4 text-amber-500" />
+                        <CheckCircle2 className="h-4.5 w-4.5 text-amber-500" />
                       ) : (
-                        <Circle className="h-4 w-4" />
+                        <Circle className="h-4.5 w-4.5" />
                       )}
                     </button>
                   ) : task.type === "schedule" ? (
-                    <span className="text-[10px] text-muted-foreground hidden sm:inline">
-                      {task.room ? `P.${task.room}` : ""}
-                    </span>
+                    task.room ? (
+                      <span className="text-[10px] font-mono font-semibold text-muted-foreground px-1.5 py-0.5 rounded bg-muted/50 border border-border/40 shrink-0 hidden sm:inline">
+                        P.{task.room}
+                      </span>
+                    ) : null
                   ) : null}
                 </div>
               </div>

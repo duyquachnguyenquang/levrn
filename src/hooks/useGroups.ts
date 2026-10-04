@@ -253,24 +253,35 @@ export function useGroups() {
     }
 
     // 2. Đọc từ localStorage nếu Supabase trống
-    if (loadedGroups.length === 0 && typeof window !== "undefined") {
+    let isLocalStorageLoaded = false;
+    if (!isSupabaseOk && typeof window !== "undefined") {
       try {
         const local = localStorage.getItem(LOCAL_STORAGE_KEY);
-        if (local) {
-          loadedGroups = JSON.parse(local);
+        if (local !== null) {
+          const parsed = JSON.parse(local);
+          if (Array.isArray(parsed)) {
+            loadedGroups = parsed;
+            isLocalStorageLoaded = true;
+          }
         }
       } catch (err) {
         console.error("Error reading groups from localStorage:", err);
       }
     }
 
-    // 3. Fallback dữ liệu mẫu ban đầu
-    if (loadedGroups.length === 0) {
+    // 3. Fallback dữ liệu mẫu ban đầu: Chỉ kích hoạt khi chưa từng khởi tạo dữ liệu
+    if (!isSupabaseOk && !isLocalStorageLoaded) {
       loadedGroups = INITIAL_DEMO_GROUPS;
       if (typeof window !== "undefined") {
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(INITIAL_DEMO_GROUPS));
       }
     }
+
+    // 4. Dọn dẹp triệt để bất kỳ nhiệm vụ giả nào (gt-initial) từng bị sinh tự động
+    loadedGroups = loadedGroups.map((g) => ({
+      ...g,
+      tasks: (g.tasks || []).filter((t) => !t.id.startsWith("gt-initial")),
+    }));
 
     setGroups(loadedGroups);
     setIsSupabaseActive(isSupabaseOk);

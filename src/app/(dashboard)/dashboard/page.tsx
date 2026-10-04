@@ -17,6 +17,7 @@ import {
 import { DashboardAttendanceCard } from "@/components/dashboard/DashboardAttendanceCard";
 import { DashboardTasksCard } from "@/components/dashboard/DashboardTasksCard";
 import { AttendanceStatus } from "@/lib/types";
+import { useUserProfile } from "@/hooks/useUserProfile";
 
 // Tính câu chào dựa theo thời điểm trong ngày
 function getTimeBasedGreeting(): string {
@@ -42,6 +43,7 @@ export default function DashboardPage() {
     refreshTasks: refreshPlanTasks,
   } = useStudyPlans();
   const { groups, updateTaskStatus: updateGroupTaskStatus } = useGroups();
+  const { profile } = useUserProfile();
   const [greeting, setGreeting] = useState<string>("Chào buổi sáng");
 
   // Điểm danh & Thông báo
@@ -149,7 +151,7 @@ export default function DashboardPage() {
       {/* 1. Lời chào theo thời gian */}
       <div className="flex items-center justify-between">
         <h2 className="text-2xl sm:text-3xl font-black text-foreground tracking-tight flex items-center gap-2">
-          <span>{greeting}, Taylor</span>
+          <span>{greeting}, {profile.fullName || "Quang Duy"}</span>
           <span className="text-2xl">👋</span>
         </h2>
       </div>
