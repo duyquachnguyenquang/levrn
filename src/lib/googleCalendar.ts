@@ -6,9 +6,14 @@
 import { Subject, GoogleCalendarIntegration } from "./types";
 import { supabase } from "./supabase";
 
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "";
+const GOOGLE_CLIENT_ID =
+  process.env.GOOGLE_CLIENT_ID ||
+  process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ||
+  "";
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || "";
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+const APP_URL =
+  process.env.NEXT_PUBLIC_APP_URL ||
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
 
 const GOOGLE_AUTH_ENDPOINT = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token";
@@ -36,6 +41,12 @@ const RRULE_DAY_MAP: Record<number, string> = {
  * Tạo URL ủy quyền OAuth 2.0 chuyển hướng người dùng sang trang Google
  */
 export function getGoogleOAuthUrl(state?: string, customRedirectUri?: string): string {
+  if (!GOOGLE_CLIENT_ID) {
+    throw new Error(
+      "Chưa cấu hình GOOGLE_CLIENT_ID. Vui lòng thêm biến môi trường GOOGLE_CLIENT_ID trong cài đặt hosting (Vercel)."
+    );
+  }
+
   const redirectUri = customRedirectUri || `${APP_URL}/api/auth/google/callback`;
   const params = new URLSearchParams({
     client_id: GOOGLE_CLIENT_ID,
@@ -60,6 +71,12 @@ export async function exchangeCodeForTokens(code: string, customRedirectUri?: st
   expiresIn: number;
   email?: string;
 }> {
+  if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
+    throw new Error(
+      "Chưa cấu hình GOOGLE_CLIENT_ID hoặc GOOGLE_CLIENT_SECRET trên môi trường Production. Vui lòng thêm hai biến môi trường này trong phần Settings -> Environment Variables của Vercel/Hosting."
+    );
+  }
+
   const redirectUri = customRedirectUri || `${APP_URL}/api/auth/google/callback`;
   const params = new URLSearchParams({
     code,
@@ -77,7 +94,11 @@ export async function exchangeCodeForTokens(code: string, customRedirectUri?: st
 
   const data = await response.json();
   if (!response.ok) {
-    throw new Error(data.error_description || data.error || "Không thể lấy token từ Google");
+    let msg = data.error_description || data.error || "Không thể lấy token từ Google";
+    if (msg.includes("Could not determine client ID from request") || msg.includes("invalid_client")) {
+      msg = "Chưa cấu hình đúng biến môi trường GOOGLE_CLIENT_ID hoặc GOOGLE_CLIENT_SECRET trên Production (Vercel).";
+    }
+    throw new Error(msg);
   }
 
   let email: string | undefined = undefined;
@@ -106,6 +127,12 @@ export async function refreshAccessToken(refreshToken: string): Promise<{
   accessToken: string;
   expiresIn: number;
 }> {
+  if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
+    throw new Error(
+      "Chưa cấu hình biến môi trường GOOGLE_CLIENT_ID hoặc GOOGLE_CLIENT_SECRET trên Production. Vui lòng thêm hai biến này vào Settings -> Environment Variables của Vercel."
+    );
+  }
+
   const params = new URLSearchParams({
     client_id: GOOGLE_CLIENT_ID,
     client_secret: GOOGLE_CLIENT_SECRET,
@@ -121,7 +148,11 @@ export async function refreshAccessToken(refreshToken: string): Promise<{
 
   const data = await response.json();
   if (!response.ok) {
-    throw new Error(data.error_description || data.error || "Không thể làm mới token Google");
+    let msg = data.error_description || data.error || "Không thể làm mới token Google";
+    if (msg.includes("Could not determine client ID from request") || msg.includes("invalid_client")) {
+      msg = "Chưa cấu hình biến môi trường GOOGLE_CLIENT_ID hoặc GOOGLE_CLIENT_SECRET trên Production. Vui lòng thêm hai biến này trong phần Settings -> Environment Variables của Vercel.";
+    }
+    throw new Error(msg);
   }
 
   return {

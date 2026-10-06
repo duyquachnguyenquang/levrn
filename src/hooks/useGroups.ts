@@ -12,191 +12,6 @@ import { supabase } from "@/lib/supabase";
 
 const LOCAL_STORAGE_KEY = "levrn_group_projects_data";
 
-// Dữ liệu nhóm đồ án mẫu ban đầu
-const INITIAL_DEMO_GROUPS: GroupProject[] = [
-  {
-    id: "grp-demo-1",
-    name: "Nhóm 04 - Logistics Warriors",
-    subjectCode: "SCM",
-    subjectName: "Quản trị chuỗi cung ứng",
-    topic: "Tối ưu hoá mạng lưới kho bãi và trung tâm phân phối miền Nam",
-    description: "Đồ án kết thúc học phần phân tích chuỗi cung ứng thực tế tại Shopee Xpress.",
-    semester: "HK1 2026-2027",
-    status: "in_progress",
-    deadline: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toISOString(), // 6 ngày nữa
-    driveUrl: "https://drive.google.com/drive/folders/demo-scm-project",
-    repoUrl: "https://github.com/example/scm-distribution-analysis",
-    meetingUrl: "https://meet.google.com/abc-defg-hij",
-    chatUrl: "https://zalo.me/g/example-scm-group",
-    imageUrl: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1000&q=80", // Kho vận & Chuỗi cung ứng
-    members: [
-      {
-        id: "mem-1",
-        name: "Quang Duy (Bạn)",
-        studentId: "2251010045",
-        role: "leader",
-        email: "duy.qn@levrn.edu.vn",
-        contributionScore: 100,
-        avatarColor: "#7D39EB",
-      },
-      {
-        id: "mem-2",
-        name: "Nguyễn Minh Khang",
-        studentId: "2251010088",
-        role: "member",
-        email: "khang.nm@levrn.edu.vn",
-        contributionScore: 95,
-        avatarColor: "#3B82F6",
-      },
-      {
-        id: "mem-3",
-        name: "Trần Bảo Ngọc",
-        studentId: "2251010112",
-        role: "secretary",
-        email: "ngoc.tb@levrn.edu.vn",
-        contributionScore: 90,
-        avatarColor: "#EC4899",
-      },
-      {
-        id: "mem-4",
-        name: "Lê Hoàng Nam",
-        studentId: "2251010072",
-        role: "member",
-        email: "nam.lh@levrn.edu.vn",
-        contributionScore: 85,
-        avatarColor: "#10B981",
-      },
-    ],
-    tasks: [
-      {
-        id: "gt-1",
-        groupId: "grp-demo-1",
-        title: "Thu thập số liệu lưu chuyển hàng hoá tại Hub Củ Chi",
-        assigneeMemberId: "mem-2",
-        assigneeName: "Nguyễn Minh Khang",
-        status: "done",
-        priority: "high",
-        dueDate: "2024-10-15",
-        createdAt: new Date().toISOString(),
-      },
-      {
-        id: "gt-2",
-        groupId: "grp-demo-1",
-        title: "Xây dựng mô hình toán tối ưu chi phí vận chuyển đường bộ",
-        assigneeMemberId: "mem-1",
-        assigneeName: "Quang Duy (Bạn)",
-        status: "in_progress",
-        priority: "urgent",
-        dueDate: "2024-10-22",
-        createdAt: new Date().toISOString(),
-      },
-      {
-        id: "gt-3",
-        groupId: "grp-demo-1",
-        title: "Tổng hợp báo cáo Word 30 trang và định dạng bảng biểu",
-        assigneeMemberId: "mem-3",
-        assigneeName: "Trần Bảo Ngọc",
-        status: "todo",
-        priority: "medium",
-        dueDate: "2024-10-28",
-        createdAt: new Date().toISOString(),
-      },
-      {
-        id: "gt-4",
-        groupId: "grp-demo-1",
-        title: "Thiết kế Slide thuyết trình Canva chuẩn thương hiệu",
-        assigneeMemberId: "mem-4",
-        assigneeName: "Lê Hoàng Nam",
-        status: "todo",
-        priority: "medium",
-        dueDate: "2024-11-02",
-        createdAt: new Date().toISOString(),
-      },
-    ],
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "grp-demo-2",
-    name: "AI Thinkers - Đồ án Trí tuệ Nhân tạo",
-    subjectCode: "AIA",
-    subjectName: "Ứng dụng trí tuệ nhân tạo",
-    topic: "Nhận diện bệnh cây trồng qua ảnh lá với Convolutional Neural Network (CNN)",
-    description: "Huấn luyện mô hình ResNet-50 trên tập dữ liệu PlantVillage đạt độ chính xác > 92%.",
-    semester: "HK1 2026-2027",
-    status: "in_progress",
-    deadline: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
-    driveUrl: "https://drive.google.com/drive/folders/demo-ai-dataset",
-    repoUrl: "https://github.com/example/plant-disease-cnn",
-    meetingUrl: "https://meet.google.com/xyz-uvwx-rst",
-    imageUrl: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1000&q=80", // AI & Trí tuệ nhân tạo (giống mẫu reference)
-    members: [
-      {
-        id: "mem-201",
-        name: "Quang Duy (Bạn)",
-        studentId: "2251010045",
-        role: "leader",
-        email: "duy.qn@levrn.edu.vn",
-        contributionScore: 100,
-        avatarColor: "#7D39EB",
-      },
-      {
-        id: "mem-202",
-        name: "Phạm Hải Đăng",
-        studentId: "2251010033",
-        role: "member",
-        email: "dang.ph@levrn.edu.vn",
-        contributionScore: 90,
-        avatarColor: "#F59E0B",
-      },
-      {
-        id: "mem-203",
-        name: "Vũ Phương Linh",
-        studentId: "2251010156",
-        role: "member",
-        email: "linh.vp@levrn.edu.vn",
-        contributionScore: 90,
-        avatarColor: "#06B6D4",
-      },
-    ],
-    tasks: [
-      {
-        id: "gt-201",
-        groupId: "grp-demo-2",
-        title: "Thu thập và làm sạch 10.000 ảnh từ Kaggle Dataset",
-        assigneeMemberId: "mem-202",
-        assigneeName: "Phạm Hải Đăng",
-        status: "done",
-        priority: "high",
-        dueDate: "2024-10-10",
-        createdAt: new Date().toISOString(),
-      },
-      {
-        id: "gt-202",
-        groupId: "grp-demo-2",
-        title: "Huấn luyện mô hình Transfer Learning ResNet50 trên GPU Colab",
-        assigneeMemberId: "mem-201",
-        assigneeName: "Quang Duy (Bạn)",
-        status: "done",
-        priority: "urgent",
-        dueDate: "2024-10-18",
-        createdAt: new Date().toISOString(),
-      },
-      {
-        id: "gt-203",
-        groupId: "grp-demo-2",
-        title: "Viết API FastApi và dựng giao diện Demo bằng Next.js",
-        assigneeMemberId: "mem-203",
-        assigneeName: "Vũ Phương Linh",
-        status: "in_progress",
-        priority: "high",
-        dueDate: "2024-10-25",
-        createdAt: new Date().toISOString(),
-      },
-    ],
-    createdAt: new Date().toISOString(),
-  },
-];
-
 export function useGroups() {
   const [groups, setGroups] = useState<GroupProject[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -219,7 +34,7 @@ export function useGroups() {
           .select("*")
           .order("created_at", { ascending: false });
 
-        if (!error && data && data.length > 0) {
+        if (!error && data !== null) {
           loadedGroups = data.map((row: any) => ({
             id: row.id,
             name: row.name,
@@ -252,8 +67,7 @@ export function useGroups() {
       }
     }
 
-    // 2. Đọc từ localStorage nếu Supabase trống
-    let isLocalStorageLoaded = false;
+    // 2. Đọc từ localStorage nếu Supabase không khả dụng
     if (!isSupabaseOk && typeof window !== "undefined") {
       try {
         const local = localStorage.getItem(LOCAL_STORAGE_KEY);
@@ -261,7 +75,6 @@ export function useGroups() {
           const parsed = JSON.parse(local);
           if (Array.isArray(parsed)) {
             loadedGroups = parsed;
-            isLocalStorageLoaded = true;
           }
         }
       } catch (err) {
@@ -269,19 +82,23 @@ export function useGroups() {
       }
     }
 
-    // 3. Fallback dữ liệu mẫu ban đầu: Chỉ kích hoạt khi chưa từng khởi tạo dữ liệu
-    if (!isSupabaseOk && !isLocalStorageLoaded) {
-      loadedGroups = INITIAL_DEMO_GROUPS;
-      if (typeof window !== "undefined") {
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(INITIAL_DEMO_GROUPS));
-      }
-    }
+    // 3. Dọn dẹp triệt để bất kỳ nhóm mẫu/ảo cũ nào (grp-demo-*, Logistics Warriors, AI Thinkers) còn sót lại trong cache
+    loadedGroups = loadedGroups.filter(
+      (g) =>
+        !g.id.startsWith("grp-demo") &&
+        !g.name.includes("Logistics Warriors") &&
+        !g.name.includes("AI Thinkers")
+    );
 
-    // 4. Dọn dẹp triệt để bất kỳ nhiệm vụ giả nào (gt-initial) từng bị sinh tự động
+    // 4. Dọn dẹp triệt để bất kỳ nhiệm vụ giả nào (gt-initial)
     loadedGroups = loadedGroups.map((g) => ({
       ...g,
       tasks: (g.tasks || []).filter((t) => !t.id.startsWith("gt-initial")),
     }));
+
+    if (typeof window !== "undefined") {
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(loadedGroups));
+    }
 
     setGroups(loadedGroups);
     setIsSupabaseActive(isSupabaseOk);

@@ -202,8 +202,18 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Action không hợp lệ" }, { status: 400 });
   } catch (error: any) {
     console.error("Lỗi thực thi API Google Calendar Sync:", error);
+    let msg = error?.message || "Lỗi đồng bộ Google Calendar";
+    if (
+      msg.includes("Could not determine client ID from request") ||
+      msg.includes("GOOGLE_CLIENT_ID") ||
+      msg.includes("GOOGLE_CLIENT_SECRET") ||
+      msg.includes("invalid_client")
+    ) {
+      msg =
+        "Chưa cấu hình biến môi trường GOOGLE_CLIENT_ID hoặc GOOGLE_CLIENT_SECRET trên Production (Vercel). Vui lòng thêm các biến này vào Settings > Environment Variables của Vercel.";
+    }
     return NextResponse.json(
-      { error: error.message || "Lỗi đồng bộ Google Calendar" },
+      { error: msg },
       { status: 500 }
     );
   }

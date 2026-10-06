@@ -332,7 +332,7 @@ export function GroupProjectModal({
             </Label>
             <Input
               id="grp-name"
-              placeholder="VD: Nhóm 04 - Logistics Warriors"
+              placeholder="VD: Nhóm 01 - Đồ án kết thúc môn"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required

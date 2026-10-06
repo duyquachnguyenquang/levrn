@@ -191,9 +191,18 @@ export async function POST(request: NextRequest) {
       (msg.includes("insufficient authentication scopes") ||
         msg.includes("ACCESS_TOKEN_SCOPE_INSUFFICIENT"));
 
+    const isClientIdError =
+      msg.includes("Could not determine client ID from request") ||
+      msg.includes("GOOGLE_CLIENT_ID") ||
+      msg.includes("GOOGLE_CLIENT_SECRET") ||
+      msg.includes("invalid_client");
+
     let enableApiUrl: string | undefined = undefined;
     let friendlyError = msg || "Lỗi đồng bộ Google Tasks";
-    if (isApiDisabled) {
+    if (isClientIdError) {
+      friendlyError =
+        "Chưa cấu hình biến môi trường GOOGLE_CLIENT_ID hoặc GOOGLE_CLIENT_SECRET trên Production (Vercel). Vui lòng thêm các biến này vào Settings > Environment Variables của Vercel.";
+    } else if (isApiDisabled) {
       const enableMatch = msg.match(/https:\/\/console\.[^\s]+/);
       enableApiUrl = enableMatch
         ? enableMatch[0].replace(/[.,]+$/, "")

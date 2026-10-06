@@ -540,7 +540,7 @@ export type GroupProjectStatus = "planning" | "in_progress" | "submitted" | "com
 
 export interface GroupProject {
   id: string;
-  name: string;              // Tên nhóm (VD: "Nhóm 03 - Logistics Warriors")
+  name: string;              // Tên nhóm (VD: "Nhóm 01 - Đồ án tốt nghiệp")
   subjectId?: string;        // ID môn học liên kết
   subjectCode: string;       // Mã môn (VD: "SCM")
   subjectName: string;       // Tên môn học

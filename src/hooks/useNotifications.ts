@@ -19,16 +19,6 @@ const INITIAL_DEMO_NOTIFICATIONS: AppNotification[] = [
     createdAt: new Date(Date.now() - 35 * 60 * 1000).toISOString(), // 35 phút trước
   },
   {
-    id: "notif-2",
-    title: "Hạn chót đồ án nhóm: Nhóm 04 - Logistics Warriors",
-    message: "Đồ án kết thúc học phần SCM còn 6 ngày nữa đến hạn nộp (23:59 Chủ Nhật tuần này). Hiện nhóm đã hoàn thành 2/4 nhiệm vụ.",
-    type: "deadline",
-    category: "groups",
-    read: false,
-    link: "/groups",
-    createdAt: new Date(Date.now() - 3 * 3600 * 1000).toISOString(), // 3 giờ trước
-  },
-  {
     id: "notif-3",
     title: "Lịch học hôm nay: Ca sáng lúc 08:00",
     message: "Hôm nay bạn có tiết học môn Giải Tích & Đại Số Tuyến Tính tại phòng B.304 - Cơ sở 1.",
@@ -37,16 +27,6 @@ const INITIAL_DEMO_NOTIFICATIONS: AppNotification[] = [
     read: false,
     link: "/subjects",
     createdAt: new Date(Date.now() - 7 * 3600 * 1000).toISOString(), // 7 giờ trước
-  },
-  {
-    id: "notif-4",
-    title: "Nhiệm vụ nhóm mới được giao",
-    message: "Bạn vừa được phân công nhiệm vụ: 'Xây dựng mô hình toán tối ưu chi phí vận chuyển đường bộ' trong đồ án SCM.",
-    type: "info",
-    category: "groups",
-    read: true,
-    link: "/groups",
-    createdAt: new Date(Date.now() - 24 * 3600 * 1000).toISOString(), // Hôm qua
   },
   {
     id: "notif-5",
@@ -116,6 +96,18 @@ export function useNotifications() {
       if (typeof window !== "undefined") {
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(INITIAL_DEMO_NOTIFICATIONS));
       }
+    }
+    // Dọn dẹp bất kỳ thông báo cũ nào nhắc tới nhóm ảo đã bị xóa
+    loaded = loaded.filter(
+      (n) =>
+        !n.title.includes("Logistics Warriors") &&
+        !n.message.includes("Logistics Warriors") &&
+        !n.title.includes("AI Thinkers") &&
+        !n.message.includes("AI Thinkers")
+    );
+
+    if (typeof window !== "undefined") {
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(loaded));
     }
 
     setNotifications(loaded);
