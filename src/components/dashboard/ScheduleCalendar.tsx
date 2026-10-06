@@ -212,6 +212,9 @@ export function ScheduleCalendar({
   // Kiểm tra 1 ca học cụ thể đã được điểm danh hay chưa
   const isSessionCheckedIn = React.useCallback(
     (ses: ClassSession) => {
+      // Ngày học trong tương lai tuyệt đối không thể tính là đã điểm danh
+      if (ses.dateStr > todayKey) return false;
+
       return attendanceRecords.some(
         (r) =>
           r.subjectId === ses.subject.id &&
@@ -219,19 +222,20 @@ export function ScheduleCalendar({
           (r.status === "present" || r.status === "late")
       );
     },
-    [attendanceRecords]
+    [attendanceRecords, todayKey]
   );
 
-  // Lấy số ngày đã điểm danh của môn học
+  // Lấy số ngày đã điểm danh của môn học (chỉ tính các buổi đã hoặc đang diễn ra)
   const getSubjectAttendedCount = React.useCallback(
     (subjectId: string) => {
       return attendanceRecords.filter(
         (r) =>
           r.subjectId === subjectId &&
-          (r.status === "present" || r.status === "late")
+          (r.status === "present" || r.status === "late") &&
+          (!r.date || r.date <= todayKey)
       ).length;
     },
-    [attendanceRecords]
+    [attendanceRecords, todayKey]
   );
 
   // Danh sách các ca học của ngày đang chọn

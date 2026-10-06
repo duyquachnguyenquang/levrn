@@ -62,7 +62,7 @@ export function getSubjectCheckinStatus(
   // 2. Tính số buổi đã điểm danh (present hoặc late)
   const subjectRecords = records.filter((r) => r.subjectId === subject.id);
   const attendedCount = subjectRecords.filter(
-    (r) => r.status === "present" || r.status === "late"
+    (r) => (r.status === "present" || r.status === "late") && (!r.date || r.date <= todayDateStr)
   ).length;
 
   // 2.1. Nếu môn học đã hoàn thành / thuộc các học kỳ trước HK1 2026-2027 -> Trả về "Học xong"

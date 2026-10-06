@@ -124,33 +124,64 @@ export function useAttendance(subjects: Subject[] = []) {
       }
     }
 
-    // 4. Dọn dẹp dữ liệu demo cũ: reset MỌI bản ghi present/late không có checkinTime hợp lệ
-    // ID demo cũ: att-{subjectId}-{1..15} (kết thúc bằng số 1-2 chữ số)
-    // ID thực: att-{subjectId}-{timestamp13} hoặc att-{subjectId}-{timestamp}-{random}
-    const LEGACY_ID_REGEX = /^att-[^-]+-(\d{1,2})$/; // chỉ match suffix 1-2 chữ số (session number)
+    // 4. Dọn dẹp dữ liệu demo cũ & dữ liệu điểm danh bất hợp lý:
+    // - ID demo cũ: att-{subjectId}-{1..15} (subjectId có thể chứa dấu '-' như UUID hay sub-demo-1)
+    // - Bất kỳ buổi học nào trong tương lai (date > todayStr) mà có status là 'present' hoặc 'late'
+    // - Bản ghi ghost không có checkinTime hợp lệ hoặc có note demo
+    const LEGACY_ID_REGEX = /^att-.*-(\d{1,2})$/;
     const VALID_CHECKIN_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/;   // ISO datetime
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 
     let hasCleanedMock = false;
     loadedRecords = loadedRecords.map((r) => {
       const isLegacyId = LEGACY_ID_REGEX.test(r.id);
       const hasValidCheckin = r.checkinTime && VALID_CHECKIN_RE.test(r.checkinTime);
-      const isGhostPresent = (r.status === "present" || r.status === "late") && !hasValidCheckin;
+      const isFutureDate = !!(r.date && r.date > todayStr);
+      const isGhostPresent =
+        (r.status === "present" || r.status === "late") &&
+        (!hasValidCheckin || isFutureDate || isLegacyId);
       const isDemoNote = r.notes === "Đến trễ 15 phút do kẹt xe";
 
-      if (isDemoNote || (isLegacyId && isGhostPresent)) {
+      if (isDemoNote || isGhostPresent || (isFutureDate && (r.status === "present" || r.status === "late"))) {
         hasCleanedMock = true;
         return {
           ...r,
           status: "upcoming" as AttendanceStatus,
           notes: isDemoNote ? undefined : r.notes,
           checkinTime: undefined,
+          updatedAt: new Date().toISOString(),
         };
       }
       return r;
     });
 
-    if (hasCleanedMock && typeof window !== "undefined") {
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(loadedRecords));
+    if (hasCleanedMock) {
+      if (typeof window !== "undefined") {
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(loadedRecords));
+      }
+      if (supabase && isSupabaseOk) {
+        try {
+          const rows = loadedRecords.map((r) => ({
+            id: r.id,
+            subject_id: r.subjectId,
+            subject_code: r.subjectCode,
+            subject_name: r.subjectName,
+            session_number: r.sessionNumber,
+            date: r.date,
+            start_time: r.startTime,
+            end_time: r.endTime,
+            room: r.room,
+            status: r.status,
+            notes: r.notes,
+            checked_in_at: r.checkinTime || null,
+            updated_at: new Date().toISOString(),
+          }));
+          await supabase.from("attendance_records").upsert(rows);
+        } catch (err) {
+          console.error("Supabase cleanup sync error:", err);
+        }
+      }
     }
 
     setRecords(loadedRecords);
@@ -451,10 +482,12 @@ export function useAttendance(subjects: Subject[] = []) {
         .sort((a, b) => a.sessionNumber - b.sessionNumber);
 
       const totalWeeks = sub.totalWeeks || 15;
-      const presentCount = subRecords.filter((r) => r.status === "present").length;
-      const lateCount = subRecords.filter((r) => r.status === "late").length;
-      const excusedCount = subRecords.filter((r) => r.status === "excused").length;
-      const absentCount = subRecords.filter((r) => r.status === "absent").length;
+      const now = new Date();
+      const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+      const presentCount = subRecords.filter((r) => r.status === "present" && (!r.date || r.date <= todayStr)).length;
+      const lateCount = subRecords.filter((r) => r.status === "late" && (!r.date || r.date <= todayStr)).length;
+      const excusedCount = subRecords.filter((r) => r.status === "excused" && (!r.date || r.date <= todayStr)).length;
+      const absentCount = subRecords.filter((r) => r.status === "absent" && (!r.date || r.date <= todayStr)).length;
 
       // Buổi đã diễn ra và có ghi nhận
       const totalRecorded = presentCount + lateCount + excusedCount + absentCount;
@@ -622,8 +655,10 @@ export function useAttendance(subjects: Subject[] = []) {
   // Lấy số ngày đã học/điểm danh của 1 môn học
   const getSubjectAttendedCount = useCallback(
     (subjectId: string): number => {
+      const now = new Date();
+      const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
       return records.filter(
-        (r) => r.subjectId === subjectId && (r.status === "present" || r.status === "late")
+        (r) => r.subjectId === subjectId && (r.status === "present" || r.status === "late") && (!r.date || r.date <= todayStr)
       ).length;
     },
     [records]
@@ -632,6 +667,9 @@ export function useAttendance(subjects: Subject[] = []) {
   // Kiểm tra 1 môn học đã điểm danh vào ngày cụ thể chưa
   const isSubjectDateCheckedIn = useCallback(
     (dateStr: string, subjectId: string): boolean => {
+      const now = new Date();
+      const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+      if (dateStr > todayStr) return false;
       return records.some(
         (r) => r.subjectId === subjectId && r.date === dateStr && (r.status === "present" || r.status === "late")
       );

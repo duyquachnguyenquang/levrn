@@ -81,8 +81,9 @@ export function AttendanceDetailModal({
   // Thống kê số buổi đã điểm danh, số buổi còn lại
   const totalWeeks = subject?.totalWeeks || 15;
   const attendedCount = useMemo(() => {
+    const todayKey = getLocalDateKey(new Date());
     return subjectRecords.filter(
-      (r) => r.status === "present" || r.status === "late"
+      (r) => (r.status === "present" || r.status === "late") && (!r.date || r.date <= todayKey)
     ).length;
   }, [subjectRecords]);
   const remainingSessions = Math.max(0, totalWeeks - attendedCount);
