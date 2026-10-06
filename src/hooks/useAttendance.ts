@@ -72,6 +72,7 @@ export function useAttendance(subjects: Subject[] = []) {
     let isSupabaseOk = false;
 
     // 1. Thử tải từ Supabase nếu có bảng attendance_records
+    let sbData: any[] | null = null;
     if (supabase) {
       try {
         const { data, error } = await supabase
@@ -79,24 +80,29 @@ export function useAttendance(subjects: Subject[] = []) {
           .select("*")
           .order("session_number", { ascending: true });
 
-        if (!error && data && data.length > 0) {
-          loadedRecords = data.map((row: any) => ({
-            id: row.id,
-            subjectId: row.subject_id,
-            subjectCode: row.subject_code,
-            subjectName: row.subject_name,
-            sessionNumber: row.session_number,
-            date: row.date,
-            startTime: row.start_time,
-            endTime: row.end_time,
-            room: row.room,
-            status: row.status as AttendanceStatus,
-            notes: row.notes,
-            checkinTime: row.checked_in_at || row.checkin_time || undefined,
-            createdAt: row.created_at,
-            updatedAt: row.updated_at,
-          }));
+        if (!error) {
           isSupabaseOk = true;
+          sbData = data;
+          if (data && data.length > 0) {
+            loadedRecords = data.map((row: any) => ({
+              id: row.id,
+              subjectId: row.subject_id,
+              subjectCode: row.subject_code,
+              subjectName: row.subject_name,
+              sessionNumber: row.session_number,
+              date: row.date,
+              startTime: row.start_time,
+              endTime: row.end_time,
+              room: row.room,
+              status: row.status as AttendanceStatus,
+              notes: row.notes,
+              checkinTime: row.checked_in_at || row.checkin_time || undefined,
+              createdAt: row.created_at,
+              updatedAt: row.updated_at,
+            }));
+          }
+        } else {
+          console.warn("Supabase attendance fetch error:", error);
         }
       } catch (err) {
         console.warn("Supabase attendance fetch skipped, fallback to localStorage:", err);
@@ -115,35 +121,35 @@ export function useAttendance(subjects: Subject[] = []) {
       }
     }
 
-    // 3. Nếu vẫn trống và có danh sách môn học, tự động sinh dữ liệu các buổi học cho các môn hiện có
-    if (loadedRecords.length === 0 && subjects.length > 0) {
-      const generated = subjects.flatMap((s) => generateSessionsForSubject(s));
-      loadedRecords = generated;
+    // 3. Nếu danh sách môn học có môn chưa được sinh buổi học, bổ sung các buổi học tương ứng
+    if (subjects.length > 0) {
+      if (loadedRecords.length === 0) {
+        const generated = subjects.flatMap((s) => generateSessionsForSubject(s));
+        loadedRecords = generated;
+      } else {
+        const existingSubIds = new Set(loadedRecords.map((r) => r.subjectId));
+        const missingSubs = subjects.filter((s) => !existingSubIds.has(s.id));
+        if (missingSubs.length > 0) {
+          const generated = missingSubs.flatMap((s) => generateSessionsForSubject(s));
+          loadedRecords = [...loadedRecords, ...generated];
+        }
+      }
       if (typeof window !== "undefined") {
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(generated));
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(loadedRecords));
       }
     }
 
-    // 4. Dọn dẹp dữ liệu demo cũ & dữ liệu điểm danh bất hợp lý:
-    // - ID demo cũ: att-{subjectId}-{1..15} (subjectId có thể chứa dấu '-' như UUID hay sub-demo-1)
-    // - Bất kỳ buổi học nào trong tương lai (date > todayStr) mà có status là 'present' hoặc 'late'
-    // - Bản ghi ghost không có checkinTime hợp lệ hoặc có note demo
-    const LEGACY_ID_REGEX = /^att-.*-(\d{1,2})$/;
-    const VALID_CHECKIN_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/;   // ISO datetime
+    // 4. Chỉ dọn dẹp các dữ liệu bất hợp lý (ngày trong tương lai > todayStr bị đánh dấu có mặt, hoặc ghi chú demo)
     const now = new Date();
     const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 
     let hasCleanedMock = false;
     loadedRecords = loadedRecords.map((r) => {
-      const isLegacyId = LEGACY_ID_REGEX.test(r.id);
-      const hasValidCheckin = r.checkinTime && VALID_CHECKIN_RE.test(r.checkinTime);
       const isFutureDate = !!(r.date && r.date > todayStr);
-      const isGhostPresent =
-        (r.status === "present" || r.status === "late") &&
-        (!hasValidCheckin || isFutureDate || isLegacyId);
       const isDemoNote = r.notes === "Đến trễ 15 phút do kẹt xe";
+      const isInvalidFuture = isFutureDate && (r.status === "present" || r.status === "late");
 
-      if (isDemoNote || isGhostPresent || (isFutureDate && (r.status === "present" || r.status === "late"))) {
+      if (isDemoNote || isInvalidFuture) {
         hasCleanedMock = true;
         return {
           ...r,
@@ -156,31 +162,31 @@ export function useAttendance(subjects: Subject[] = []) {
       return r;
     });
 
-    if (hasCleanedMock) {
-      if (typeof window !== "undefined") {
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(loadedRecords));
-      }
-      if (supabase && isSupabaseOk) {
-        try {
-          const rows = loadedRecords.map((r) => ({
-            id: r.id,
-            subject_id: r.subjectId,
-            subject_code: r.subjectCode,
-            subject_name: r.subjectName,
-            session_number: r.sessionNumber,
-            date: r.date,
-            start_time: r.startTime,
-            end_time: r.endTime,
-            room: r.room,
-            status: r.status,
-            notes: r.notes,
-            checked_in_at: r.checkinTime || null,
-            updated_at: new Date().toISOString(),
-          }));
-          await supabase.from("attendance_records").upsert(rows);
-        } catch (err) {
-          console.error("Supabase cleanup sync error:", err);
-        }
+    if (hasCleanedMock && typeof window !== "undefined") {
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(loadedRecords));
+    }
+
+    // 5. Nếu Supabase kết nối được nhưng ban đầu chưa có bản ghi nào, đồng bộ dữ liệu hiện tại lên Supabase
+    if (supabase && isSupabaseOk && (!sbData || sbData.length === 0) && loadedRecords.length > 0) {
+      try {
+        const rows = loadedRecords.map((r) => ({
+          id: r.id,
+          subject_id: r.subjectId,
+          subject_code: r.subjectCode,
+          subject_name: r.subjectName,
+          session_number: r.sessionNumber,
+          date: r.date,
+          start_time: r.startTime,
+          end_time: r.endTime,
+          room: r.room,
+          status: r.status,
+          notes: r.notes || null,
+          checked_in_at: r.checkinTime || null,
+          updated_at: new Date().toISOString(),
+        }));
+        await supabase.from("attendance_records").upsert(rows);
+      } catch (err) {
+        console.error("Supabase initial sync error:", err);
       }
     }
 
@@ -201,7 +207,7 @@ export function useAttendance(subjects: Subject[] = []) {
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newRecords));
       }
 
-      if (supabase && isSupabaseActive) {
+      if (supabase) {
         try {
           const rows = newRecords.map((r) => ({
             id: r.id,
@@ -214,17 +220,22 @@ export function useAttendance(subjects: Subject[] = []) {
             end_time: r.endTime,
             room: r.room,
             status: r.status,
-            notes: r.notes,
+            notes: r.notes || null,
             checked_in_at: r.checkinTime || null,
             updated_at: new Date().toISOString(),
           }));
-          await supabase.from("attendance_records").upsert(rows);
+          const { error } = await supabase.from("attendance_records").upsert(rows);
+          if (error) {
+            console.error("Supabase upsert error:", error);
+          } else {
+            setIsSupabaseActive(true);
+          }
         } catch (err) {
-          console.error("Supabase upsert error:", err);
+          console.error("Supabase upsert exception:", err);
         }
       }
     },
-    [isSupabaseActive]
+    []
   );
 
   // Cập nhật trạng thái của 1 buổi học
@@ -634,14 +645,24 @@ export function useAttendance(subjects: Subject[] = []) {
       if (subjectIds && subjectIds.length > 0) {
         updatedList = updatedList.map((r) => {
           if (r.date === dateStr && subjectIds.includes(r.subjectId)) {
-            return { ...r, status: "upcoming" as AttendanceStatus, updatedAt: new Date().toISOString() };
+            return {
+              ...r,
+              status: "upcoming" as AttendanceStatus,
+              checkinTime: undefined,
+              updatedAt: new Date().toISOString(),
+            };
           }
           return r;
         });
       } else {
         updatedList = updatedList.map((r) => {
           if (r.date === dateStr) {
-            return { ...r, status: "upcoming" as AttendanceStatus, updatedAt: new Date().toISOString() };
+            return {
+              ...r,
+              status: "upcoming" as AttendanceStatus,
+              checkinTime: undefined,
+              updatedAt: new Date().toISOString(),
+            };
           }
           return r;
         });

@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   TrendingUp,
   AlertCircle,
+  ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -28,6 +29,7 @@ interface PlanHeaderProps {
   isRefreshing: boolean;
   onRefresh: () => void;
   onAddNew: () => void;
+  onGoogleTasks?: () => void;
   isSupabaseActive?: boolean;
   errorMessage?: string | null;
 }
@@ -37,6 +39,7 @@ export function PlanHeader({
   isRefreshing,
   onRefresh,
   onAddNew,
+  onGoogleTasks,
   isSupabaseActive = true,
   errorMessage,
 }: PlanHeaderProps) {
@@ -53,8 +56,22 @@ export function PlanHeader({
           </h2>
         </div>
 
-        {/* Cụm 2 nút thao tác bên phải: Làm mới + Thêm (+) */}
+        {/* Cụm nút thao tác bên phải: Google Tasks + Làm mới + Thêm (+) */}
         <div className="flex items-center gap-2 shrink-0">
+          {/* Nút Đồng bộ Google Tasks */}
+          {onGoogleTasks && (
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={onGoogleTasks}
+              className="rounded-md min-h-[40px] min-w-[40px] h-10 w-10 sm:h-9 sm:w-9 border-border/70 text-muted-foreground hover:text-[#7D39EB] hover:border-[#7D39EB]/60 hover:bg-[#7D39EB]/10 transition-all active:scale-95 shrink-0"
+              title="Đồng bộ nhiệm vụ lên Google Tasks"
+              aria-label="Đồng bộ Google Tasks"
+            >
+              <ExternalLink className="h-4 w-4" />
+            </Button>
+          )}
+
           <Button
             variant="outline"
             size="icon"

@@ -30,9 +30,12 @@ import {
   X,
   Check,
   CalendarDays,
+  ListTodo,
+  ExternalLink,
 } from "lucide-react";
 import { MarqueeText } from "@/components/ui/marquee-text";
 import { getLocalDateKey } from "@/lib/checkinUtils";
+import { GoogleTasksModal } from "@/components/tasks/GoogleTasksModal";
 import { cn } from "@/lib/utils";
 
 export type DashboardTaskItem = {
@@ -113,6 +116,9 @@ export function DashboardTasksCard({
   const [sortType, setSortType] = useState<TaskSortType>("date");
   const [sortDirection, setSortDirection] = useState<TaskSortDirection>("asc");
   const [isSortOpen, setIsSortOpen] = useState(false);
+
+  // Google Tasks modal
+  const [isGoogleTasksOpen, setIsGoogleTasksOpen] = useState(false);
 
   // 2. Tổng hợp tất cả các mục trong tuần: Lịch học, Nhiệm vụ cá nhân, Nhiệm vụ nhóm
   const allWeekItems = useMemo<DashboardTaskItem[]>(() => {
@@ -295,8 +301,20 @@ export function DashboardTasksCard({
           </span>
         </div>
 
-        {/* Cụm công cụ bên phải: 1. Bộ lọc (icon Đầu lọc), 2. Sắp xếp, 3. Tìm kiếm */}
+        {/* Cụm công cụ bên phải: 0. Google Tasks, 1. Bộ lọc, 2. Sắp xếp, 3. Tìm kiếm */}
         <div className="flex items-center gap-2 shrink-0">
+          {/* 0. Nút Đồng bộ Google Tasks */}
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setIsGoogleTasksOpen(true)}
+            className="min-h-[40px] min-w-[40px] h-10 w-10 sm:h-8 sm:w-8 rounded-md border border-border/80 text-muted-foreground hover:text-[#7D39EB] hover:border-[#7D39EB]/60 hover:bg-[#7D39EB]/10 transition-all active:scale-95 shrink-0"
+            title="Đồng bộ nhiệm vụ lên Google Tasks"
+            aria-label="Đồng bộ Google Tasks"
+          >
+            <ExternalLink className="h-4 w-4" />
+          </Button>
+
           {/* 1. Nút Bộ lọc (Icon Đầu lọc) */}
           <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
             <PopoverTrigger asChild>
@@ -610,6 +628,15 @@ export function DashboardTasksCard({
           </div>
         )}
       </div>
+
+      {/* Google Tasks Sync Modal */}
+      <GoogleTasksModal
+        isOpen={isGoogleTasksOpen}
+        onClose={() => setIsGoogleTasksOpen(false)}
+        personalTasks={personalTasks}
+        groups={groups}
+        subjects={subjects}
+      />
     </Card>
   );
 }

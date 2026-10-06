@@ -3,11 +3,13 @@
 import React, { useState, useMemo, useCallback } from "react";
 import { useSubjects } from "@/hooks/useSubjects";
 import { useStudyPlans } from "@/hooks/useStudyPlans";
+import { useGroups } from "@/hooks/useGroups";
 import { PlanHeader } from "@/components/plans/PlanHeader";
 import { PlanToolbar, PlanDisplayMode } from "@/components/plans/PlanToolbar";
 import { TaskGrid } from "@/components/plans/TaskGrid";
 import { TaskListView } from "@/components/plans/TaskListView";
 import { TaskFormDialog } from "@/components/plans/TaskFormDialog";
+import { GoogleTasksModal } from "@/components/tasks/GoogleTasksModal";
 import {
   StudyTask,
   StudyTaskFormData,
@@ -34,6 +36,7 @@ function getTomorrowString(): string {
 
 export default function PlansPage() {
   const { subjects } = useSubjects();
+  const { groups } = useGroups();
   const {
     tasks,
     isLoading,
@@ -51,6 +54,9 @@ export default function PlansPage() {
 
   // Dạng hiển thị: "grid" (Thẻ) | "list" (Danh sách)
   const [displayMode, setDisplayMode] = useState<PlanDisplayMode>("grid");
+
+  // Google Tasks modal
+  const [isGoogleTasksOpen, setIsGoogleTasksOpen] = useState(false);
 
   // Bộ lọc
   const [searchQuery, setSearchQuery] = useState("");
@@ -200,6 +206,7 @@ export default function PlansPage() {
         isRefreshing={isRefreshing}
         onRefresh={handleRefresh}
         onAddNew={handleAddNew}
+        onGoogleTasks={() => setIsGoogleTasksOpen(true)}
         isSupabaseActive={isSupabaseActive}
         errorMessage={errorMessage}
       />
@@ -264,6 +271,15 @@ export default function PlansPage() {
         initialData={editingTask}
         defaultDate={getTodayString()}
         defaultStatus={dialogStatus}
+        subjects={subjects}
+      />
+
+      {/* Google Tasks Sync Modal */}
+      <GoogleTasksModal
+        isOpen={isGoogleTasksOpen}
+        onClose={() => setIsGoogleTasksOpen(false)}
+        personalTasks={tasks}
+        groups={groups}
         subjects={subjects}
       />
     </div>

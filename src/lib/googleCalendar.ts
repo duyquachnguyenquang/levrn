@@ -19,6 +19,7 @@ const SCOPES = [
   "https://www.googleapis.com/auth/calendar.events",
   "https://www.googleapis.com/auth/calendar",
   "https://www.googleapis.com/auth/userinfo.email",
+  "https://www.googleapis.com/auth/tasks",
 ].join(" ");
 
 const RRULE_DAY_MAP: Record<number, string> = {
@@ -43,6 +44,7 @@ export function getGoogleOAuthUrl(state?: string, customRedirectUri?: string): s
     scope: SCOPES,
     access_type: "offline",
     prompt: "consent", // Bắt buộc để luôn cấp refresh_token
+    include_granted_scopes: "true",
     ...(state ? { state } : {}),
   });
 
