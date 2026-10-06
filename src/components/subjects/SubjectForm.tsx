@@ -418,7 +418,11 @@ export function SubjectForm({
         setTerm(CURRENT_TERM);
       }
 
-      setCredits(initialData.credits ? String(initialData.credits) : "");
+      setCredits(
+        initialData.credits !== undefined && initialData.credits !== null
+          ? String(initialData.credits)
+          : ""
+      );
       setCategory(initialData.category || "Môn chuyên ngành");
       setCourseUrl(initialData.courseUrl || "");
       setDriveUrl(initialData.driveUrl || "");
@@ -572,7 +576,7 @@ export function SubjectForm({
       academicYear: academicYear.trim(),
       term,
       semester: combinedSemester,
-      credits: credits ? parseInt(credits, 10) : undefined,
+      credits: credits !== "" && credits !== undefined ? parseInt(credits, 10) : undefined,
       category,
       color: activeColor,
       courseUrl: courseUrl.trim() || undefined,
@@ -699,7 +703,7 @@ export function SubjectForm({
 
                 <span className="font-bold text-xs px-2.5 py-1 rounded-md bg-muted/80 text-foreground border border-border/70 flex items-center gap-1.5 shadow-2xs">
                   <GraduationCap className="h-3.5 w-3.5 text-muted-foreground" />
-                  <span>{credits ? `${credits} tín chỉ` : "Chưa có tín chỉ"}</span>
+                  <span>{credits !== "" && credits !== undefined ? `${credits} tín chỉ` : "Chưa có tín chỉ"}</span>
                 </span>
 
                 <span

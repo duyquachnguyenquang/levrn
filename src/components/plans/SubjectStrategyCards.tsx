@@ -102,7 +102,7 @@ export function SubjectStrategyCards({
                     {sub.code}
                   </span>
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-black/50 backdrop-blur-md text-white/90 border border-white/10 shadow-2xs">
-                    {sub.credits ? `${sub.credits} Tín chỉ` : "Học phần"}
+                    {sub.credits !== undefined && sub.credits !== null ? `${sub.credits} Tín chỉ` : "Học phần"}
                   </span>
                 </div>
 

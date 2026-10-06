@@ -88,7 +88,9 @@ export function QuickPastCoursesModal({
     const sc = parseFloat(r.score10);
     if (r.name.trim() && !isNaN(sc) && sc >= 0 && sc <= 10) {
       validCount++;
-      const cr = Number(r.credits) || 3;
+      const cr = (r.credits !== undefined && r.credits !== null && !isNaN(Number(r.credits)))
+        ? Math.max(0, Number(r.credits))
+        : 3;
       totalCredits += cr;
       weightedSum10 += sc * cr;
       weightedSum4 += score10ToScore4(sc) * cr;
@@ -117,7 +119,9 @@ export function QuickPastCoursesModal({
         return {
           subjectCode: r.code.trim().toUpperCase() || "MON",
           subjectName: r.name.trim(),
-          credits: Number(r.credits) || 3,
+          credits: (r.credits !== undefined && r.credits !== null && !isNaN(Number(r.credits)))
+            ? Math.max(0, Number(r.credits))
+            : 3,
           semester: semester.trim(),
           gradingMethod: "final_only",
           finalScore: sc,
@@ -215,12 +219,13 @@ export function QuickPastCoursesModal({
                     <div className="w-full sm:col-span-2 flex items-center justify-center">
                       <Input
                         type="number"
-                        min="1"
+                        min="0"
                         max="15"
                         value={r.credits}
-                        onChange={(e) =>
-                          handleUpdateRow(r.id, "credits", parseInt(e.target.value) || 3)
-                        }
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          handleUpdateRow(r.id, "credits", val === "" ? 0 : Math.max(0, parseInt(val, 10) || 0));
+                        }}
                         className="text-xs h-9 font-mono text-center"
                       />
                     </div>

@@ -326,8 +326,11 @@ export function SubjectCard({
           <div className="w-full pt-2 flex items-center justify-between gap-1.5 border-t border-border/40 mt-auto">
             {/* Góc dưới bên trái: Thông tin tín chỉ hoặc giảng viên */}
             <div className="flex items-center gap-1 text-[11px] font-semibold text-muted-foreground/80 truncate min-w-0">
-              {subject.credits ? (
-                <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-muted/60 text-[10px] font-bold text-foreground/80 border border-border/40 shrink-0">
+              {subject.credits !== undefined && subject.credits !== null ? (
+                <span
+                  className="inline-flex items-center px-1.5 py-0.5 rounded bg-muted/60 text-[10px] font-bold text-foreground/80 border border-border/40 shrink-0"
+                  title={subject.credits === 0 ? "Môn điều kiện (không tính GPA)" : `${subject.credits} tín chỉ`}
+                >
                   {subject.credits} TC
                 </span>
               ) : subject.instructor ? (

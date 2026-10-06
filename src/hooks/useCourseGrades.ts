@@ -99,6 +99,15 @@ export function useCourseGrades() {
             .order("created_at", { ascending: true });
 
           if (!subErr && subjectRows) {
+            // SAFETY GUARD: Nếu subjects trả về rỗng nhưng grades đang có dữ liệu,
+            // KHÔNG thực hiện sync xóa để tránh xóa toàn bộ grades do lỗi mạng/RLS.
+            if (subjectRows.length === 0 && currentRows.length > 0) {
+              const mapped = currentRows.map(mapRowToCourseGrade);
+              setGrades(mapped);
+              setIsLoading(false);
+              return;
+            }
+
             const subjectMap = new Map<string, any>(subjectRows.map((s: any) => [s.id, s]));
             const deletedSubjectIds = getDeletedSubjectIds();
             const validRows: any[] = [];
@@ -120,7 +129,9 @@ export function useCourseGrades() {
                 const targetSemester = (s.semester && s.semester.trim()) ? s.semester.trim() : "Chưa xếp kỳ";
                 const targetYear = s.academic_year || null;
                 const targetTerm = s.term || null;
-                const targetCredits = Number(s.credits) || 3;
+                const targetCredits = (s.credits !== undefined && s.credits !== null && !isNaN(Number(s.credits)))
+                  ? Number(s.credits)
+                  : 3;
                 const targetCode = s.code;
                 const targetName = s.name;
 
@@ -185,7 +196,9 @@ export function useCourseGrades() {
                 subject_id: s.id,
                 subject_code: s.code,
                 subject_name: s.name,
-                credits: s.credits || 3,
+                credits: (s.credits !== undefined && s.credits !== null && !isNaN(Number(s.credits)))
+                  ? Number(s.credits)
+                  : 3,
                 semester: (s.semester && s.semester.trim()) ? s.semester.trim() : "Chưa xếp kỳ",
                 academic_year: s.academic_year || null,
                 term: s.term || null,
@@ -243,7 +256,9 @@ export function useCourseGrades() {
                 subjectId: s.id,
                 subjectCode: s.code,
                 subjectName: s.name,
-                credits: s.credits || 3,
+                credits: (s.credits !== undefined && s.credits !== null && !isNaN(Number(s.credits)))
+                  ? Number(s.credits)
+                  : 3,
                 semester: (s.semester && s.semester.trim()) ? s.semester.trim() : "Chưa xếp kỳ",
                 academicYear: s.academicYear,
                 term: s.term,
@@ -265,7 +280,9 @@ export function useCourseGrades() {
             subjectId: s.id,
             subjectCode: s.code,
             subjectName: s.name,
-            credits: s.credits || 3,
+            credits: (s.credits !== undefined && s.credits !== null && !isNaN(Number(s.credits)))
+              ? Number(s.credits)
+              : 3,
             semester: (s.semester && s.semester.trim()) ? s.semester.trim() : "Chưa xếp kỳ",
             academicYear: s.academicYear,
             term: s.term,
@@ -549,7 +566,9 @@ export function useCourseGrades() {
       subjectId: subject.id,
       subjectCode: subject.code,
       subjectName: subject.name,
-      credits: subject.credits || 3,
+      credits: (subject.credits !== undefined && subject.credits !== null && !isNaN(Number(subject.credits)))
+        ? Number(subject.credits)
+        : 3,
       semester: subject.semester,
       academicYear: subject.academicYear,
       term: subject.term,

@@ -476,7 +476,7 @@ export function SubjectBatchEditDialog({
                 {/* E. SỐ TÍN CHỈ */}
                 {selectedField === "credits" && (
                   <div className="flex items-center gap-1">
-                    {[1, 2, 3, 4, 5].map((tc) => (
+                    {[0, 1, 2, 3, 4, 5, 6].map((tc) => (
                       <button
                         key={tc}
                         type="button"
@@ -486,6 +486,7 @@ export function SubjectBatchEditDialog({
                             ? "bg-[#7D39EB] text-white border-[#7D39EB] shadow-xs"
                             : "bg-background border-border/80 text-foreground hover:bg-muted"
                         }`}
+                        title={tc === 0 ? "Môn điều kiện (không tính GPA)" : `${tc} tín chỉ`}
                       >
                         {tc} TC
                       </button>

@@ -243,7 +243,7 @@ export function buildGoogleCalendarEvent(subject: Subject): any {
 
   const descriptionParts: string[] = [];
   if (subject.category) descriptionParts.push(`Phân loại: ${subject.category}`);
-  if (subject.credits) descriptionParts.push(`Số tín chỉ: ${subject.credits}`);
+  if (subject.credits !== undefined && subject.credits !== null) descriptionParts.push(`Số tín chỉ: ${subject.credits}`);
   if (subject.instructor) descriptionParts.push(`Giảng viên: ${subject.instructor}`);
   if (subject.courseUrl) descriptionParts.push(`Trang LMS: ${subject.courseUrl}`);
   if (subject.driveUrl) descriptionParts.push(`Google Drive: ${subject.driveUrl}`);

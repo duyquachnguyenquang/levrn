@@ -88,7 +88,11 @@ export function CourseGradeModal({
       setSubjectId(initialData.subjectId || "");
       setSubjectCode(initialData.subjectCode || "");
       setSubjectName(initialData.subjectName || "");
-      setCredits(initialData.credits || 3);
+      setCredits(
+        initialData.credits !== undefined && initialData.credits !== null && !isNaN(Number(initialData.credits))
+          ? Number(initialData.credits)
+          : 3
+      );
       setSemester(initialData.semester || "HK1 2026-2027");
       setTargetScore(
         initialData.targetScore !== null && initialData.targetScore !== undefined
@@ -149,7 +153,11 @@ export function CourseGradeModal({
     setSubjectId(sub.id);
     setSubjectCode(sub.code);
     setSubjectName(sub.name);
-    setCredits(sub.credits || 3);
+    setCredits(
+      sub.credits !== undefined && sub.credits !== null && !isNaN(Number(sub.credits))
+        ? Number(sub.credits)
+        : 3
+    );
     setSemester((sub.semester && sub.semester.trim()) ? sub.semester.trim() : "Chưa xếp kỳ");
   };
 
@@ -195,7 +203,7 @@ export function CourseGradeModal({
         subjectId: subjectId || undefined,
         subjectCode: subjectCode.trim() || "MON",
         subjectName: subjectName.trim(),
-        credits: Number(credits) || 3,
+        credits: !isNaN(Number(credits)) && Number(credits) >= 0 ? Number(credits) : 0,
         semester: (semester && semester.trim()) ? semester.trim() : "Chưa xếp kỳ",
         gradingMethod,
         finalScore: effectiveFinalScore10,
@@ -282,7 +290,7 @@ export function CourseGradeModal({
                 <option value="">-- Chọn môn học --</option>
                 {existingSubjects.map((s) => (
                   <option key={s.id} value={s.id}>
-                    [{s.code}] {s.name} ({s.credits || 3} TC - {(s.semester && s.semester.trim()) ? s.semester.trim() : "Chưa xếp kỳ"})
+                    [{s.code}] {s.name} ({s.credits !== undefined && s.credits !== null ? s.credits : 3} TC - {(s.semester && s.semester.trim()) ? s.semester.trim() : "Chưa xếp kỳ"})
                   </option>
                 ))}
               </select>
@@ -330,10 +338,13 @@ export function CourseGradeModal({
               </Label>
               <Input
                 type="number"
-                min={1}
+                min={0}
                 max={15}
                 value={credits}
-                onChange={(e) => setCredits(parseInt(e.target.value) || 3)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setCredits(val === "" ? 0 : Math.max(0, parseInt(val, 10) || 0));
+                }}
                 className="mt-1 font-bold text-xs h-9"
                 required
               />

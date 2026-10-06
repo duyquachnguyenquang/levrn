@@ -100,7 +100,9 @@ async function syncAddGrade(subject: Subject, isSupabaseActive: boolean) {
         subject_id: subject.id,
         subject_code: subject.code,
         subject_name: subject.name,
-        credits: subject.credits || 3,
+        credits: (subject.credits !== undefined && subject.credits !== null && !isNaN(Number(subject.credits)))
+          ? Number(subject.credits)
+          : 3,
         semester: targetSemester,
         academic_year: subject.academicYear || null,
         term: subject.term || null,
@@ -124,7 +126,9 @@ async function syncAddGrade(subject: Subject, isSupabaseActive: boolean) {
           subjectId: subject.id,
           subjectCode: subject.code,
           subjectName: subject.name,
-          credits: subject.credits || 3,
+          credits: (subject.credits !== undefined && subject.credits !== null && !isNaN(Number(subject.credits)))
+            ? Number(subject.credits)
+            : 3,
           semester: targetSemester,
           academicYear: subject.academicYear,
           term: subject.term,

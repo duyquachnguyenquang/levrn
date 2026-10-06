@@ -249,8 +249,11 @@ export function AttendanceDetailModal({
                 <span className="text-base font-extrabold text-foreground">
                   {subject.name}
                 </span>
-                {subject.credits && (
-                  <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-muted text-muted-foreground">
+                {subject.credits !== undefined && subject.credits !== null && (
+                  <span
+                    className="text-xs font-semibold px-2 py-0.5 rounded-md bg-muted text-muted-foreground"
+                    title={subject.credits === 0 ? "Môn điều kiện (không tính GPA)" : undefined}
+                  >
                     {subject.credits} tín chỉ
                   </span>
                 )}
