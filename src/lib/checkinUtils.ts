@@ -25,6 +25,52 @@ export function getLocalDateKey(date: Date = new Date()): string {
 }
 
 /**
+ * Kiểm tra xem bản ghi điểm danh có thời gian check-in thực tế hay không.
+ * Bản ghi hợp lệ phải có checkinTime dạng ISO datetime hoặc HH:mm.
+ */
+export function hasValidAttendanceCheckin(r: {
+  checkinTime?: string;
+  status?: string;
+}): boolean {
+  if (!r.checkinTime) return false;
+  return (
+    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(r.checkinTime) ||
+    /^\d{1,2}:\d{2}/.test(r.checkinTime)
+  );
+}
+
+/**
+ * Tính số ngày học thực tế đã điểm danh (present hoặc late) của một môn học.
+ * Đếm theo tập hợp ngày duy nhất (Distinct Dates) và loại bỏ hoàn toàn các bản ghi ma
+ * (bản ghi demo/khởi tạo cũ không có checkinTime thực tế hoặc ngày tương lai).
+ */
+export function calculateAttendedCount(
+  records: AttendanceRecord[],
+  cutoffDateStr?: string
+): number {
+  const cutoff = cutoffDateStr || getLocalDateKey(new Date());
+  const attendedDates = new Set<string>();
+
+  records.forEach((r) => {
+    // Chỉ tính các buổi có trạng thái có mặt hoặc đi trễ
+    if (r.status !== "present" && r.status !== "late") return;
+
+    // Không tính các ngày trong tương lai (vượt quá cutoff)
+    if (r.date && r.date > cutoff) return;
+
+    // QUAN TRỌNG: Loại bỏ hoàn toàn bản ghi ma/demo:
+    // Bản ghi điểm danh thực sự BẮT BUỘC phải có thời gian điểm danh thực tế
+    if (!hasValidAttendanceCheckin(r)) return;
+
+    // Ưu tiên key theo ngày học (r.date) để đảm bảo 1 ngày chỉ tính 1 lần
+    const key = r.date || `session-${r.sessionNumber}`;
+    attendedDates.add(key);
+  });
+
+  return attendedDates.size;
+}
+
+/**
  * Phân tích và kiểm tra trạng thái điểm danh hôm nay của một môn học
  */
 export function getSubjectCheckinStatus(
@@ -59,11 +105,9 @@ export function getSubjectCheckinStatus(
     }
   }
 
-  // 2. Tính số buổi đã điểm danh (present hoặc late)
+  // 2. Tính số buổi đã điểm danh (present hoặc late) dựa trên số ngày học duy nhất (distinct dates)
   const subjectRecords = records.filter((r) => r.subjectId === subject.id);
-  const attendedCount = subjectRecords.filter(
-    (r) => (r.status === "present" || r.status === "late") && (!r.date || r.date <= todayDateStr)
-  ).length;
+  const attendedCount = calculateAttendedCount(subjectRecords, todayDateStr);
 
   // 2.1. Nếu môn học đã hoàn thành / thuộc các học kỳ trước HK1 2026-2027 -> Trả về "Học xong"
   if (
@@ -201,11 +245,9 @@ export function isSubjectEnded(subject: Subject, records: AttendanceRecord[] = [
     }
   }
 
-  // 4. Kiểm tra số buổi đã điểm danh (nếu đã đủ 100% số buổi)
+  // 4. Kiểm tra số buổi đã điểm danh (nếu đã đủ 100% số buổi theo ngày duy nhất)
   const subjectRecords = records.filter((r) => r.subjectId === subject.id);
-  const attendedCount = subjectRecords.filter(
-    (r) => r.status === "present" || r.status === "late"
-  ).length;
+  const attendedCount = calculateAttendedCount(subjectRecords, todayStr);
   if (attendedCount >= totalWeeks && totalWeeks > 0) {
     return true;
   }

@@ -8,6 +8,11 @@ import {
   Subject,
 } from "@/lib/types";
 import { supabase } from "@/lib/supabase";
+import {
+  getLocalDateKey,
+  calculateAttendedCount,
+  hasValidAttendanceCheckin,
+} from "@/lib/checkinUtils";
 
 const LOCAL_STORAGE_KEY = "levrn_attendance_data";
 
@@ -17,26 +22,36 @@ const LOCAL_STORAGE_KEY = "levrn_attendance_data";
 export function generateSessionsForSubject(subject: Subject): AttendanceRecord[] {
   const weeks = subject.totalWeeks || 15;
   const sessions: AttendanceRecord[] = [];
-  const startDate = subject.startDate ? new Date(subject.startDate) : new Date();
+  let startDate: Date;
+  if (subject.startDate) {
+    const [sy, sm, sd] = subject.startDate.split("-").map(Number);
+    startDate = new Date(sy, sm - 1, sd);
+  } else {
+    startDate = new Date();
+  }
 
   // Xác định ngày trong tuần nếu có cấu hình
-  const preferredDay = subject.scheduleDays && subject.scheduleDays.length > 0
-    ? subject.scheduleDays[0]
-    : startDate.getDay();
+  const preferredDay =
+    subject.scheduleDays && subject.scheduleDays.length > 0
+      ? subject.scheduleDays[0]
+      : startDate.getDay();
 
   for (let i = 1; i <= weeks; i++) {
     // Tính ngày học tương ứng từng tuần
-    const sessionDate = new Date(startDate);
-    sessionDate.setDate(startDate.getDate() + (i - 1) * 7);
+    const sessionDate = new Date(
+      startDate.getFullYear(),
+      startDate.getMonth(),
+      startDate.getDate() + (i - 1) * 7
+    );
 
     // Điều chỉnh ngày về thứ học mong muốn
     const currentDay = sessionDate.getDay();
     const diff = (preferredDay - currentDay + 7) % 7;
     sessionDate.setDate(sessionDate.getDate() + diff);
 
-    const dateStr = sessionDate.toISOString().split("T")[0];
+    const dateStr = getLocalDateKey(sessionDate);
 
-    // Xác định trạng thái mặc định (nếu ngày đã qua -> present hoặc upcoming)
+    // Xác định trạng thái mặc định (luôn là upcoming)
     const status: AttendanceStatus = "upcoming";
 
     sessions.push({
@@ -139,37 +154,111 @@ export function useAttendance(subjects: Subject[] = []) {
       }
     }
 
-    // 4. Chỉ dọn dẹp các dữ liệu bất hợp lý (ngày trong tương lai > todayStr bị đánh dấu có mặt, hoặc ghi chú demo)
+    // 4. Khử trùng lặp (Deduplication) và dọn dẹp bản ghi ảo/demo cũ
     const now = new Date();
-    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+    const todayStr = getLocalDateKey(now);
 
-    let hasCleanedMock = false;
-    loadedRecords = loadedRecords.map((r) => {
+    // 4.1. Khử trùng lặp theo (subjectId, date): 1 môn trong 1 ngày chỉ được có 1 bản ghi duy nhất
+    const dedupedMap = new Map<string, AttendanceRecord>();
+    const duplicateIdsToDelete: string[] = [];
+
+    loadedRecords.forEach((r) => {
+      const key = `${r.subjectId}__${r.date || `session-${r.sessionNumber}`}`;
+      const existing = dedupedMap.get(key);
+
+      if (!existing) {
+        dedupedMap.set(key, r);
+      } else {
+        // Nếu đã có bản ghi cho ngày này, ưu tiên giữ bản ghi có checkinTime hoặc có status present/late
+        const existingHasCheckin = !!existing.checkinTime;
+        const currentHasCheckin = !!r.checkinTime;
+        const existingIsPresent = existing.status === "present" || existing.status === "late";
+        const currentIsPresent = r.status === "present" || r.status === "late";
+
+        if (!existingHasCheckin && currentHasCheckin) {
+          duplicateIdsToDelete.push(existing.id);
+          dedupedMap.set(key, r);
+        } else if (!existingIsPresent && currentIsPresent) {
+          duplicateIdsToDelete.push(existing.id);
+          dedupedMap.set(key, r);
+        } else {
+          duplicateIdsToDelete.push(r.id);
+        }
+      }
+    });
+
+    let cleanedRecords = Array.from(dedupedMap.values());
+    let hasCleanedMock = duplicateIdsToDelete.length > 0;
+
+    // 4.2. Dọn dẹp bản ghi demo cũ & bản ghi bất hợp lý:
+    // - Mọi bản ghi bị gán 'present'/'late' từ code cũ nhưng KHÔNG CÓ checkinTime thực tế
+    // - Ngày trong tương lai (> todayStr) bị đánh dấu có mặt
+    // - Ghi chú demo "Đến trễ 15 phút do kẹt xe"
+    const modifiedCleanedRecords: AttendanceRecord[] = [];
+
+    cleanedRecords = cleanedRecords.map((r) => {
+      const hasValidCheckin = hasValidAttendanceCheckin(r);
       const isFutureDate = !!(r.date && r.date > todayStr);
       const isDemoNote = r.notes === "Đến trễ 15 phút do kẹt xe";
       const isInvalidFuture = isFutureDate && (r.status === "present" || r.status === "late");
+      const isGhostPresent = (r.status === "present" || r.status === "late") && !hasValidCheckin;
 
-      if (isDemoNote || isInvalidFuture) {
+      if (isDemoNote || isInvalidFuture || isGhostPresent) {
         hasCleanedMock = true;
-        return {
+        const updatedRec: AttendanceRecord = {
           ...r,
           status: "upcoming" as AttendanceStatus,
           notes: isDemoNote ? undefined : r.notes,
           checkinTime: undefined,
           updatedAt: new Date().toISOString(),
         };
+        modifiedCleanedRecords.push(updatedRec);
+        return updatedRec;
       }
       return r;
     });
 
     if (hasCleanedMock && typeof window !== "undefined") {
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(loadedRecords));
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(cleanedRecords));
+    }
+
+    // Nếu Supabase hoạt động và có bản ghi trùng lặp bị loại bỏ, xoá khỏi Supabase
+    if (supabase && isSupabaseOk && duplicateIdsToDelete.length > 0) {
+      try {
+        await supabase.from("attendance_records").delete().in("id", duplicateIdsToDelete);
+      } catch (err) {
+        console.error("Supabase delete duplicates error:", err);
+      }
+    }
+
+    // Nếu có bản ghi được dọn dẹp trạng thái ma về upcoming, cập nhật lại lên Supabase
+    if (supabase && isSupabaseOk && modifiedCleanedRecords.length > 0) {
+      try {
+        const rowsToUpdate = modifiedCleanedRecords.map((r) => ({
+          id: r.id,
+          subject_id: r.subjectId,
+          subject_code: r.subjectCode,
+          subject_name: r.subjectName,
+          session_number: r.sessionNumber,
+          date: r.date,
+          start_time: r.startTime,
+          end_time: r.endTime,
+          room: r.room,
+          status: r.status,
+          notes: r.notes || null,
+          checked_in_at: null,
+          updated_at: new Date().toISOString(),
+        }));
+        await supabase.from("attendance_records").upsert(rowsToUpdate);
+      } catch (err) {
+        console.error("Supabase update cleaned records error:", err);
+      }
     }
 
     // 5. Nếu Supabase kết nối được nhưng ban đầu chưa có bản ghi nào, đồng bộ dữ liệu hiện tại lên Supabase
-    if (supabase && isSupabaseOk && (!sbData || sbData.length === 0) && loadedRecords.length > 0) {
+    if (supabase && isSupabaseOk && (!sbData || sbData.length === 0) && cleanedRecords.length > 0) {
       try {
-        const rows = loadedRecords.map((r) => ({
+        const rows = cleanedRecords.map((r) => ({
           id: r.id,
           subject_id: r.subjectId,
           subject_code: r.subjectCode,
@@ -190,7 +279,7 @@ export function useAttendance(subjects: Subject[] = []) {
       }
     }
 
-    setRecords(loadedRecords);
+    setRecords(cleanedRecords);
     setIsSupabaseActive(isSupabaseOk);
     setIsLoading(false);
   }, [subjects]);
@@ -277,32 +366,46 @@ export function useAttendance(subjects: Subject[] = []) {
     ): Promise<{ success: boolean; message: string; record?: AttendanceRecord }> => {
       const now = new Date();
       const nowIso = now.toISOString();
-      const dateStr = targetDateStr || nowIso.split("T")[0];
+      const dateStr = targetDateStr || getLocalDateKey(now);
       const totalWeeks = subject.totalWeeks || 15;
 
-      // 1. Tìm xem hôm nay đã có bản ghi của môn này chưa
-      const existingIdx = records.findIndex(
-        (r) => r.subjectId === subject.id && r.date === dateStr
-      );
+      // 1. Tìm xem hôm nay đã có bản ghi của môn này chưa (tìm tất cả matches để tránh duplicate)
+      const matchingIndices = records
+        .map((r, idx) => (r.subjectId === subject.id && r.date === dateStr ? idx : -1))
+        .filter((idx) => idx !== -1);
 
       let updatedRecord: AttendanceRecord;
       let newRecords: AttendanceRecord[];
 
-      if (existingIdx >= 0) {
-        const existing = records[existingIdx];
+      if (matchingIndices.length > 0) {
+        const firstIdx = matchingIndices[0];
+        const existing = records[firstIdx];
         updatedRecord = {
           ...existing,
           status: "present",
           checkinTime: nowIso,
           updatedAt: nowIso,
         };
-        newRecords = [...records];
-        newRecords[existingIdx] = updatedRecord;
+
+        // Nếu phát hiện có nhiều bản ghi trùng cùng ngày, chỉ giữ 1 bản ghi và loại bỏ phần thừa
+        if (matchingIndices.length > 1) {
+          const redundantIndices = new Set(matchingIndices.slice(1));
+          const redundantIds = matchingIndices.slice(1).map((idx) => records[idx].id);
+          newRecords = records
+            .filter((_, idx) => !redundantIndices.has(idx))
+            .map((r) => (r.id === existing.id ? updatedRecord : r));
+
+          if (supabase) {
+            supabase.from("attendance_records").delete().in("id", redundantIds).then();
+          }
+        } else {
+          newRecords = [...records];
+          newRecords[firstIdx] = updatedRecord;
+        }
       } else {
-        // Tìm số buổi đã học để xác định sessionNumber tiếp theo
-        const attendedCount = records.filter(
-          (r) => r.subjectId === subject.id && (r.status === "present" || r.status === "late")
-        ).length;
+        // Tìm số buổi đã học theo số ngày duy nhất để xác định sessionNumber tiếp theo
+        const subRecords = records.filter((r) => r.subjectId === subject.id);
+        const attendedCount = calculateAttendedCount(subRecords, dateStr);
         const nextSessionNum = Math.min(totalWeeks, attendedCount + 1);
 
         updatedRecord = {
@@ -494,11 +597,42 @@ export function useAttendance(subjects: Subject[] = []) {
 
       const totalWeeks = sub.totalWeeks || 15;
       const now = new Date();
-      const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-      const presentCount = subRecords.filter((r) => r.status === "present" && (!r.date || r.date <= todayStr)).length;
-      const lateCount = subRecords.filter((r) => r.status === "late" && (!r.date || r.date <= todayStr)).length;
-      const excusedCount = subRecords.filter((r) => r.status === "excused" && (!r.date || r.date <= todayStr)).length;
-      const absentCount = subRecords.filter((r) => r.status === "absent" && (!r.date || r.date <= todayStr)).length;
+      const todayStr = getLocalDateKey(now);
+      const presentDates = new Set(
+        subRecords
+          .filter(
+            (r) =>
+              r.status === "present" &&
+              (!r.date || r.date <= todayStr) &&
+              hasValidAttendanceCheckin(r)
+          )
+          .map((r) => r.date || `session-${r.sessionNumber}`)
+      );
+      const lateDates = new Set(
+        subRecords
+          .filter(
+            (r) =>
+              r.status === "late" &&
+              (!r.date || r.date <= todayStr) &&
+              hasValidAttendanceCheckin(r)
+          )
+          .map((r) => r.date || `session-${r.sessionNumber}`)
+      );
+      const excusedDates = new Set(
+        subRecords
+          .filter((r) => r.status === "excused" && (!r.date || r.date <= todayStr))
+          .map((r) => r.date || `session-${r.sessionNumber}`)
+      );
+      const absentDates = new Set(
+        subRecords
+          .filter((r) => r.status === "absent" && (!r.date || r.date <= todayStr))
+          .map((r) => r.date || `session-${r.sessionNumber}`)
+      );
+
+      const presentCount = presentDates.size;
+      const lateCount = lateDates.size;
+      const excusedCount = excusedDates.size;
+      const absentCount = absentDates.size;
 
       // Buổi đã diễn ra và có ghi nhận
       const totalRecorded = presentCount + lateCount + excusedCount + absentCount;
@@ -585,32 +719,41 @@ export function useAttendance(subjects: Subject[] = []) {
 
       // Không cho phép điểm danh ngày tương lai
       const now = new Date();
-      const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+      const todayStr = getLocalDateKey(now);
       if (dateStr > todayStr) {
         return { success: false, message: "Chưa đến ngày học, không thể điểm danh trước" };
       }
 
       const nowIso = now.toISOString();
       let updatedList = [...records];
+      const redundantIdsToDelete: string[] = [];
 
       for (const sub of subjectsToMark) {
-        const existingIdx = updatedList.findIndex(
-          (r) => r.subjectId === sub.id && r.date === dateStr
-        );
+        const matchingIndices = updatedList
+          .map((r, i) => (r.subjectId === sub.id && r.date === dateStr ? i : -1))
+          .filter((i) => i !== -1);
 
-        if (existingIdx >= 0) {
-          updatedList[existingIdx] = {
-            ...updatedList[existingIdx],
+        if (matchingIndices.length > 0) {
+          const firstIdx = matchingIndices[0];
+          updatedList[firstIdx] = {
+            ...updatedList[firstIdx],
             status: "present",
             checkinTime: nowIso,
             updatedAt: nowIso,
           };
+
+          // Nếu có các bản ghi trùng lặp thừa vào cùng ngày đó, loại bỏ đi
+          if (matchingIndices.length > 1) {
+            const redundantIndices = new Set(matchingIndices.slice(1));
+            matchingIndices.slice(1).forEach((i) => {
+              redundantIdsToDelete.push(updatedList[i].id);
+            });
+            updatedList = updatedList.filter((_, i) => !redundantIndices.has(i));
+          }
         } else {
           const totalWeeks = sub.totalWeeks || 15;
           const subRecords = updatedList.filter((r) => r.subjectId === sub.id);
-          const attendedCount = subRecords.filter(
-            (r) => r.status === "present" || r.status === "late"
-          ).length;
+          const attendedCount = calculateAttendedCount(subRecords, dateStr);
           const sessionNumber = Math.min(totalWeeks, attendedCount + 1);
 
           const newRec: AttendanceRecord = {
@@ -629,6 +772,14 @@ export function useAttendance(subjects: Subject[] = []) {
             updatedAt: nowIso,
           };
           updatedList.unshift(newRec);
+        }
+      }
+
+      if (redundantIdsToDelete.length > 0 && supabase) {
+        try {
+          await supabase.from("attendance_records").delete().in("id", redundantIdsToDelete);
+        } catch (err) {
+          console.error("Supabase delete redundant error:", err);
         }
       }
 
@@ -673,14 +824,13 @@ export function useAttendance(subjects: Subject[] = []) {
     [records, saveRecords]
   );
 
-  // Lấy số ngày đã học/điểm danh của 1 môn học
+  // Lấy số ngày đã học/điểm danh của 1 môn học (theo số ngày duy nhất)
   const getSubjectAttendedCount = useCallback(
     (subjectId: string): number => {
       const now = new Date();
-      const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-      return records.filter(
-        (r) => r.subjectId === subjectId && (r.status === "present" || r.status === "late") && (!r.date || r.date <= todayStr)
-      ).length;
+      const todayStr = getLocalDateKey(now);
+      const subRecords = records.filter((r) => r.subjectId === subjectId);
+      return calculateAttendedCount(subRecords, todayStr);
     },
     [records]
   );
@@ -689,10 +839,14 @@ export function useAttendance(subjects: Subject[] = []) {
   const isSubjectDateCheckedIn = useCallback(
     (dateStr: string, subjectId: string): boolean => {
       const now = new Date();
-      const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+      const todayStr = getLocalDateKey(now);
       if (dateStr > todayStr) return false;
       return records.some(
-        (r) => r.subjectId === subjectId && r.date === dateStr && (r.status === "present" || r.status === "late")
+        (r) =>
+          r.subjectId === subjectId &&
+          r.date === dateStr &&
+          (r.status === "present" || r.status === "late") &&
+          hasValidAttendanceCheckin(r)
       );
     },
     [records]

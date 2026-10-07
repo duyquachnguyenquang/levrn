@@ -14,6 +14,7 @@ import {
 import { DashboardTasksCard } from "@/components/dashboard/DashboardTasksCard";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { Subject } from "@/lib/types";
+import { calculateAttendedCount } from "@/lib/checkinUtils";
 
 // Tính câu chào dựa theo thời điểm trong ngày
 function getTimeBasedGreeting(): string {
@@ -85,11 +86,8 @@ export default function DashboardPage() {
           r.date === dateStr &&
           (r.status === "present" || r.status === "late")
       );
-      const currentAttended = attendanceRecords.filter(
-        (r) =>
-          r.subjectId === firstSub.id &&
-          (r.status === "present" || r.status === "late")
-      ).length;
+      const subRecords = attendanceRecords.filter((r) => r.subjectId === firstSub.id);
+      const currentAttended = calculateAttendedCount(subRecords);
       const attendedCount = wasAlreadyChecked ? currentAttended : currentAttended + 1;
       const totalWeeks = firstSub.totalWeeks || 15;
 

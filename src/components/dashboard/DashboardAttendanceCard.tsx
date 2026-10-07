@@ -30,6 +30,7 @@ import { MarqueeText } from "@/components/ui/marquee-text";
 import {
   isSubjectEnded,
   getSubjectCheckinStatus,
+  calculateAttendedCount,
 } from "@/lib/checkinUtils";
 import { AttendanceDetailModal } from "./AttendanceDetailModal";
 import { cn } from "@/lib/utils";
@@ -126,12 +127,8 @@ export function DashboardAttendanceCard({
       }
 
       if (sortVariable === "attendance") {
-        const countA = attendanceRecords.filter(
-          (r) => r.subjectId === a.id && (r.status === "present" || r.status === "late")
-        ).length;
-        const countB = attendanceRecords.filter(
-          (r) => r.subjectId === b.id && (r.status === "present" || r.status === "late")
-        ).length;
+        const countA = calculateAttendedCount(attendanceRecords.filter((r) => r.subjectId === a.id));
+        const countB = calculateAttendedCount(attendanceRecords.filter((r) => r.subjectId === b.id));
         return sortDirection === "asc" ? countA - countB : countB - countA;
       }
 

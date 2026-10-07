@@ -33,7 +33,12 @@ import {
   Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { formatCheckinDateTime, getLocalDateKey } from "@/lib/checkinUtils";
+import {
+  formatCheckinDateTime,
+  getLocalDateKey,
+  calculateAttendedCount,
+  hasValidAttendanceCheckin,
+} from "@/lib/checkinUtils";
 
 interface AttendanceDetailModalProps {
   isOpen: boolean;
@@ -78,20 +83,18 @@ export function AttendanceDetailModal({
       .sort((a, b) => b.date.localeCompare(a.date));
   }, [subject, attendanceRecords]);
 
-  // Thống kê số buổi đã điểm danh, số buổi còn lại
+  // Thống kê số buổi đã điểm danh, số buổi còn lại (đếm theo ngày duy nhất)
   const totalWeeks = subject?.totalWeeks || 15;
   const attendedCount = useMemo(() => {
     const todayKey = getLocalDateKey(new Date());
-    return subjectRecords.filter(
-      (r) => (r.status === "present" || r.status === "late") && (!r.date || r.date <= todayKey)
-    ).length;
+    return calculateAttendedCount(subjectRecords, todayKey);
   }, [subjectRecords]);
   const remainingSessions = Math.max(0, totalWeeks - attendedCount);
 
   // Bản ghi điểm danh gần nhất
   const lastCheckin = useMemo(() => {
     const valid = subjectRecords.filter(
-      (r) => (r.status === "present" || r.status === "late") && r.checkinTime
+      (r) => (r.status === "present" || r.status === "late") && hasValidAttendanceCheckin(r)
     );
     return valid.length > 0 ? valid[0] : null;
   }, [subjectRecords]);
@@ -362,7 +365,12 @@ export function AttendanceDetailModal({
               {subjectRecords.length > 0 ? (
                 <div className="max-h-48 overflow-y-auto space-y-1.5 pr-1">
                   {subjectRecords.map((rec) => {
-                    const statusMeta = ATTENDANCE_STATUS_MAP[rec.status];
+                    const isRealCheckin = hasValidAttendanceCheckin(rec);
+                    const displayStatus =
+                      (rec.status === "present" || rec.status === "late") && !isRealCheckin
+                        ? "upcoming"
+                        : rec.status;
+                    const statusMeta = ATTENDANCE_STATUS_MAP[displayStatus];
 
                     return (
                       <div

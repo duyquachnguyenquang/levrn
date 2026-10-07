@@ -310,6 +310,34 @@ CREATE POLICY "Allow public update attendance_records" ON public.attendance_reco
 DROP POLICY IF EXISTS "Allow public delete attendance_records" ON public.attendance_records;
 CREATE POLICY "Allow public delete attendance_records" ON public.attendance_records FOR DELETE USING (true);
 
+-- Tạo Unique Index để ngăn chặn vĩnh viễn việc tạo duplicate buổi học cho cùng 1 môn trong 1 ngày
+CREATE UNIQUE INDEX IF NOT EXISTS idx_attendance_records_subject_date 
+ON public.attendance_records (subject_id, date);
+
+-- Script hỗ trợ dọn dẹp bản ghi trùng lặp và bản ghi demo cũ (chạy bất kỳ lúc nào trong Supabase SQL Editor nếu cần):
+-- 1. Xoá bản ghi trùng lặp cùng ngày, chỉ giữ lại bản ghi có check-in thực tế:
+DELETE FROM public.attendance_records a
+WHERE a.id IN (
+    SELECT id FROM (
+        SELECT id,
+               ROW_NUMBER() OVER (
+                   PARTITION BY subject_id, date 
+                   ORDER BY 
+                       (CASE WHEN checked_in_at IS NOT NULL THEN 0 ELSE 1 END),
+                       (CASE WHEN status IN ('present', 'late') THEN 0 ELSE 1 END),
+                       updated_at DESC
+               ) as rn
+        FROM public.attendance_records
+    ) t
+    WHERE t.rn > 1
+);
+
+-- 2. Reset triệt để tất cả bản ghi có mặt/đi trễ ảo mà không có checked_in_at thực tế về 'upcoming':
+UPDATE public.attendance_records
+SET status = 'upcoming', notes = NULL, updated_at = now()
+WHERE status IN ('present', 'late')
+  AND checked_in_at IS NULL;
+
 -- ====================================================================
 -- 10. Bảng group_projects (Quản lý nhóm đồ án & bài tập lớn)
 -- ====================================================================

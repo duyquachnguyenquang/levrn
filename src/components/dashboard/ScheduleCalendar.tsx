@@ -34,6 +34,7 @@ import { GoogleCalendarModal } from "@/components/calendar/GoogleCalendarModal";
 import { useStudyPlans } from "@/hooks/useStudyPlans";
 import { useAttendance } from "@/hooks/useAttendance";
 import { cn } from "@/lib/utils";
+import { calculateAttendedCount, hasValidAttendanceCheckin } from "@/lib/checkinUtils";
 
 export interface ClassSession {
   subject: Subject;
@@ -219,21 +220,18 @@ export function ScheduleCalendar({
         (r) =>
           r.subjectId === ses.subject.id &&
           r.date === ses.dateStr &&
-          (r.status === "present" || r.status === "late")
+          (r.status === "present" || r.status === "late") &&
+          hasValidAttendanceCheckin(r)
       );
     },
     [attendanceRecords, todayKey]
   );
 
-  // Lấy số ngày đã điểm danh của môn học (chỉ tính các buổi đã hoặc đang diễn ra)
+  // Lấy số ngày đã điểm danh của môn học (chỉ tính các buổi đã hoặc đang diễn ra, đếm theo ngày duy nhất)
   const getSubjectAttendedCount = React.useCallback(
     (subjectId: string) => {
-      return attendanceRecords.filter(
-        (r) =>
-          r.subjectId === subjectId &&
-          (r.status === "present" || r.status === "late") &&
-          (!r.date || r.date <= todayKey)
-      ).length;
+      const subRecords = attendanceRecords.filter((r) => r.subjectId === subjectId);
+      return calculateAttendedCount(subRecords, todayKey);
     },
     [attendanceRecords, todayKey]
   );
